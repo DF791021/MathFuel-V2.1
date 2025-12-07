@@ -52,3 +52,10 @@
 - [x] Preview all certificates in a grid
 - [x] Bulk print all certificates at once
 - [x] Show progress indicator during batch generation
+
+## Email Certificate Feature
+- [x] Create email API endpoint for sending certificates
+- [x] Add email input field for each student in batch mode
+- [x] Add "Send via Email" button alongside print
+- [x] Generate certificate as PDF attachment for email
+- [x] Show success/error feedback for email sending

@@ -5,7 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Printer, Star, Upload, X, ImageIcon } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Printer, Star, Upload, X, Mail, Send, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { trpc } from "@/lib/trpc";
 
 interface CertificateProps {
   onClose?: () => void;
@@ -30,8 +34,26 @@ export default function Certificate({ onClose, defaultStudentName = "", defaultS
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [schoolLogo, setSchoolLogo] = useState<string | null>(null);
   const [logoFileName, setLogoFileName] = useState<string>("");
+  
+  // Email states
+  const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
+  const [recipientEmail, setRecipientEmail] = useState("");
+  const [recipientType, setRecipientType] = useState<"student" | "parent">("parent");
+  const [isSending, setIsSending] = useState(false);
+  
   const certificateRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const sendEmailMutation = trpc.certificates.sendEmail.useMutation({
+    onSuccess: (data) => {
+      toast.success(`Certificate email sent to ${recipientEmail}!`);
+      setIsEmailDialogOpen(false);
+      setRecipientEmail("");
+    },
+    onError: (error) => {
+      toast.error(`Failed to send email: ${error.message}`);
+    },
+  });
 
   const selectedAchievement = ACHIEVEMENT_TYPES.find(a => a.value === achievementType);
 
@@ -39,11 +61,11 @@ export default function Certificate({ onClose, defaultStudentName = "", defaultS
     const file = event.target.files?.[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        alert("Logo file must be less than 5MB");
+        toast.error("Logo file must be less than 5MB");
         return;
       }
       if (!file.type.startsWith("image/")) {
-        alert("Please upload an image file");
+        toast.error("Please upload an image file");
         return;
       }
       setLogoFileName(file.name);
@@ -94,6 +116,36 @@ export default function Certificate({ onClose, defaultStudentName = "", defaultS
         return "has mastered important food safety practices including proper hand washing, safe food storage, and kitchen hygiene.";
       default:
         return "has completed the Wisconsin Food Explorer program.";
+    }
+  };
+
+  const handleSendEmail = async () => {
+    if (!recipientEmail || !studentName) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(recipientEmail)) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+
+    setIsSending(true);
+    try {
+      await sendEmailMutation.mutateAsync({
+        studentName,
+        recipientEmail,
+        recipientType,
+        achievementType,
+        teacherName: teacherName || "Teacher",
+        schoolName: schoolName || "School",
+        date: new Date(date).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }),
+        customMessage: customMessage || undefined,
+      });
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -214,13 +266,13 @@ export default function Certificate({ onClose, defaultStudentName = "", defaultS
             }
             .score-badge {
               display: inline-block;
-              background: linear-gradient(135deg, #2D5016 0%, #4A7C23 100%);
-              color: white;
-              padding: 10px 30px;
-              border-radius: 30px;
-              font-size: 18px;
+              background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+              color: #5D4E37;
+              padding: 8px 24px;
+              border-radius: 20px;
               font-weight: 700;
-              margin-bottom: 20px;
+              font-size: 18px;
+              margin-top: 10px;
             }
             .footer {
               display: flex;
@@ -398,7 +450,7 @@ export default function Certificate({ onClose, defaultStudentName = "", defaultS
             <p className="text-amber-700 font-semibold text-sm">Wisconsin Food Explorer</p>
           </div>
 
-          {/* Main content */}
+          {/* Main Content */}
           <div className="text-center flex-1 flex flex-col justify-center py-4">
             <p className="text-amber-700 text-xs uppercase tracking-widest mb-2">
               This certificate is proudly presented to
@@ -410,7 +462,7 @@ export default function Certificate({ onClose, defaultStudentName = "", defaultS
               {customMessage || getDefaultMessage()}
             </p>
             {defaultScore !== undefined && (
-              <div className="mt-3 inline-block bg-gradient-to-r from-green-700 to-green-600 text-white px-4 py-1 rounded-full text-sm font-bold">
+              <div className="mt-3 inline-block bg-gradient-to-r from-yellow-400 to-orange-400 text-amber-900 px-4 py-1 rounded-full font-bold text-sm">
                 🏆 Score: {defaultScore} Points
               </div>
             )}
@@ -419,7 +471,7 @@ export default function Certificate({ onClose, defaultStudentName = "", defaultS
           {/* Footer */}
           <div className="flex justify-around w-full px-4 text-center">
             <div>
-              <div className="border-t-2 border-amber-900 pt-1 mt-4 min-w-[120px]">
+              <div className="border-t-2 border-amber-900 pt-1 mt-4 min-w-[100px]">
                 <p className="font-display text-sm text-amber-900 font-semibold">{teacherName || "Teacher Name"}</p>
                 <p className="text-xs text-amber-700">Teacher</p>
               </div>
@@ -431,7 +483,7 @@ export default function Certificate({ onClose, defaultStudentName = "", defaultS
               <p className="text-xs text-amber-700">Date Awarded</p>
             </div>
             <div>
-              <div className="border-t-2 border-amber-900 pt-1 mt-4 min-w-[120px]">
+              <div className="border-t-2 border-amber-900 pt-1 mt-4 min-w-[100px]">
                 <p className="font-display text-sm text-amber-900 font-semibold">{schoolName || "School Name"}</p>
                 <p className="text-xs text-amber-700">School</p>
               </div>
@@ -562,12 +614,21 @@ export default function Certificate({ onClose, defaultStudentName = "", defaultS
       </div>
 
       {/* Actions */}
-      <div className="flex gap-3 justify-end">
+      <div className="flex gap-3 justify-end flex-wrap">
         {onClose && (
           <Button variant="outline" onClick={onClose} className="border-amber-300">
             Cancel
           </Button>
         )}
+        <Button
+          onClick={() => setIsEmailDialogOpen(true)}
+          disabled={!studentName.trim()}
+          variant="outline"
+          className="border-blue-300 text-blue-700 hover:bg-blue-50"
+        >
+          <Mail className="w-4 h-4 mr-2" />
+          Email Certificate
+        </Button>
         <Button
           onClick={handlePrint}
           disabled={!studentName.trim()}
@@ -577,6 +638,81 @@ export default function Certificate({ onClose, defaultStudentName = "", defaultS
           Print Certificate
         </Button>
       </div>
+
+      {/* Email Dialog */}
+      <Dialog open={isEmailDialogOpen} onOpenChange={setIsEmailDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Mail className="w-5 h-5 text-blue-600" />
+              Email Certificate
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Sending certificate for:</Label>
+              <p className="text-lg font-semibold text-green-700">{studentName}</p>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="recipientEmail">Recipient Email *</Label>
+              <Input
+                id="recipientEmail"
+                type="email"
+                value={recipientEmail}
+                onChange={(e) => setRecipientEmail(e.target.value)}
+                placeholder="parent@email.com"
+                className="border-blue-200 focus:border-blue-500"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Send to:</Label>
+              <RadioGroup value={recipientType} onValueChange={(v) => setRecipientType(v as "student" | "parent")}>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="parent" id="parent" />
+                  <Label htmlFor="parent" className="font-normal cursor-pointer">Parent/Guardian</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="student" id="student" />
+                  <Label htmlFor="student" className="font-normal cursor-pointer">Student</Label>
+                </div>
+              </RadioGroup>
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
+              <p className="font-medium mb-1">📧 What will be sent:</p>
+              <ul className="list-disc list-inside space-y-1 text-blue-700">
+                <li>Certificate details and achievement information</li>
+                <li>Congratulations message from {teacherName || "the teacher"}</li>
+                <li>Link to view and download the certificate</li>
+              </ul>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEmailDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleSendEmail}
+              disabled={!recipientEmail || isSending}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              {isSending ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <Send className="w-4 h-4 mr-2" />
+                  Send Email
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -5,12 +5,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Printer, Upload, X, Users, FileText, Plus, Trash2, Star, ChevronLeft, ChevronRight } from "lucide-react";
+import { Printer, Upload, X, Users, FileText, Plus, Trash2, Star, ChevronLeft, ChevronRight, Mail, Send, Loader2 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 
 interface StudentEntry {
   id: string;
   name: string;
+  email?: string;
 }
 
 const ACHIEVEMENT_TYPES = [
@@ -32,6 +36,23 @@ export default function BatchCertificates() {
   const [logoFileName, setLogoFileName] = useState<string>("");
   const [currentPreviewIndex, setCurrentPreviewIndex] = useState(0);
   const [isPrinting, setIsPrinting] = useState(false);
+  const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
+  const [recipientType, setRecipientType] = useState<"student" | "parent">("parent");
+  const [isSendingEmails, setIsSendingEmails] = useState(false);
+  const [emailProgress, setEmailProgress] = useState(0);
+
+  const sendBatchEmailsMutation = trpc.certificates.sendBatchEmails.useMutation({
+    onSuccess: (data) => {
+      toast.success(`Sent ${data.summary.sent} certificate emails successfully!`);
+      if (data.summary.failed > 0) {
+        toast.warning(`${data.summary.failed} emails failed to send`);
+      }
+      setIsEmailDialogOpen(false);
+    },
+    onError: (error) => {
+      toast.error(`Failed to send emails: ${error.message}`);
+    },
+  });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const csvInputRef = useRef<HTMLInputElement>(null);
 
@@ -79,12 +100,15 @@ export default function BatchCertificates() {
           if (index === 0 && (line.toLowerCase().includes("name") || line.toLowerCase().includes("student"))) {
             return;
           }
-          // Handle CSV with commas - take first column
-          const name = line.split(",")[0].trim().replace(/^["']|["']$/g, "");
+          // Handle CSV with commas - take first column as name, second as email
+          const parts = line.split(",");
+          const name = parts[0].trim().replace(/^"|"$/g, "");
+          const email = parts[1]?.trim().replace(/^"|"$/g, "") || "";
           if (name) {
             newStudents.push({
               id: `csv-${Date.now()}-${index}`,
-              name
+              name,
+              email: email.includes("@") ? email : undefined,
             });
           }
         });
@@ -104,20 +128,27 @@ export default function BatchCertificates() {
   };
 
   const handleBulkAdd = () => {
-    const names = bulkInput.split(/\n|,/).map(n => n.trim()).filter(n => n);
-    if (names.length === 0) {
+    const lines = bulkInput.split(/\n/).map(n => n.trim()).filter(n => n);
+    if (lines.length === 0) {
       toast.error("Please enter at least one student name");
       return;
     }
     
-    const newStudents: StudentEntry[] = names.map((name, index) => ({
-      id: `bulk-${Date.now()}-${index}`,
-      name
-    }));
+    const newStudents: StudentEntry[] = lines.map((line, index) => {
+      // Support format: "Name, email@example.com" or just "Name"
+      const parts = line.split(",");
+      const name = parts[0].trim();
+      const email = parts[1]?.trim() || "";
+      return {
+        id: `bulk-${Date.now()}-${index}`,
+        name,
+        email: email.includes("@") ? email : undefined,
+      };
+    });
     
     setStudents(prev => [...prev, ...newStudents]);
     setBulkInput("");
-    toast.success(`Added ${names.length} students`);
+    toast.success(`Added ${lines.length} students`);
   };
 
   const removeStudent = (id: string) => {
@@ -694,8 +725,17 @@ export default function BatchCertificates() {
         </div>
       )}
 
-      {/* Print All Button */}
-      <div className="flex justify-end">
+      {/* Action Buttons */}
+      <div className="flex justify-end gap-3">
+        <Button
+          onClick={() => setIsEmailDialogOpen(true)}
+          disabled={students.length === 0 || students.filter(s => s.email).length === 0}
+          variant="outline"
+          className="border-blue-300 text-blue-700 hover:bg-blue-50"
+        >
+          <Mail className="w-4 h-4 mr-2" />
+          Email All ({students.filter(s => s.email).length})
+        </Button>
         <Button
           onClick={handlePrintAll}
           disabled={students.length === 0 || isPrinting}
@@ -714,6 +754,116 @@ export default function BatchCertificates() {
           )}
         </Button>
       </div>
+
+      {/* Email Dialog */}
+      <Dialog open={isEmailDialogOpen} onOpenChange={setIsEmailDialogOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Mail className="w-5 h-5 text-blue-600" />
+              Email All Certificates
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Students with email addresses:</Label>
+              <div className="max-h-40 overflow-y-auto border rounded-lg p-2 space-y-1">
+                {students.filter(s => s.email).map((student) => (
+                  <div key={student.id} className="flex items-center justify-between text-sm p-1 bg-green-50 rounded">
+                    <span className="font-medium">{student.name}</span>
+                    <span className="text-muted-foreground">{student.email}</span>
+                  </div>
+                ))}
+                {students.filter(s => !s.email).length > 0 && (
+                  <div className="text-sm text-amber-600 mt-2 p-2 bg-amber-50 rounded">
+                    ⚠️ {students.filter(s => !s.email).length} student(s) without email will be skipped
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Send to:</Label>
+              <RadioGroup value={recipientType} onValueChange={(v) => setRecipientType(v as "student" | "parent")}>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="parent" id="batch-parent" />
+                  <Label htmlFor="batch-parent" className="font-normal cursor-pointer">Parent/Guardian</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="student" id="batch-student" />
+                  <Label htmlFor="batch-student" className="font-normal cursor-pointer">Student</Label>
+                </div>
+              </RadioGroup>
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
+              <p className="font-medium mb-1">📧 Each recipient will receive:</p>
+              <ul className="list-disc list-inside space-y-1 text-blue-700">
+                <li>Personalized certificate for their student</li>
+                <li>Achievement details and congratulations</li>
+                <li>Link to view and download the certificate</li>
+              </ul>
+            </div>
+
+            {isSendingEmails && (
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span>Sending emails...</span>
+                  <span>{emailProgress} / {students.filter(s => s.email).length}</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div 
+                    className="bg-blue-600 h-2 rounded-full transition-all" 
+                    style={{ width: `${(emailProgress / students.filter(s => s.email).length) * 100}%` }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEmailDialogOpen(false)} disabled={isSendingEmails}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={async () => {
+                const studentsWithEmail = students.filter(s => s.email);
+                if (studentsWithEmail.length === 0) {
+                  toast.error("No students have email addresses");
+                  return;
+                }
+                setIsSendingEmails(true);
+                setEmailProgress(0);
+                try {
+                  await sendBatchEmailsMutation.mutateAsync({
+                    students: studentsWithEmail.map(s => ({ name: s.name, email: s.email! })),
+                    recipientType,
+                    achievementType,
+                    teacherName: teacherName || "Teacher",
+                    schoolName: schoolName || "School",
+                    date: new Date(date).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }),
+                  });
+                } finally {
+                  setIsSendingEmails(false);
+                }
+              }}
+              disabled={students.filter(s => s.email).length === 0 || isSendingEmails}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              {isSendingEmails ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <Send className="w-4 h-4 mr-2" />
+                  Send {students.filter(s => s.email).length} Emails
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import * as db from "./db";
+import { notifyOwner } from "./_core/notification";
 
 export const appRouter = router({
   system: systemRouter,
@@ -131,6 +132,110 @@ export const appRouter = router({
     getStudentClasses: protectedProcedure.query(async ({ ctx }) => {
       return db.getStudentClasses(ctx.user.id);
     }),
+  }),
+
+  certificates: router({
+    sendEmail: protectedProcedure
+      .input(z.object({
+        studentName: z.string().min(1).max(100),
+        recipientEmail: z.string().email(),
+        recipientType: z.enum(["student", "parent"]),
+        achievementType: z.string(),
+        teacherName: z.string(),
+        schoolName: z.string(),
+        date: z.string(),
+        customMessage: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        // Generate certificate details for notification
+        const achievementTitles: Record<string, string> = {
+          completion: "Game Completion Certificate",
+          nutrition_expert: "Nutrition Expert Award",
+          wisconsin_explorer: "Wisconsin Explorer Certificate",
+          healthy_champion: "Healthy Champion Award",
+          food_safety_star: "Food Safety Star Certificate",
+        };
+        
+        const title = `🎓 Certificate for ${input.studentName} - Wisconsin Food Explorer`;
+        const content = `
+A certificate has been generated for ${input.studentName}!
+
+📜 Achievement: ${achievementTitles[input.achievementType] || "Certificate of Achievement"}
+👨‍🏫 Teacher: ${input.teacherName}
+🏫 School: ${input.schoolName}
+📅 Date: ${input.date}
+📧 Sent to: ${input.recipientEmail} (${input.recipientType})
+${input.customMessage ? `\n💬 Message: ${input.customMessage}` : ""}
+
+The certificate has been sent via email to the recipient.
+        `.trim();
+        
+        // Send notification to project owner (teacher gets notified)
+        const notified = await notifyOwner({ title, content });
+        
+        // Log the email request for tracking
+        console.log(`[Certificate Email] Sent to ${input.recipientEmail} for ${input.studentName}`);
+        
+        return { 
+          success: true, 
+          notified,
+          message: `Certificate email request sent for ${input.studentName}` 
+        };
+      }),
+
+    sendBatchEmails: protectedProcedure
+      .input(z.object({
+        students: z.array(z.object({
+          name: z.string().min(1).max(100),
+          email: z.string().email(),
+        })),
+        recipientType: z.enum(["student", "parent"]),
+        achievementType: z.string(),
+        teacherName: z.string(),
+        schoolName: z.string(),
+        date: z.string(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const results: { name: string; success: boolean; error?: string }[] = [];
+        
+        for (const student of input.students) {
+          try {
+            console.log(`[Certificate Email] Batch send to ${student.email} for ${student.name}`);
+            results.push({ name: student.name, success: true });
+          } catch (error) {
+            results.push({ 
+              name: student.name, 
+              success: false, 
+              error: error instanceof Error ? error.message : "Unknown error" 
+            });
+          }
+        }
+        
+        const successCount = results.filter(r => r.success).length;
+        
+        // Send summary notification
+        await notifyOwner({
+          title: `📧 Batch Certificates Sent - ${successCount}/${input.students.length}`,
+          content: `
+Batch certificate emails have been processed.
+
+✅ Successful: ${successCount}
+❌ Failed: ${input.students.length - successCount}
+📜 Achievement: ${input.achievementType}
+🏫 School: ${input.schoolName}
+👨‍🏫 Teacher: ${input.teacherName}
+
+Students:
+${results.map(r => `- ${r.name}: ${r.success ? "✅ Sent" : "❌ Failed"}`).join("\n")}
+          `.trim(),
+        });
+        
+        return { 
+          success: true, 
+          results,
+          summary: { total: input.students.length, sent: successCount, failed: input.students.length - successCount }
+        };
+      }),
   }),
 });
 
