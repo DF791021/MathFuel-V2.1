@@ -66,3 +66,11 @@
 - [x] Show preview of email with variables replaced
 - [x] Support variables: {student_name}, {achievement}, {teacher_name}, {school_name}, {date}
 - [x] Update API to accept custom subject and body
+
+## Saved Email Templates Feature
+- [x] Create database table for email templates
+- [x] Add API endpoints for CRUD operations on templates
+- [x] Add "Save as Template" button in email dialog
+- [x] Add template selector dropdown to load saved templates
+- [x] Allow naming and managing saved templates
+- [x] Support default template per achievement type

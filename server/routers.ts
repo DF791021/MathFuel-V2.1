@@ -263,6 +263,63 @@ ${results.map(r => `- ${r.name}: ${r.success ? "✅ Sent" : "❌ Failed"}`).join
         };
       }),
   }),
+
+  emailTemplates: router({
+    getAll: protectedProcedure.query(async ({ ctx }) => {
+      return db.getTeacherEmailTemplates(ctx.user.id);
+    }),
+
+    getById: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ ctx, input }) => {
+        return db.getEmailTemplateById(input.id, ctx.user.id);
+      }),
+
+    getDefault: protectedProcedure
+      .input(z.object({ achievementType: z.string() }))
+      .query(async ({ ctx, input }) => {
+        return db.getDefaultTemplate(ctx.user.id, input.achievementType);
+      }),
+
+    create: protectedProcedure
+      .input(z.object({
+        name: z.string().min(1).max(100),
+        subject: z.string().min(1),
+        body: z.string().min(1),
+        achievementType: z.string().optional(),
+        isDefault: z.boolean().default(false),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        await db.createEmailTemplate({
+          ...input,
+          achievementType: input.achievementType ?? null,
+          teacherId: ctx.user.id,
+        });
+        return { success: true };
+      }),
+
+    update: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        name: z.string().min(1).max(100).optional(),
+        subject: z.string().min(1).optional(),
+        body: z.string().min(1).optional(),
+        achievementType: z.string().optional(),
+        isDefault: z.boolean().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const { id, ...data } = input;
+        await db.updateEmailTemplate(id, ctx.user.id, data);
+        return { success: true };
+      }),
+
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        await db.deleteEmailTemplate(input.id, ctx.user.id);
+        return { success: true };
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

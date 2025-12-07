@@ -1,6 +1,6 @@
 import { eq, desc, and } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, gameScores, InsertGameScore, customQuestions, InsertCustomQuestion, classes, InsertClass, classMembers, InsertClassMember } from "../drizzle/schema";
+import { InsertUser, users, gameScores, InsertGameScore, customQuestions, InsertCustomQuestion, classes, InsertClass, classMembers, InsertClassMember, emailTemplates, InsertEmailTemplate } from "../drizzle/schema";
 import { nanoid } from 'nanoid';
 import { ENV } from './_core/env';
 
@@ -237,4 +237,85 @@ export async function getStudentClasses(studentId: number) {
     .where(eq(classMembers.studentId, studentId));
   
   return result;
+}
+
+// ============ EMAIL TEMPLATE FUNCTIONS ============
+
+export async function createEmailTemplate(template: InsertEmailTemplate) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  // If this is set as default, unset other defaults for same achievement type
+  if (template.isDefault && template.achievementType) {
+    await db.update(emailTemplates)
+      .set({ isDefault: false })
+      .where(and(
+        eq(emailTemplates.teacherId, template.teacherId),
+        eq(emailTemplates.achievementType, template.achievementType)
+      ));
+  }
+  
+  const result = await db.insert(emailTemplates).values(template);
+  return result;
+}
+
+export async function getTeacherEmailTemplates(teacherId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const result = await db.select().from(emailTemplates)
+    .where(eq(emailTemplates.teacherId, teacherId))
+    .orderBy(desc(emailTemplates.createdAt));
+  return result;
+}
+
+export async function getEmailTemplateById(id: number, teacherId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const result = await db.select().from(emailTemplates)
+    .where(and(eq(emailTemplates.id, id), eq(emailTemplates.teacherId, teacherId)))
+    .limit(1);
+  return result.length > 0 ? result[0] : null;
+}
+
+export async function updateEmailTemplate(id: number, teacherId: number, data: Partial<InsertEmailTemplate>) {
+  const db = await getDb();
+  if (!db) return;
+  
+  // If setting as default, unset other defaults for same achievement type
+  if (data.isDefault && data.achievementType) {
+    await db.update(emailTemplates)
+      .set({ isDefault: false })
+      .where(and(
+        eq(emailTemplates.teacherId, teacherId),
+        eq(emailTemplates.achievementType, data.achievementType)
+      ));
+  }
+  
+  await db.update(emailTemplates)
+    .set(data)
+    .where(and(eq(emailTemplates.id, id), eq(emailTemplates.teacherId, teacherId)));
+}
+
+export async function deleteEmailTemplate(id: number, teacherId: number) {
+  const db = await getDb();
+  if (!db) return;
+  
+  await db.delete(emailTemplates)
+    .where(and(eq(emailTemplates.id, id), eq(emailTemplates.teacherId, teacherId)));
+}
+
+export async function getDefaultTemplate(teacherId: number, achievementType: string) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const result = await db.select().from(emailTemplates)
+    .where(and(
+      eq(emailTemplates.teacherId, teacherId),
+      eq(emailTemplates.achievementType, achievementType),
+      eq(emailTemplates.isDefault, true)
+    ))
+    .limit(1);
+  return result.length > 0 ? result[0] : null;
 }

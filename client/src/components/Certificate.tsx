@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Printer, Star, Upload, X, Mail, Send, Loader2 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Printer, Star, Upload, X, Mail, Send, Loader2, Save, FileText, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 
@@ -43,6 +44,53 @@ export default function Certificate({ onClose, defaultStudentName = "", defaultS
   const [emailSubject, setEmailSubject] = useState("");
   const [emailBody, setEmailBody] = useState("");
   const [showEmailPreview, setShowEmailPreview] = useState(false);
+  
+  // Template states
+  const [selectedTemplateId, setSelectedTemplateId] = useState<number | null>(null);
+  const [templateName, setTemplateName] = useState("");
+  const [isSaveTemplateDialogOpen, setIsSaveTemplateDialogOpen] = useState(false);
+  const [setAsDefault, setSetAsDefault] = useState(false);
+  const [isSavingTemplate, setIsSavingTemplate] = useState(false);
+  
+  // Template queries
+  const { data: savedTemplates = [], refetch: refetchTemplates } = trpc.emailTemplates.getAll.useQuery();
+  const { data: defaultTemplate } = trpc.emailTemplates.getDefault.useQuery(
+    { achievementType },
+    { enabled: !!achievementType }
+  );
+  
+  const createTemplateMutation = trpc.emailTemplates.create.useMutation({
+    onSuccess: () => {
+      toast.success("Template saved successfully!");
+      setIsSaveTemplateDialogOpen(false);
+      setTemplateName("");
+      setSetAsDefault(false);
+      refetchTemplates();
+    },
+    onError: (error) => {
+      toast.error(`Failed to save template: ${error.message}`);
+    },
+  });
+  
+  const deleteTemplateMutation = trpc.emailTemplates.delete.useMutation({
+    onSuccess: () => {
+      toast.success("Template deleted");
+      setSelectedTemplateId(null);
+      refetchTemplates();
+    },
+    onError: (error) => {
+      toast.error(`Failed to delete template: ${error.message}`);
+    },
+  });
+  
+  // Load default template when achievement type changes
+  useEffect(() => {
+    if (defaultTemplate && !selectedTemplateId) {
+      setEmailSubject(defaultTemplate.subject);
+      setEmailBody(defaultTemplate.body);
+      setSelectedTemplateId(defaultTemplate.id);
+    }
+  }, [defaultTemplate, achievementType]);
 
   const getDefaultEmailSubject = () => {
     return `🎉 Congratulations! ${studentName || "{student_name}"} earned a ${getAchievementTitle()}!`;
@@ -720,17 +768,77 @@ ${schoolName || "{school_name}"}`;
 
             {/* Email Template Customization */}
             <div className="border-t pt-4 space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between flex-wrap gap-2">
                 <Label className="text-base font-semibold">Customize Email Template</Label>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowEmailPreview(!showEmailPreview)}
-                  className="text-blue-600 hover:text-blue-800"
-                >
-                  {showEmailPreview ? "Edit Template" : "Preview Email"}
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowEmailPreview(!showEmailPreview)}
+                    className="text-blue-600 hover:text-blue-800"
+                  >
+                    {showEmailPreview ? "Edit Template" : "Preview Email"}
+                  </Button>
+                </div>
               </div>
+
+              {/* Template Selector */}
+              {savedTemplates.length > 0 && (
+                <div className="space-y-2">
+                  <Label>Load Saved Template</Label>
+                  <div className="flex items-center gap-2">
+                    <Select
+                      value={selectedTemplateId?.toString() || ""}
+                      onValueChange={(value) => {
+                        if (value) {
+                          const template = savedTemplates.find(t => t.id === parseInt(value));
+                          if (template) {
+                            setSelectedTemplateId(template.id);
+                            setEmailSubject(template.subject);
+                            setEmailBody(template.body);
+                            toast.success(`Loaded template: ${template.name}`);
+                          }
+                        } else {
+                          setSelectedTemplateId(null);
+                          setEmailSubject("");
+                          setEmailBody("");
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="flex-1 border-blue-200">
+                        <SelectValue placeholder="Select a saved template..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {savedTemplates.map((template) => (
+                          <SelectItem key={template.id} value={template.id.toString()}>
+                            <div className="flex items-center gap-2">
+                              <FileText className="w-4 h-4" />
+                              {template.name}
+                              {template.isDefault && (
+                                <span className="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded">Default</span>
+                              )}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {selectedTemplateId && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          if (confirm("Delete this template?")) {
+                            deleteTemplateMutation.mutate({ id: selectedTemplateId });
+                          }
+                        }}
+                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {!showEmailPreview ? (
                 <>
@@ -787,9 +895,18 @@ ${schoolName || "{school_name}"}`;
               </ul>
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="flex-wrap gap-2">
             <Button variant="outline" onClick={() => setIsEmailDialogOpen(false)}>
               Cancel
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setIsSaveTemplateDialogOpen(true)}
+              disabled={!emailSubject && !emailBody}
+              className="border-green-300 text-green-700 hover:bg-green-50"
+            >
+              <Save className="w-4 h-4 mr-2" />
+              Save as Template
             </Button>
             <Button 
               onClick={handleSendEmail}
@@ -805,6 +922,84 @@ ${schoolName || "{school_name}"}`;
                 <>
                   <Send className="w-4 h-4 mr-2" />
                   Send Email
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Save Template Dialog */}
+      <Dialog open={isSaveTemplateDialogOpen} onOpenChange={setIsSaveTemplateDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Save className="w-5 h-5 text-green-600" />
+              Save Email Template
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="templateName">Template Name *</Label>
+              <Input
+                id="templateName"
+                value={templateName}
+                onChange={(e) => setTemplateName(e.target.value)}
+                placeholder="e.g., Parent Congratulations Email"
+                className="border-green-200 focus:border-green-500"
+              />
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="setAsDefault"
+                checked={setAsDefault}
+                onCheckedChange={(checked) => setSetAsDefault(checked === true)}
+              />
+              <Label htmlFor="setAsDefault" className="font-normal cursor-pointer">
+                Set as default template for "{selectedAchievement?.label}"
+              </Label>
+            </div>
+            
+            <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-sm text-green-800">
+              <p className="font-medium mb-1">💾 Template will include:</p>
+              <ul className="list-disc list-inside space-y-1 text-green-700">
+                <li>Email subject: {emailSubject ? emailSubject.substring(0, 40) + "..." : "(default)"}</li>
+                <li>Email body: {emailBody ? emailBody.substring(0, 40) + "..." : "(default)"}</li>
+                <li>Achievement type: {selectedAchievement?.label}</li>
+              </ul>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsSaveTemplateDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                if (!templateName.trim()) {
+                  toast.error("Please enter a template name");
+                  return;
+                }
+                createTemplateMutation.mutate({
+                  name: templateName.trim(),
+                  subject: emailSubject || getDefaultEmailSubject(),
+                  body: emailBody || getDefaultEmailBody(),
+                  achievementType: achievementType,
+                  isDefault: setAsDefault,
+                });
+              }}
+              disabled={!templateName.trim() || createTemplateMutation.isPending}
+              className="bg-green-600 hover:bg-green-700 text-white"
+            >
+              {createTemplateMutation.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4 mr-2" />
+                  Save Template
                 </>
               )}
             </Button>

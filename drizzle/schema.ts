@@ -80,3 +80,21 @@ export const classMembers = mysqlTable("classMembers", {
 
 export type ClassMember = typeof classMembers.$inferSelect;
 export type InsertClassMember = typeof classMembers.$inferInsert;
+
+/**
+ * Saved email templates for certificates
+ */
+export const emailTemplates = mysqlTable("emailTemplates", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  subject: text("subject").notNull(),
+  body: text("body").notNull(),
+  achievementType: varchar("achievementType", { length: 50 }),
+  isDefault: boolean("isDefault").default(false).notNull(),
+  teacherId: int("teacherId").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type EmailTemplate = typeof emailTemplates.$inferSelect;
+export type InsertEmailTemplate = typeof emailTemplates.$inferInsert;
