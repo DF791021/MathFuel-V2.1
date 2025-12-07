@@ -32,3 +32,10 @@
 - [x] Home page with game board
 - [x] Leaderboard page with rankings
 - [x] Teacher Portal with tabs (Questions, Classes, Stats)
+
+## Certificate Feature
+- [x] Create Certificate component with Wisconsin theme
+- [x] Add student name, date, and achievement fields
+- [x] Implement print functionality
+- [x] Add certificate generation to Teacher Portal
+- [x] Allow customization of certificate message

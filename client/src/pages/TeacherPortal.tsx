@@ -17,8 +17,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Plus, Trash2, Edit, Users, BookOpen, Trophy, 
   Copy, CheckCircle, XCircle, ArrowLeft, Sparkles,
-  GraduationCap, ClipboardList, BarChart3
+  GraduationCap, ClipboardList, BarChart3, Award
 } from "lucide-react";
+import Certificate from "@/components/Certificate";
 import { getLoginUrl } from "@/const";
 
 const CATEGORIES = [
@@ -165,7 +166,7 @@ export default function TeacherPortal() {
       {/* Main Content */}
       <main className="container py-8">
         <Tabs defaultValue="questions" className="space-y-6">
-          <TabsList className="grid w-full max-w-md grid-cols-3 h-12">
+          <TabsList className="grid w-full max-w-lg grid-cols-4 h-12">
             <TabsTrigger value="questions" className="text-sm">
               <ClipboardList className="h-4 w-4 mr-2" />
               Questions
@@ -177,6 +178,10 @@ export default function TeacherPortal() {
             <TabsTrigger value="stats" className="text-sm">
               <BarChart3 className="h-4 w-4 mr-2" />
               Stats
+            </TabsTrigger>
+            <TabsTrigger value="certificates" className="text-sm">
+              <Award className="h-4 w-4 mr-2" />
+              Certificates
             </TabsTrigger>
           </TabsList>
 
@@ -457,6 +462,22 @@ export default function TeacherPortal() {
                   <BarChart3 className="h-12 w-12 mx-auto mb-4 opacity-50" />
                   <p>Statistics will appear here as students play the game</p>
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Certificates Tab */}
+          <TabsContent value="certificates" className="space-y-6">
+            <div>
+              <h2 className="text-xl font-bold flex items-center gap-2">
+                <Award className="h-6 w-6 text-yellow-500" />
+                Generate Achievement Certificates
+              </h2>
+              <p className="text-muted-foreground">Create personalized certificates for your students</p>
+            </div>
+            <Card className="border-2">
+              <CardContent className="pt-6">
+                <Certificate />
               </CardContent>
             </Card>
           </TabsContent>
