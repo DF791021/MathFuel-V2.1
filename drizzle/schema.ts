@@ -139,6 +139,10 @@ export const issuedCertificates = mysqlTable("issuedCertificates", {
   revokedAt: timestamp("revokedAt"), // Null if valid, timestamp if revoked
   verificationCount: int("verificationCount").default(0).notNull(),
   lastVerifiedAt: timestamp("lastVerifiedAt"),
+  // School branding for verification page
+  schoolLogoUrl: text("schoolLogoUrl"), // URL to school logo
+  primaryColor: varchar("primaryColor", { length: 20 }), // Hex color like #2E7D32
+  secondaryColor: varchar("secondaryColor", { length: 20 }), // Hex color for accents
 });
 
 export type IssuedCertificate = typeof issuedCertificates.$inferSelect;

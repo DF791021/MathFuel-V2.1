@@ -271,6 +271,9 @@ ${results.map(r => `- ${r.name}: ${r.success ? "✅ Sent" : "❌ Failed"}`).join
         teacherName: z.string().max(100).optional(),
         schoolName: z.string().max(200).optional(),
         customMessage: z.string().optional(),
+        schoolLogoUrl: z.string().optional(),
+        primaryColor: z.string().max(20).optional(),
+        secondaryColor: z.string().max(20).optional(),
       }))
       .mutation(async ({ ctx, input }) => {
         const result = await db.issueCertificate({

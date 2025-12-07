@@ -411,6 +411,9 @@ export async function issueCertificate(data: {
   teacherName?: string | null;
   schoolName?: string | null;
   customMessage?: string | null;
+  schoolLogoUrl?: string | null;
+  primaryColor?: string | null;
+  secondaryColor?: string | null;
   issuedBy: number;
 }) {
   const db = await getDb();
@@ -427,6 +430,9 @@ export async function issueCertificate(data: {
     teacherName: data.teacherName ?? null,
     schoolName: data.schoolName ?? null,
     customMessage: data.customMessage ?? null,
+    schoolLogoUrl: data.schoolLogoUrl ?? null,
+    primaryColor: data.primaryColor ?? null,
+    secondaryColor: data.secondaryColor ?? null,
     signature,
     issuedBy: data.issuedBy,
   };

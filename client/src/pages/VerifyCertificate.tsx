@@ -3,7 +3,7 @@ import { useParams, Link } from "wouter";
 import { motion } from "framer-motion";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { 
   ShieldCheck, ShieldX, Loader2, Home, Award, Calendar, 
   User, School, FileText, Clock, AlertTriangle, CheckCircle2
@@ -29,6 +29,11 @@ export default function VerifyCertificate() {
       setVerificationStatus("valid");
     }
   }, [certificate, isLoading, error]);
+
+  // Get custom colors or defaults
+  const primaryColor = certificate?.primaryColor || "#2E7D32";
+  const secondaryColor = certificate?.secondaryColor || "#1B5E20";
+  const schoolLogo = certificate?.schoolLogoUrl;
 
   const formatDate = (date: Date | string | null) => {
     if (!date) return "N/A";
@@ -61,15 +66,40 @@ export default function VerifyCertificate() {
     return icons[type] || "🏆";
   };
 
+  // Generate gradient style based on custom colors
+  const headerGradientStyle = {
+    background: `linear-gradient(to right, ${primaryColor}, ${secondaryColor})`,
+  };
+
+  const validBannerStyle = {
+    background: `linear-gradient(to right, ${primaryColor}, ${secondaryColor})`,
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-yellow-50 to-green-50">
-      {/* Header */}
-      <header className="bg-gradient-to-r from-green-800 to-green-700 text-white py-4 px-6 shadow-lg">
+      {/* Header - Uses custom school colors */}
+      <header 
+        className="text-white py-4 px-6 shadow-lg"
+        style={headerGradientStyle}
+      >
         <div className="container flex items-center justify-between">
           <Link href="/">
-            <a className="flex items-center gap-2 hover:opacity-90 transition-opacity">
-              <span className="text-2xl">🌽</span>
-              <span className="font-display text-xl font-bold">Wisconsin Food Explorer</span>
+            <a className="flex items-center gap-3 hover:opacity-90 transition-opacity">
+              {schoolLogo ? (
+                <img 
+                  src={schoolLogo} 
+                  alt="School Logo" 
+                  className="w-10 h-10 object-contain bg-white rounded-lg p-1"
+                />
+              ) : (
+                <span className="text-2xl">🌽</span>
+              )}
+              <div className="flex flex-col">
+                {certificate?.schoolName && (
+                  <span className="text-sm opacity-90">{certificate.schoolName}</span>
+                )}
+                <span className="font-display text-xl font-bold">Wisconsin Food Explorer</span>
+              </div>
             </a>
           </Link>
           <Link href="/">
@@ -87,15 +117,30 @@ export default function VerifyCertificate() {
           animate={{ opacity: 1, y: 0 }}
           className="max-w-2xl mx-auto"
         >
+          {/* School Logo Display (if available) */}
+          {schoolLogo && verificationStatus === "valid" && (
+            <div className="flex justify-center mb-6">
+              <div className="bg-white p-4 rounded-xl shadow-lg border-2" style={{ borderColor: primaryColor }}>
+                <img 
+                  src={schoolLogo} 
+                  alt="School Logo" 
+                  className="w-24 h-24 object-contain"
+                />
+              </div>
+            </div>
+          )}
+
           {/* Verification Status Card */}
           <Card className="border-2 shadow-xl overflow-hidden">
-            {/* Status Banner */}
-            <div className={`py-6 px-8 text-center ${
-              verificationStatus === "loading" ? "bg-gray-100" :
-              verificationStatus === "valid" ? "bg-gradient-to-r from-green-600 to-green-500" :
-              verificationStatus === "revoked" ? "bg-gradient-to-r from-orange-600 to-orange-500" :
-              "bg-gradient-to-r from-red-600 to-red-500"
-            }`}>
+            {/* Status Banner - Uses custom colors for valid status */}
+            <div 
+              className={`py-6 px-8 text-center ${
+                verificationStatus === "loading" ? "bg-gray-100" :
+                verificationStatus === "revoked" ? "bg-gradient-to-r from-orange-600 to-orange-500" :
+                verificationStatus === "invalid" ? "bg-gradient-to-r from-red-600 to-red-500" : ""
+              }`}
+              style={verificationStatus === "valid" ? validBannerStyle : undefined}
+            >
               {verificationStatus === "loading" ? (
                 <div className="flex flex-col items-center text-gray-600">
                   <Loader2 className="w-16 h-16 animate-spin mb-3" />
@@ -140,20 +185,26 @@ export default function VerifyCertificate() {
                 </div>
 
                 <div className="space-y-4">
-                  <div className="flex items-center gap-3 p-3 bg-amber-50 rounded-lg">
-                    <User className="w-5 h-5 text-amber-700" />
+                  <div 
+                    className="flex items-center gap-3 p-3 rounded-lg"
+                    style={{ backgroundColor: `${primaryColor}15` }}
+                  >
+                    <User className="w-5 h-5" style={{ color: primaryColor }} />
                     <div>
-                      <p className="text-xs text-amber-600 uppercase tracking-wider">Awarded To</p>
-                      <p className="font-semibold text-amber-900">{certificate.studentName}</p>
+                      <p className="text-xs uppercase tracking-wider" style={{ color: primaryColor }}>Awarded To</p>
+                      <p className="font-semibold text-gray-900">{certificate.studentName}</p>
                     </div>
                   </div>
 
                   {certificate.schoolName && (
-                    <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
-                      <School className="w-5 h-5 text-green-700" />
+                    <div 
+                      className="flex items-center gap-3 p-3 rounded-lg"
+                      style={{ backgroundColor: `${secondaryColor}15` }}
+                    >
+                      <School className="w-5 h-5" style={{ color: secondaryColor }} />
                       <div>
-                        <p className="text-xs text-green-600 uppercase tracking-wider">School</p>
-                        <p className="font-semibold text-green-900">{certificate.schoolName}</p>
+                        <p className="text-xs uppercase tracking-wider" style={{ color: secondaryColor }}>School</p>
+                        <p className="font-semibold text-gray-900">{certificate.schoolName}</p>
                       </div>
                     </div>
                   )}
@@ -204,7 +255,10 @@ export default function VerifyCertificate() {
                 </div>
 
                 {/* Certificate ID */}
-                <div className="mt-4 p-3 bg-gray-100 rounded-lg text-center">
+                <div 
+                  className="mt-4 p-3 rounded-lg text-center"
+                  style={{ backgroundColor: `${primaryColor}10` }}
+                >
                   <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Certificate ID</p>
                   <p className="font-mono text-lg font-bold text-gray-800">{certificate.certificateId}</p>
                   <p className="text-xs text-gray-400 mt-1">Signature: {certificate.signature?.substring(0, 16)}...</p>
@@ -231,9 +285,12 @@ export default function VerifyCertificate() {
             )}
           </Card>
 
-          {/* Info Box */}
-          <div className="mt-6 p-4 bg-white/80 rounded-lg border border-amber-200 text-center">
-            <p className="text-sm text-amber-800">
+          {/* Info Box - Uses custom colors */}
+          <div 
+            className="mt-6 p-4 bg-white/80 rounded-lg border text-center"
+            style={{ borderColor: `${primaryColor}40` }}
+          >
+            <p className="text-sm" style={{ color: primaryColor }}>
               <strong>Wisconsin Food Explorer</strong> certificates include QR codes and digital signatures 
               to prevent forgery and ensure authenticity.
             </p>

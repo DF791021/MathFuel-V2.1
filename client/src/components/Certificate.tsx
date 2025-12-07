@@ -63,6 +63,10 @@ export default function Certificate({ onClose, defaultStudentName = "", defaultS
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string | null>(null);
   const [isIssuingCertificate, setIsIssuingCertificate] = useState(false);
   
+  // School branding states
+  const [primaryColor, setPrimaryColor] = useState("#2E7D32");
+  const [secondaryColor, setSecondaryColor] = useState("#1B5E20");
+  
   // Template queries
   const { data: savedTemplates = [], refetch: refetchTemplates } = trpc.emailTemplates.getAll.useQuery();
   const { data: defaultTemplate } = trpc.emailTemplates.getDefault.useQuery(
@@ -186,6 +190,9 @@ ${schoolName || "{school_name}"}`;
       teacherName: teacherName || undefined,
       schoolName: schoolName || undefined,
       customMessage: customMessage || undefined,
+      schoolLogoUrl: schoolLogo || undefined,
+      primaryColor: primaryColor || undefined,
+      secondaryColor: secondaryColor || undefined,
     });
   };
 
@@ -814,6 +821,47 @@ ${schoolName || "{school_name}"}`;
             )}
           </div>
           <p className="text-xs text-muted-foreground">PNG, JPG, or SVG. Max 5MB.</p>
+        </div>
+
+        {/* School Branding Colors */}
+        <div className="space-y-2">
+          <Label htmlFor="primaryColor">Primary Color</Label>
+          <div className="flex gap-2 items-center">
+            <input
+              type="color"
+              id="primaryColor"
+              value={primaryColor}
+              onChange={(e) => setPrimaryColor(e.target.value)}
+              className="w-10 h-10 rounded border border-amber-300 cursor-pointer"
+            />
+            <Input
+              value={primaryColor}
+              onChange={(e) => setPrimaryColor(e.target.value)}
+              placeholder="#2E7D32"
+              className="border-amber-300 focus:border-green-500 flex-1"
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">Used for verification page header</p>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="secondaryColor">Secondary Color</Label>
+          <div className="flex gap-2 items-center">
+            <input
+              type="color"
+              id="secondaryColor"
+              value={secondaryColor}
+              onChange={(e) => setSecondaryColor(e.target.value)}
+              className="w-10 h-10 rounded border border-amber-300 cursor-pointer"
+            />
+            <Input
+              value={secondaryColor}
+              onChange={(e) => setSecondaryColor(e.target.value)}
+              placeholder="#1B5E20"
+              className="border-amber-300 focus:border-green-500 flex-1"
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">Used for accents and gradients</p>
         </div>
 
         <div className="space-y-2 md:col-span-2">

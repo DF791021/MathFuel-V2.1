@@ -106,3 +106,10 @@
 - [x] Display verification status with certificate details
 - [x] Add verification badge/seal to printed certificates
 - [x] Store certificate metadata (student, date, achievement, issuer)
+
+## Verification Page Customization Feature
+- [x] Update issued certificates table to store school branding
+- [x] Add logo URL and primary/secondary color fields
+- [x] Update verification page to display custom logo
+- [x] Apply custom colors to verification page header
+- [x] Add branding options to certificate generation form
