@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Printer, Download, Award, Star, Trophy } from "lucide-react";
+import { Printer, Star, Upload, X, ImageIcon } from "lucide-react";
 
 interface CertificateProps {
   onClose?: () => void;
@@ -28,9 +28,40 @@ export default function Certificate({ onClose, defaultStudentName = "", defaultS
   const [achievementType, setAchievementType] = useState("completion");
   const [customMessage, setCustomMessage] = useState("");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const [schoolLogo, setSchoolLogo] = useState<string | null>(null);
+  const [logoFileName, setLogoFileName] = useState<string>("");
   const certificateRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const selectedAchievement = ACHIEVEMENT_TYPES.find(a => a.value === achievementType);
+
+  const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        alert("Logo file must be less than 5MB");
+        return;
+      }
+      if (!file.type.startsWith("image/")) {
+        alert("Please upload an image file");
+        return;
+      }
+      setLogoFileName(file.name);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setSchoolLogo(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeLogo = () => {
+    setSchoolLogo(null);
+    setLogoFileName("");
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
 
   const getAchievementTitle = () => {
     switch (achievementType) {
@@ -125,6 +156,15 @@ export default function Certificate({ onClose, defaultStudentName = "", defaultS
             .header {
               text-align: center;
               margin-bottom: 20px;
+              position: relative;
+            }
+            .school-logo {
+              position: absolute;
+              top: 0;
+              left: 40px;
+              width: 80px;
+              height: 80px;
+              object-fit: contain;
             }
             .logo {
               font-size: 48px;
@@ -269,6 +309,7 @@ export default function Certificate({ onClose, defaultStudentName = "", defaultS
             <div class="corner-decoration corner-br">🌾</div>
             
             <div class="header">
+              ${schoolLogo ? `<img src="${schoolLogo}" alt="School Logo" class="school-logo" />` : ""}
               <div class="logo">${selectedAchievement?.icon || "🏆"}</div>
               <h1 class="title">${getAchievementTitle()}</h1>
               <p class="subtitle">Wisconsin Food Explorer</p>
@@ -334,6 +375,17 @@ export default function Certificate({ onClose, defaultStudentName = "", defaultS
         <div className="absolute top-6 right-6 text-4xl opacity-30 scale-x-[-1]">🌾</div>
         <div className="absolute bottom-6 left-6 text-4xl opacity-30 scale-y-[-1]">🌾</div>
         <div className="absolute bottom-6 right-6 text-4xl opacity-30 scale-[-1]">🌾</div>
+
+        {/* School Logo in Preview */}
+        {schoolLogo && (
+          <div className="absolute top-8 left-8 w-14 h-14 z-20">
+            <img 
+              src={schoolLogo} 
+              alt="School Logo" 
+              className="w-full h-full object-contain rounded"
+            />
+          </div>
+        )}
 
         {/* Content */}
         <div className="relative z-10 h-full flex flex-col items-center justify-between py-4">
@@ -454,6 +506,47 @@ export default function Certificate({ onClose, defaultStudentName = "", defaultS
             onChange={(e) => setDate(e.target.value)}
             className="border-amber-300 focus:border-green-500"
           />
+        </div>
+
+        {/* School Logo Upload */}
+        <div className="space-y-2">
+          <Label>School Logo (optional)</Label>
+          <div className="flex items-center gap-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleLogoUpload}
+              className="hidden"
+              id="logoUpload"
+            />
+            {schoolLogo ? (
+              <div className="flex items-center gap-2 flex-1 p-2 border border-amber-300 rounded-md bg-amber-50">
+                <img src={schoolLogo} alt="Logo preview" className="w-8 h-8 object-contain" />
+                <span className="text-sm text-amber-800 truncate flex-1">{logoFileName}</span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={removeLogo}
+                  className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+            ) : (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                className="flex-1 border-amber-300 hover:bg-amber-50"
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Upload Logo
+              </Button>
+            )}
+          </div>
+          <p className="text-xs text-muted-foreground">PNG, JPG, or SVG. Max 5MB.</p>
         </div>
 
         <div className="space-y-2 md:col-span-2">

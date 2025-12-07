@@ -39,3 +39,9 @@
 - [x] Implement print functionality
 - [x] Add certificate generation to Teacher Portal
 - [x] Allow customization of certificate message
+
+## School Logo Upload Feature
+- [x] Add file input for logo upload
+- [x] Preview uploaded logo in certificate
+- [x] Include logo in printed certificate
+- [x] Add option to remove/change logo
