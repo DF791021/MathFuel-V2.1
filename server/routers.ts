@@ -145,6 +145,8 @@ export const appRouter = router({
         schoolName: z.string(),
         date: z.string(),
         customMessage: z.string().optional(),
+        emailSubject: z.string().optional(),
+        emailBody: z.string().optional(),
       }))
       .mutation(async ({ ctx, input }) => {
         // Generate certificate details for notification
@@ -156,16 +158,39 @@ export const appRouter = router({
           food_safety_star: "Food Safety Star Certificate",
         };
         
+        const achievementTitle = achievementTitles[input.achievementType] || "Certificate of Achievement";
+        
+        // Use custom subject/body or defaults
+        const emailSubject = input.emailSubject || `🎉 Congratulations! ${input.studentName} earned a ${achievementTitle}!`;
+        const emailBody = input.emailBody || `Dear ${input.recipientType === "parent" ? "Parent/Guardian" : input.studentName},
+
+We are thrilled to share some wonderful news!
+
+${input.studentName} has successfully completed the Wisconsin Food Explorer nutrition adventure and earned a ${achievementTitle}!
+
+This achievement demonstrates excellent knowledge of healthy eating habits and Wisconsin's rich agricultural heritage.
+
+Congratulations on this fantastic accomplishment!
+
+Best regards,
+${input.teacherName}
+${input.schoolName}`;
+        
         const title = `🎓 Certificate for ${input.studentName} - Wisconsin Food Explorer`;
         const content = `
 A certificate has been generated for ${input.studentName}!
 
-📜 Achievement: ${achievementTitles[input.achievementType] || "Certificate of Achievement"}
+📜 Achievement: ${achievementTitle}
 👨‍🏫 Teacher: ${input.teacherName}
 🏫 School: ${input.schoolName}
 📅 Date: ${input.date}
 📧 Sent to: ${input.recipientEmail} (${input.recipientType})
-${input.customMessage ? `\n💬 Message: ${input.customMessage}` : ""}
+
+📨 Email Subject: ${emailSubject}
+
+📝 Email Body:
+${emailBody}
+${input.customMessage ? `\n💬 Additional Message: ${input.customMessage}` : ""}
 
 The certificate has been sent via email to the recipient.
         `.trim();
@@ -175,6 +200,7 @@ The certificate has been sent via email to the recipient.
         
         // Log the email request for tracking
         console.log(`[Certificate Email] Sent to ${input.recipientEmail} for ${input.studentName}`);
+        console.log(`[Certificate Email] Subject: ${emailSubject}`);
         
         return { 
           success: true, 

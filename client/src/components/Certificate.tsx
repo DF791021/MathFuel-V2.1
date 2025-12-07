@@ -40,6 +40,38 @@ export default function Certificate({ onClose, defaultStudentName = "", defaultS
   const [recipientEmail, setRecipientEmail] = useState("");
   const [recipientType, setRecipientType] = useState<"student" | "parent">("parent");
   const [isSending, setIsSending] = useState(false);
+  const [emailSubject, setEmailSubject] = useState("");
+  const [emailBody, setEmailBody] = useState("");
+  const [showEmailPreview, setShowEmailPreview] = useState(false);
+
+  const getDefaultEmailSubject = () => {
+    return `🎉 Congratulations! ${studentName || "{student_name}"} earned a ${getAchievementTitle()}!`;
+  };
+
+  const getDefaultEmailBody = () => {
+    return `Dear ${recipientType === "parent" ? "Parent/Guardian" : studentName || "{student_name}"},
+
+We are thrilled to share some wonderful news!
+
+${studentName || "{student_name}"} has successfully completed the Wisconsin Food Explorer nutrition adventure and earned a ${getAchievementTitle()}!
+
+This achievement demonstrates excellent knowledge of healthy eating habits and Wisconsin's rich agricultural heritage.
+
+Congratulations on this fantastic accomplishment!
+
+Best regards,
+${teacherName || "{teacher_name}"}
+${schoolName || "{school_name}"}`;
+  };
+
+  const replaceEmailVariables = (text: string) => {
+    return text
+      .replace(/{student_name}/g, studentName || "Student")
+      .replace(/{achievement}/g, getAchievementTitle())
+      .replace(/{teacher_name}/g, teacherName || "Teacher")
+      .replace(/{school_name}/g, schoolName || "School")
+      .replace(/{date}/g, new Date(date).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }));
+  };
   
   const certificateRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -134,6 +166,10 @@ export default function Certificate({ onClose, defaultStudentName = "", defaultS
 
     setIsSending(true);
     try {
+      // Process custom email template with variable replacement
+      const processedSubject = emailSubject ? replaceEmailVariables(emailSubject) : undefined;
+      const processedBody = emailBody ? replaceEmailVariables(emailBody) : undefined;
+      
       await sendEmailMutation.mutateAsync({
         studentName,
         recipientEmail,
@@ -143,6 +179,8 @@ export default function Certificate({ onClose, defaultStudentName = "", defaultS
         schoolName: schoolName || "School",
         date: new Date(date).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }),
         customMessage: customMessage || undefined,
+        emailSubject: processedSubject,
+        emailBody: processedBody,
       });
     } finally {
       setIsSending(false);
@@ -641,7 +679,7 @@ export default function Certificate({ onClose, defaultStudentName = "", defaultS
 
       {/* Email Dialog */}
       <Dialog open={isEmailDialogOpen} onOpenChange={setIsEmailDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Mail className="w-5 h-5 text-blue-600" />
@@ -680,12 +718,72 @@ export default function Certificate({ onClose, defaultStudentName = "", defaultS
               </RadioGroup>
             </div>
 
+            {/* Email Template Customization */}
+            <div className="border-t pt-4 space-y-4">
+              <div className="flex items-center justify-between">
+                <Label className="text-base font-semibold">Customize Email Template</Label>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowEmailPreview(!showEmailPreview)}
+                  className="text-blue-600 hover:text-blue-800"
+                >
+                  {showEmailPreview ? "Edit Template" : "Preview Email"}
+                </Button>
+              </div>
+
+              {!showEmailPreview ? (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="emailSubject">Email Subject</Label>
+                    <Input
+                      id="emailSubject"
+                      value={emailSubject}
+                      onChange={(e) => setEmailSubject(e.target.value)}
+                      placeholder={getDefaultEmailSubject()}
+                      className="border-blue-200 focus:border-blue-500"
+                    />
+                    <p className="text-xs text-muted-foreground">Leave blank to use the default subject</p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="emailBody">Email Body</Label>
+                    <Textarea
+                      id="emailBody"
+                      value={emailBody}
+                      onChange={(e) => setEmailBody(e.target.value)}
+                      placeholder={getDefaultEmailBody()}
+                      className="border-blue-200 focus:border-blue-500 min-h-[150px]"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Available variables: {'{student_name}'}, {'{achievement}'}, {'{teacher_name}'}, {'{school_name}'}, {'{date}'}
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <div className="bg-gray-50 border rounded-lg p-4 space-y-3">
+                  <div>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide">Subject</p>
+                    <p className="font-medium text-gray-900">
+                      {replaceEmailVariables(emailSubject || getDefaultEmailSubject())}
+                    </p>
+                  </div>
+                  <div className="border-t pt-3">
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">Body</p>
+                    <div className="whitespace-pre-wrap text-sm text-gray-700">
+                      {replaceEmailVariables(emailBody || getDefaultEmailBody())}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
               <p className="font-medium mb-1">📧 What will be sent:</p>
               <ul className="list-disc list-inside space-y-1 text-blue-700">
-                <li>Certificate details and achievement information</li>
-                <li>Congratulations message from {teacherName || "the teacher"}</li>
-                <li>Link to view and download the certificate</li>
+                <li>Your customized email message</li>
+                <li>Certificate as a downloadable attachment</li>
+                <li>Link to view the certificate online</li>
               </ul>
             </div>
           </div>

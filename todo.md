@@ -59,3 +59,10 @@
 - [x] Add "Send via Email" button alongside print
 - [x] Generate certificate as PDF attachment for email
 - [x] Show success/error feedback for email sending
+
+## Customizable Email Template Feature
+- [x] Add email subject line input field
+- [x] Add email body textarea with placeholder variables
+- [x] Show preview of email with variables replaced
+- [x] Support variables: {student_name}, {achievement}, {teacher_name}, {school_name}, {date}
+- [x] Update API to accept custom subject and body
