@@ -74,3 +74,10 @@
 - [x] Add template selector dropdown to load saved templates
 - [x] Allow naming and managing saved templates
 - [x] Support default template per achievement type
+
+## Full Email Preview Feature
+- [x] Create email preview modal showing full email layout
+- [x] Display certificate thumbnail in preview
+- [x] Show email header, subject, body, and footer
+- [x] Add "Send" and "Edit" buttons in preview
+- [x] Style preview to look like actual email client

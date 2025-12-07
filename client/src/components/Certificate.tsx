@@ -869,17 +869,80 @@ ${schoolName || "{school_name}"}`;
                   </div>
                 </>
               ) : (
-                <div className="bg-gray-50 border rounded-lg p-4 space-y-3">
-                  <div>
-                    <p className="text-xs text-muted-foreground uppercase tracking-wide">Subject</p>
-                    <p className="font-medium text-gray-900">
-                      {replaceEmailVariables(emailSubject || getDefaultEmailSubject())}
-                    </p>
+                <div className="bg-white border-2 border-gray-200 rounded-lg overflow-hidden shadow-lg">
+                  {/* Email Client Header */}
+                  <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <Mail className="w-5 h-5" />
+                      <span className="font-semibold">Email Preview</span>
+                    </div>
                   </div>
-                  <div className="border-t pt-3">
-                    <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">Body</p>
-                    <div className="whitespace-pre-wrap text-sm text-gray-700">
+                  
+                  {/* Email Header Info */}
+                  <div className="bg-gray-50 px-4 py-3 border-b space-y-2 text-sm">
+                    <div className="flex">
+                      <span className="text-gray-500 w-16">From:</span>
+                      <span className="text-gray-800">Wisconsin Food Explorer &lt;noreply@wisconsinfoodexplorer.edu&gt;</span>
+                    </div>
+                    <div className="flex">
+                      <span className="text-gray-500 w-16">To:</span>
+                      <span className="text-gray-800">{recipientEmail || "recipient@email.com"}</span>
+                    </div>
+                    <div className="flex">
+                      <span className="text-gray-500 w-16">Subject:</span>
+                      <span className="text-gray-900 font-medium">
+                        {replaceEmailVariables(emailSubject || getDefaultEmailSubject())}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  {/* Email Body */}
+                  <div className="p-4 space-y-4">
+                    <div className="whitespace-pre-wrap text-sm text-gray-700 leading-relaxed">
                       {replaceEmailVariables(emailBody || getDefaultEmailBody())}
+                    </div>
+                    
+                    {/* Certificate Attachment Preview */}
+                    <div className="border-t pt-4 mt-4">
+                      <p className="text-xs text-gray-500 uppercase tracking-wide mb-3 flex items-center gap-2">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                        </svg>
+                        Attachment (1)
+                      </p>
+                      <div className="flex items-start gap-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                        <div className="w-24 h-32 bg-white border-2 border-amber-300 rounded shadow-sm flex-shrink-0 overflow-hidden">
+                          {/* Mini Certificate Preview */}
+                          <div className="w-full h-full p-1 flex flex-col items-center justify-center text-center">
+                            <div className="text-amber-600 text-[6px] font-bold">WISCONSIN FOOD EXPLORER</div>
+                            <div className="text-[5px] text-gray-500 mt-0.5">Certificate of Achievement</div>
+                            <div className="w-8 h-0.5 bg-amber-400 my-1"></div>
+                            <div className="text-[6px] font-semibold text-gray-800 truncate w-full px-1">{studentName}</div>
+                            <div className="text-[4px] text-gray-500 mt-0.5">{getAchievementTitle()}</div>
+                            <Star className="w-3 h-3 text-amber-500 mt-1" />
+                          </div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-gray-800 text-sm truncate">
+                            {studentName}_Certificate.pdf
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {getAchievementTitle()}
+                          </p>
+                          <p className="text-xs text-gray-400 mt-0.5">
+                            PDF Document • ~150 KB
+                          </p>
+                          <div className="flex gap-2 mt-2">
+                            <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">Ready to send</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Email Footer */}
+                    <div className="border-t pt-3 mt-4 text-xs text-gray-400">
+                      <p>This email was sent from Wisconsin Food Explorer - A Nutrition Adventure for Elementary Students</p>
+                      <p className="mt-1">© {new Date().getFullYear()} Wisconsin Food Explorer. All rights reserved.</p>
                     </div>
                   </div>
                 </div>
