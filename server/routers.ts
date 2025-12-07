@@ -262,6 +262,41 @@ ${results.map(r => `- ${r.name}: ${r.success ? "✅ Sent" : "❌ Failed"}`).join
           summary: { total: input.students.length, sent: successCount, failed: input.students.length - successCount }
         };
       }),
+
+    // Certificate verification and anti-forgery
+    issue: protectedProcedure
+      .input(z.object({
+        studentName: z.string().min(1).max(100),
+        achievementType: z.string().min(1).max(50),
+        teacherName: z.string().max(100).optional(),
+        schoolName: z.string().max(200).optional(),
+        customMessage: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const result = await db.issueCertificate({
+          ...input,
+          issuedBy: ctx.user.id,
+        });
+        return result;
+      }),
+
+    verify: publicProcedure
+      .input(z.object({ certificateId: z.string().min(1).max(32) }))
+      .query(async ({ input }) => {
+        const result = await db.verifyCertificate(input.certificateId);
+        return result;
+      }),
+
+    revoke: protectedProcedure
+      .input(z.object({ certificateId: z.string().min(1).max(32) }))
+      .mutation(async ({ ctx, input }) => {
+        await db.revokeCertificate(input.certificateId, ctx.user.id);
+        return { success: true };
+      }),
+
+    getMyIssuedCertificates: protectedProcedure.query(async ({ ctx }) => {
+      return db.getTeacherCertificates(ctx.user.id);
+    }),
   }),
 
   scheduledEmails: router({

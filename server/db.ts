@@ -1,6 +1,6 @@
 import { eq, desc, and, lt, gte } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, gameScores, InsertGameScore, customQuestions, InsertCustomQuestion, classes, InsertClass, classMembers, InsertClassMember, emailTemplates, InsertEmailTemplate, scheduledEmails, InsertScheduledEmail } from "../drizzle/schema";
+import { InsertUser, users, gameScores, InsertGameScore, customQuestions, InsertCustomQuestion, classes, InsertClass, classMembers, InsertClassMember, emailTemplates, InsertEmailTemplate, scheduledEmails, InsertScheduledEmail, issuedCertificates, InsertIssuedCertificate } from "../drizzle/schema";
 import { nanoid } from 'nanoid';
 import { ENV } from './_core/env';
 
@@ -390,4 +390,100 @@ export async function getScheduledEmailById(id: number, teacherId: number) {
     ))
     .limit(1);
   return result.length > 0 ? result[0] : null;
+}
+
+// ==================== Issued Certificates ====================
+
+import crypto from 'crypto';
+
+function generateCertificateId(): string {
+  // Generate a unique 16-character alphanumeric ID
+  return nanoid(16).toUpperCase();
+}
+
+function generateSignature(data: string, secret: string): string {
+  return crypto.createHmac('sha256', secret).update(data).digest('hex').substring(0, 64);
+}
+
+export async function issueCertificate(data: {
+  studentName: string;
+  achievementType: string;
+  teacherName?: string | null;
+  schoolName?: string | null;
+  customMessage?: string | null;
+  issuedBy: number;
+}) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const certificateId = generateCertificateId();
+  const signatureData = `${certificateId}:${data.studentName}:${data.achievementType}:${data.issuedBy}:${Date.now()}`;
+  const signature = generateSignature(signatureData, process.env.JWT_SECRET || 'certificate-secret');
+  
+  const insertData: InsertIssuedCertificate = {
+    certificateId,
+    studentName: data.studentName,
+    achievementType: data.achievementType,
+    teacherName: data.teacherName ?? null,
+    schoolName: data.schoolName ?? null,
+    customMessage: data.customMessage ?? null,
+    signature,
+    issuedBy: data.issuedBy,
+  };
+  
+  await db.insert(issuedCertificates).values(insertData);
+  
+  return { certificateId, signature };
+}
+
+export async function verifyCertificate(certificateId: string) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const result = await db.select().from(issuedCertificates)
+    .where(eq(issuedCertificates.certificateId, certificateId))
+    .limit(1);
+  
+  if (result.length === 0) return null;
+  
+  const cert = result[0];
+  
+  // Update verification count
+  await db.update(issuedCertificates)
+    .set({ 
+      verificationCount: cert.verificationCount + 1,
+      lastVerifiedAt: new Date()
+    })
+    .where(eq(issuedCertificates.id, cert.id));
+  
+  return {
+    ...cert,
+    isValid: cert.revokedAt === null,
+    verificationCount: cert.verificationCount + 1,
+  };
+}
+
+export async function revokeCertificate(certificateId: string, teacherId: number) {
+  const db = await getDb();
+  if (!db) return false;
+  
+  const result = await db.update(issuedCertificates)
+    .set({ revokedAt: new Date() })
+    .where(and(
+      eq(issuedCertificates.certificateId, certificateId),
+      eq(issuedCertificates.issuedBy, teacherId)
+    ));
+  
+  return true;
+}
+
+export async function getTeacherCertificates(teacherId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const result = await db.select().from(issuedCertificates)
+    .where(eq(issuedCertificates.issuedBy, teacherId))
+    .orderBy(desc(issuedCertificates.issuedAt));
+  
+  return result;
 }

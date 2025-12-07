@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Printer, Star, Upload, X, Mail, Send, Loader2, Save, FileText, Trash2, Clock, Calendar } from "lucide-react";
+import { Printer, Star, Upload, X, Mail, Send, Loader2, Save, FileText, Trash2, Clock, Calendar, QrCode, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 
@@ -57,6 +57,11 @@ export default function Certificate({ onClose, defaultStudentName = "", defaultS
   const [scheduledDate, setScheduledDate] = useState("");
   const [scheduledTime, setScheduledTime] = useState("09:00");
   const [isSchedulingEmail, setIsSchedulingEmail] = useState(false);
+  
+  // Certificate verification states
+  const [certificateId, setCertificateId] = useState<string | null>(null);
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string | null>(null);
+  const [isIssuingCertificate, setIsIssuingCertificate] = useState(false);
   
   // Template queries
   const { data: savedTemplates = [], refetch: refetchTemplates } = trpc.emailTemplates.getAll.useQuery();
@@ -140,6 +145,49 @@ ${schoolName || "{school_name}"}`;
       toast.error(`Failed to send email: ${error.message}`);
     },
   });
+
+  const issueCertificateMutation = trpc.certificates.issue.useMutation({
+    onSuccess: async (data) => {
+      if (data) {
+        setCertificateId(data.certificateId);
+        // Generate QR code
+        const verifyUrl = `${window.location.origin}/verify/${data.certificateId}`;
+        try {
+          const QRCode = await import('qrcode');
+          const qrDataUrl = await QRCode.toDataURL(verifyUrl, {
+            width: 120,
+            margin: 1,
+            color: { dark: '#2d5016', light: '#ffffff' }
+          });
+          setQrCodeDataUrl(qrDataUrl);
+          toast.success("Certificate issued with verification QR code!");
+        } catch (err) {
+          console.error('QR generation failed:', err);
+          toast.success("Certificate issued! (QR code generation failed)");
+        }
+      }
+      setIsIssuingCertificate(false);
+    },
+    onError: (error) => {
+      toast.error(`Failed to issue certificate: ${error.message}`);
+      setIsIssuingCertificate(false);
+    },
+  });
+
+  const handleIssueCertificate = async () => {
+    if (!studentName) {
+      toast.error("Please enter a student name");
+      return;
+    }
+    setIsIssuingCertificate(true);
+    issueCertificateMutation.mutate({
+      studentName,
+      achievementType,
+      teacherName: teacherName || undefined,
+      schoolName: schoolName || undefined,
+      customMessage: customMessage || undefined,
+    });
+  };
 
   const scheduleEmailMutation = trpc.scheduledEmails.create.useMutation({
     onSuccess: () => {
@@ -649,6 +697,20 @@ ${schoolName || "{school_name}"}`;
           <Star className="w-6 h-6" />
           <span className="text-[8px] uppercase tracking-wider font-bold">Certified</span>
         </div>
+
+        {/* QR Code for Verification */}
+        {qrCodeDataUrl && certificateId && (
+          <div className="absolute bottom-8 left-8 flex flex-col items-center">
+            <div className="bg-white p-1 rounded shadow-md">
+              <img src={qrCodeDataUrl} alt="Verification QR" className="w-16 h-16" />
+            </div>
+            <div className="flex items-center gap-1 mt-1 bg-green-800 text-white px-2 py-0.5 rounded text-[7px] font-semibold">
+              <ShieldCheck className="w-3 h-3" />
+              <span>VERIFIED</span>
+            </div>
+            <span className="text-[6px] text-amber-700 mt-0.5">ID: {certificateId}</span>
+          </div>
+        )}
       </div>
 
       {/* Form Fields */}
@@ -782,6 +844,25 @@ ${schoolName || "{school_name}"}`;
           <Mail className="w-4 h-4 mr-2" />
           Email Certificate
         </Button>
+        {!certificateId ? (
+          <Button
+            onClick={handleIssueCertificate}
+            disabled={!studentName.trim() || isIssuingCertificate}
+            className="bg-gradient-to-r from-purple-700 to-purple-600 hover:from-purple-800 hover:to-purple-700 text-white"
+          >
+            {isIssuingCertificate ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <QrCode className="w-4 h-4 mr-2" />
+            )}
+            {isIssuingCertificate ? "Issuing..." : "Issue & Add QR"}
+          </Button>
+        ) : (
+          <div className="flex items-center gap-2 px-3 py-2 bg-green-100 text-green-800 rounded-md text-sm font-medium">
+            <ShieldCheck className="w-4 h-4" />
+            Verified: {certificateId}
+          </div>
+        )}
         <Button
           onClick={handlePrint}
           disabled={!studentName.trim()}

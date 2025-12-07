@@ -97,3 +97,12 @@
 - [x] Add edit functionality to modify scheduled emails
 - [x] Add cancel/delete functionality for scheduled emails
 - [x] Integrate into Teacher Portal as new tab
+
+## Certificate Verification & Anti-Forgery Feature
+- [x] Create database table for issued certificates with unique IDs
+- [x] Generate cryptographic signature for each certificate
+- [x] Add QR code generation to certificate component
+- [x] Create public verification page (/verify/:id)
+- [x] Display verification status with certificate details
+- [x] Add verification badge/seal to printed certificates
+- [x] Store certificate metadata (student, date, achievement, issuer)

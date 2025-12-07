@@ -121,3 +121,25 @@ export const scheduledEmails = mysqlTable("scheduledEmails", {
 
 export type ScheduledEmail = typeof scheduledEmails.$inferSelect;
 export type InsertScheduledEmail = typeof scheduledEmails.$inferInsert;
+
+/**
+ * Issued certificates with verification data
+ */
+export const issuedCertificates = mysqlTable("issuedCertificates", {
+  id: int("id").autoincrement().primaryKey(),
+  certificateId: varchar("certificateId", { length: 32 }).notNull().unique(), // Unique public ID for verification
+  studentName: varchar("studentName", { length: 100 }).notNull(),
+  achievementType: varchar("achievementType", { length: 50 }).notNull(),
+  teacherName: varchar("teacherName", { length: 100 }),
+  schoolName: varchar("schoolName", { length: 200 }),
+  customMessage: text("customMessage"),
+  signature: varchar("signature", { length: 128 }).notNull(), // Cryptographic signature
+  issuedBy: int("issuedBy").notNull(), // Teacher ID
+  issuedAt: timestamp("issuedAt").defaultNow().notNull(),
+  revokedAt: timestamp("revokedAt"), // Null if valid, timestamp if revoked
+  verificationCount: int("verificationCount").default(0).notNull(),
+  lastVerifiedAt: timestamp("lastVerifiedAt"),
+});
+
+export type IssuedCertificate = typeof issuedCertificates.$inferSelect;
+export type InsertIssuedCertificate = typeof issuedCertificates.$inferInsert;
