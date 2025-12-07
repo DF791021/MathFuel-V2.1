@@ -81,3 +81,11 @@
 - [x] Show email header, subject, body, and footer
 - [x] Add "Send" and "Edit" buttons in preview
 - [x] Style preview to look like actual email client
+
+## Scheduled Email Feature
+- [x] Create database table for scheduled emails
+- [x] Add API endpoint for scheduling emails
+- [x] Add date/time picker to email dialog
+- [x] Show scheduled emails list in Teacher Portal
+- [x] Allow canceling/editing scheduled emails
+- [x] Display countdown or scheduled time in UI

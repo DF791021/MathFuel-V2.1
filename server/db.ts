@@ -1,6 +1,6 @@
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, lt, gte } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, gameScores, InsertGameScore, customQuestions, InsertCustomQuestion, classes, InsertClass, classMembers, InsertClassMember, emailTemplates, InsertEmailTemplate } from "../drizzle/schema";
+import { InsertUser, users, gameScores, InsertGameScore, customQuestions, InsertCustomQuestion, classes, InsertClass, classMembers, InsertClassMember, emailTemplates, InsertEmailTemplate, scheduledEmails, InsertScheduledEmail } from "../drizzle/schema";
 import { nanoid } from 'nanoid';
 import { ENV } from './_core/env';
 
@@ -315,6 +315,78 @@ export async function getDefaultTemplate(teacherId: number, achievementType: str
       eq(emailTemplates.teacherId, teacherId),
       eq(emailTemplates.achievementType, achievementType),
       eq(emailTemplates.isDefault, true)
+    ))
+    .limit(1);
+  return result.length > 0 ? result[0] : null;
+}
+
+// ============ SCHEDULED EMAIL FUNCTIONS ============
+
+export async function createScheduledEmail(email: InsertScheduledEmail) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const result = await db.insert(scheduledEmails).values(email);
+  return result;
+}
+
+export async function getTeacherScheduledEmails(teacherId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const result = await db.select().from(scheduledEmails)
+    .where(eq(scheduledEmails.teacherId, teacherId))
+    .orderBy(desc(scheduledEmails.scheduledFor));
+  return result;
+}
+
+export async function getPendingScheduledEmails(teacherId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const result = await db.select().from(scheduledEmails)
+    .where(and(
+      eq(scheduledEmails.teacherId, teacherId),
+      eq(scheduledEmails.status, "pending")
+    ))
+    .orderBy(scheduledEmails.scheduledFor);
+  return result;
+}
+
+export async function cancelScheduledEmail(id: number, teacherId: number) {
+  const db = await getDb();
+  if (!db) return;
+  
+  await db.update(scheduledEmails)
+    .set({ status: "cancelled" })
+    .where(and(
+      eq(scheduledEmails.id, id),
+      eq(scheduledEmails.teacherId, teacherId),
+      eq(scheduledEmails.status, "pending")
+    ));
+}
+
+export async function updateScheduledEmail(id: number, teacherId: number, data: Partial<InsertScheduledEmail>) {
+  const db = await getDb();
+  if (!db) return;
+  
+  await db.update(scheduledEmails)
+    .set(data)
+    .where(and(
+      eq(scheduledEmails.id, id),
+      eq(scheduledEmails.teacherId, teacherId),
+      eq(scheduledEmails.status, "pending")
+    ));
+}
+
+export async function getScheduledEmailById(id: number, teacherId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const result = await db.select().from(scheduledEmails)
+    .where(and(
+      eq(scheduledEmails.id, id),
+      eq(scheduledEmails.teacherId, teacherId)
     ))
     .limit(1);
   return result.length > 0 ? result[0] : null;

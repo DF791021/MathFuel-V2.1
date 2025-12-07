@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Printer, Star, Upload, X, Mail, Send, Loader2, Save, FileText, Trash2 } from "lucide-react";
+import { Printer, Star, Upload, X, Mail, Send, Loader2, Save, FileText, Trash2, Clock, Calendar } from "lucide-react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 
@@ -51,6 +51,12 @@ export default function Certificate({ onClose, defaultStudentName = "", defaultS
   const [isSaveTemplateDialogOpen, setIsSaveTemplateDialogOpen] = useState(false);
   const [setAsDefault, setSetAsDefault] = useState(false);
   const [isSavingTemplate, setIsSavingTemplate] = useState(false);
+  
+  // Scheduling states
+  const [isScheduling, setIsScheduling] = useState(false);
+  const [scheduledDate, setScheduledDate] = useState("");
+  const [scheduledTime, setScheduledTime] = useState("09:00");
+  const [isSchedulingEmail, setIsSchedulingEmail] = useState(false);
   
   // Template queries
   const { data: savedTemplates = [], refetch: refetchTemplates } = trpc.emailTemplates.getAll.useQuery();
@@ -132,6 +138,21 @@ ${schoolName || "{school_name}"}`;
     },
     onError: (error) => {
       toast.error(`Failed to send email: ${error.message}`);
+    },
+  });
+
+  const scheduleEmailMutation = trpc.scheduledEmails.create.useMutation({
+    onSuccess: () => {
+      const scheduledDateTime = new Date(`${scheduledDate}T${scheduledTime}`);
+      toast.success(`Certificate email scheduled for ${scheduledDateTime.toLocaleString()}!`);
+      setIsEmailDialogOpen(false);
+      setRecipientEmail("");
+      setIsScheduling(false);
+      setScheduledDate("");
+      setScheduledTime("09:00");
+    },
+    onError: (error) => {
+      toast.error(`Failed to schedule email: ${error.message}`);
     },
   });
 
@@ -232,6 +253,52 @@ ${schoolName || "{school_name}"}`;
       });
     } finally {
       setIsSending(false);
+    }
+  };
+
+  const handleScheduleEmail = async () => {
+    if (!recipientEmail || !studentName) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    if (!scheduledDate) {
+      toast.error("Please select a date for the scheduled email");
+      return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(recipientEmail)) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+
+    // Validate scheduled time is in the future
+    const scheduledDateTime = new Date(`${scheduledDate}T${scheduledTime}`);
+    if (scheduledDateTime <= new Date()) {
+      toast.error("Please select a future date and time");
+      return;
+    }
+
+    setIsSchedulingEmail(true);
+    try {
+      const processedSubject = replaceEmailVariables(emailSubject || getDefaultEmailSubject());
+      const processedBody = replaceEmailVariables(emailBody || getDefaultEmailBody());
+      
+      await scheduleEmailMutation.mutateAsync({
+        studentName,
+        recipientEmail,
+        achievementType,
+        teacherName: teacherName || undefined,
+        schoolName: schoolName || undefined,
+        customMessage: customMessage || undefined,
+        emailSubject: processedSubject,
+        emailBody: processedBody,
+        scheduledFor: scheduledDateTime.toISOString(),
+      });
+    } finally {
+      setIsSchedulingEmail(false);
     }
   };
 
@@ -957,6 +1024,80 @@ ${schoolName || "{school_name}"}`;
                 <li>Link to view the certificate online</li>
               </ul>
             </div>
+
+            {/* Schedule Email Section */}
+            <div className="border-t pt-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Clock className="w-5 h-5 text-purple-600" />
+                  <Label className="text-base font-semibold">Schedule for Later</Label>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsScheduling(!isScheduling)}
+                  className={isScheduling ? "text-purple-700 bg-purple-50" : "text-gray-600"}
+                >
+                  {isScheduling ? "Cancel Scheduling" : "Schedule Email"}
+                </Button>
+              </div>
+              
+              {isScheduling && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="bg-purple-50 border border-purple-200 rounded-lg p-4 space-y-4"
+                >
+                  <p className="text-sm text-purple-700">
+                    Schedule this certificate email to be sent at a specific date and time.
+                  </p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="scheduledDate" className="flex items-center gap-1">
+                        <Calendar className="w-4 h-4" />
+                        Date *
+                      </Label>
+                      <Input
+                        id="scheduledDate"
+                        type="date"
+                        value={scheduledDate}
+                        onChange={(e) => setScheduledDate(e.target.value)}
+                        min={new Date().toISOString().split("T")[0]}
+                        className="border-purple-200 focus:border-purple-500"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="scheduledTime" className="flex items-center gap-1">
+                        <Clock className="w-4 h-4" />
+                        Time *
+                      </Label>
+                      <Input
+                        id="scheduledTime"
+                        type="time"
+                        value={scheduledTime}
+                        onChange={(e) => setScheduledTime(e.target.value)}
+                        className="border-purple-200 focus:border-purple-500"
+                      />
+                    </div>
+                  </div>
+                  {scheduledDate && scheduledTime && (
+                    <div className="bg-white border border-purple-300 rounded-lg p-3 text-sm">
+                      <p className="text-purple-800 font-medium">
+                        📅 Email will be sent on: {new Date(`${scheduledDate}T${scheduledTime}`).toLocaleString("en-US", {
+                          weekday: "long",
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                          hour: "numeric",
+                          minute: "2-digit",
+                        })}
+                      </p>
+                    </div>
+                  )}
+                </motion.div>
+              )}
+            </div>
           </div>
           <DialogFooter className="flex-wrap gap-2">
             <Button variant="outline" onClick={() => setIsEmailDialogOpen(false)}>
@@ -971,23 +1112,43 @@ ${schoolName || "{school_name}"}`;
               <Save className="w-4 h-4 mr-2" />
               Save as Template
             </Button>
-            <Button 
-              onClick={handleSendEmail}
-              disabled={!recipientEmail || isSending}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              {isSending ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Sending...
-                </>
-              ) : (
-                <>
-                  <Send className="w-4 h-4 mr-2" />
-                  Send Email
-                </>
-              )}
-            </Button>
+            {isScheduling ? (
+              <Button 
+                onClick={handleScheduleEmail}
+                disabled={!recipientEmail || !scheduledDate || isSchedulingEmail}
+                className="bg-purple-600 hover:bg-purple-700 text-white"
+              >
+                {isSchedulingEmail ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Scheduling...
+                  </>
+                ) : (
+                  <>
+                    <Clock className="w-4 h-4 mr-2" />
+                    Schedule Email
+                  </>
+                )}
+              </Button>
+            ) : (
+              <Button 
+                onClick={handleSendEmail}
+                disabled={!recipientEmail || isSending}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                {isSending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4 mr-2" />
+                    Send Now
+                  </>
+                )}
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>

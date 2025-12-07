@@ -264,6 +264,70 @@ ${results.map(r => `- ${r.name}: ${r.success ? "✅ Sent" : "❌ Failed"}`).join
       }),
   }),
 
+  scheduledEmails: router({
+    create: protectedProcedure
+      .input(z.object({
+        studentName: z.string().min(1).max(100),
+        recipientEmail: z.string().email(),
+        achievementType: z.string(),
+        teacherName: z.string().optional(),
+        schoolName: z.string().optional(),
+        customMessage: z.string().optional(),
+        emailSubject: z.string(),
+        emailBody: z.string(),
+        scheduledFor: z.string(), // ISO date string
+      }))
+      .mutation(async ({ ctx, input }) => {
+        await db.createScheduledEmail({
+          ...input,
+          teacherName: input.teacherName ?? null,
+          schoolName: input.schoolName ?? null,
+          customMessage: input.customMessage ?? null,
+          scheduledFor: new Date(input.scheduledFor),
+          teacherId: ctx.user.id,
+        });
+        return { success: true };
+      }),
+
+    getAll: protectedProcedure.query(async ({ ctx }) => {
+      return db.getTeacherScheduledEmails(ctx.user.id);
+    }),
+
+    getPending: protectedProcedure.query(async ({ ctx }) => {
+      return db.getPendingScheduledEmails(ctx.user.id);
+    }),
+
+    getById: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ ctx, input }) => {
+        return db.getScheduledEmailById(input.id, ctx.user.id);
+      }),
+
+    cancel: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        await db.cancelScheduledEmail(input.id, ctx.user.id);
+        return { success: true };
+      }),
+
+    update: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        scheduledFor: z.string().optional(),
+        emailSubject: z.string().optional(),
+        emailBody: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const { id, scheduledFor, ...data } = input;
+        const updateData: Record<string, unknown> = { ...data };
+        if (scheduledFor) {
+          updateData.scheduledFor = new Date(scheduledFor);
+        }
+        await db.updateScheduledEmail(id, ctx.user.id, updateData);
+        return { success: true };
+      }),
+  }),
+
   emailTemplates: router({
     getAll: protectedProcedure.query(async ({ ctx }) => {
       return db.getTeacherEmailTemplates(ctx.user.id);

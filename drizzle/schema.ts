@@ -98,3 +98,26 @@ export const emailTemplates = mysqlTable("emailTemplates", {
 
 export type EmailTemplate = typeof emailTemplates.$inferSelect;
 export type InsertEmailTemplate = typeof emailTemplates.$inferInsert;
+
+/**
+ * Scheduled certificate emails
+ */
+export const scheduledEmails = mysqlTable("scheduledEmails", {
+  id: int("id").autoincrement().primaryKey(),
+  studentName: varchar("studentName", { length: 100 }).notNull(),
+  recipientEmail: varchar("recipientEmail", { length: 320 }).notNull(),
+  achievementType: varchar("achievementType", { length: 50 }).notNull(),
+  teacherName: varchar("teacherName", { length: 100 }),
+  schoolName: varchar("schoolName", { length: 200 }),
+  customMessage: text("customMessage"),
+  emailSubject: text("emailSubject").notNull(),
+  emailBody: text("emailBody").notNull(),
+  scheduledFor: timestamp("scheduledFor").notNull(),
+  status: mysqlEnum("status", ["pending", "sent", "cancelled", "failed"]).default("pending").notNull(),
+  teacherId: int("teacherId").notNull(),
+  sentAt: timestamp("sentAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type ScheduledEmail = typeof scheduledEmails.$inferSelect;
+export type InsertScheduledEmail = typeof scheduledEmails.$inferInsert;
