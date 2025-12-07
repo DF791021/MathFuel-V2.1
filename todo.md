@@ -89,3 +89,11 @@
 - [x] Show scheduled emails list in Teacher Portal
 - [x] Allow canceling/editing scheduled emails
 - [x] Display countdown or scheduled time in UI
+
+## Scheduled Emails Management Feature
+- [x] Create ScheduledEmails management component
+- [x] Display list of all pending scheduled emails
+- [x] Show email details (recipient, student, date/time, status)
+- [x] Add edit functionality to modify scheduled emails
+- [x] Add cancel/delete functionality for scheduled emails
+- [x] Integrate into Teacher Portal as new tab

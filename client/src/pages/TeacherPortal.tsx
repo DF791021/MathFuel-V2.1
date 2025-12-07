@@ -17,10 +17,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Plus, Trash2, Edit, Users, BookOpen, Trophy, 
   Copy, CheckCircle, XCircle, ArrowLeft, Sparkles,
-  GraduationCap, ClipboardList, BarChart3, Award
+  GraduationCap, ClipboardList, BarChart3, Award, Clock
 } from "lucide-react";
 import Certificate from "@/components/Certificate";
 import BatchCertificates from "@/components/BatchCertificates";
+import ScheduledEmails from "@/components/ScheduledEmails";
 import { getLoginUrl } from "@/const";
 
 const CATEGORIES = [
@@ -167,7 +168,7 @@ export default function TeacherPortal() {
       {/* Main Content */}
       <main className="container py-8">
         <Tabs defaultValue="questions" className="space-y-6">
-          <TabsList className="grid w-full max-w-lg grid-cols-4 h-12">
+          <TabsList className="grid w-full max-w-2xl grid-cols-5 h-12">
             <TabsTrigger value="questions" className="text-sm">
               <ClipboardList className="h-4 w-4 mr-2" />
               Questions
@@ -183,6 +184,10 @@ export default function TeacherPortal() {
             <TabsTrigger value="certificates" className="text-sm">
               <Award className="h-4 w-4 mr-2" />
               Certificates
+            </TabsTrigger>
+            <TabsTrigger value="scheduled" className="text-sm">
+              <Clock className="h-4 w-4 mr-2" />
+              Scheduled
             </TabsTrigger>
           </TabsList>
 
@@ -499,6 +504,11 @@ export default function TeacherPortal() {
                 </Card>
               </TabsContent>
             </Tabs>
+          </TabsContent>
+
+          {/* Scheduled Emails Tab */}
+          <TabsContent value="scheduled" className="space-y-6">
+            <ScheduledEmails />
           </TabsContent>
         </Tabs>
       </main>
