@@ -20,6 +20,7 @@ import {
   GraduationCap, ClipboardList, BarChart3, Award
 } from "lucide-react";
 import Certificate from "@/components/Certificate";
+import BatchCertificates from "@/components/BatchCertificates";
 import { getLoginUrl } from "@/const";
 
 const CATEGORIES = [
@@ -475,11 +476,29 @@ export default function TeacherPortal() {
               </h2>
               <p className="text-muted-foreground">Create personalized certificates for your students</p>
             </div>
-            <Card className="border-2">
-              <CardContent className="pt-6">
-                <Certificate />
-              </CardContent>
-            </Card>
+
+            <Tabs defaultValue="single" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 max-w-md">
+                <TabsTrigger value="single">Single Certificate</TabsTrigger>
+                <TabsTrigger value="batch">Batch (Entire Class)</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="single" className="mt-4">
+                <Card className="border-2">
+                  <CardContent className="pt-6">
+                    <Certificate />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              <TabsContent value="batch" className="mt-4">
+                <Card className="border-2">
+                  <CardContent className="pt-6">
+                    <BatchCertificates />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
           </TabsContent>
         </Tabs>
       </main>

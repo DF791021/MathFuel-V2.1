@@ -45,3 +45,10 @@
 - [x] Preview uploaded logo in certificate
 - [x] Include logo in printed certificate
 - [x] Add option to remove/change logo
+
+## Batch Certificate Generation
+- [x] Add student list text input for multiple names
+- [x] Support CSV file upload for class lists
+- [x] Preview all certificates in a grid
+- [x] Bulk print all certificates at once
+- [x] Show progress indicator during batch generation
