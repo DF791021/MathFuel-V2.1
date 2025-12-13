@@ -113,3 +113,11 @@
 - [x] Update verification page to display custom logo
 - [x] Apply custom colors to verification page header
 - [x] Add branding options to certificate generation form
+
+## Bulk Certificate Issuance Feature
+- [x] Create bulk issue API endpoint for multiple certificates
+- [x] Update BatchCertificates to support CSV with achievements
+- [x] Add "Issue All with QR" button for batch mode
+- [x] Generate unique IDs and QR codes for each certificate
+- [x] Show progress indicator during bulk issuance
+- [x] Display issued certificates with their QR codes

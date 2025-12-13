@@ -40,6 +40,26 @@ export default function BatchCertificates() {
   const [recipientType, setRecipientType] = useState<"student" | "parent">("parent");
   const [isSendingEmails, setIsSendingEmails] = useState(false);
   const [emailProgress, setEmailProgress] = useState(0);
+  const [isIssuingAll, setIsIssuingAll] = useState(false);
+  const [issuedCertificates, setIssuedCertificates] = useState<Array<{certificateId: string; studentName: string; signature: string}>>([]);
+  const [primaryColor, setPrimaryColor] = useState("#2E7D32");
+  const [secondaryColor, setSecondaryColor] = useState("#1B5E20");
+
+  const bulkIssueMutation = trpc.certificates.bulkIssue.useMutation({
+    onSuccess: (data) => {
+      setIssuedCertificates(data.certificates.filter(c => c.certificateId).map(c => ({
+        certificateId: c.certificateId!,
+        studentName: c.studentName,
+        signature: c.signature || '',
+      })));
+      toast.success(`Issued ${data.count} verified certificates with QR codes!`);
+      setIsIssuingAll(false);
+    },
+    onError: (error) => {
+      toast.error(`Failed to issue certificates: ${error.message}`);
+      setIsIssuingAll(false);
+    },
+  });
 
   const sendBatchEmailsMutation = trpc.certificates.sendBatchEmails.useMutation({
     onSuccess: (data) => {
@@ -726,7 +746,39 @@ export default function BatchCertificates() {
       )}
 
       {/* Action Buttons */}
-      <div className="flex justify-end gap-3">
+      <div className="flex flex-wrap justify-end gap-3">
+        <Button
+          onClick={() => {
+            setIsIssuingAll(true);
+            bulkIssueMutation.mutate({
+              students: students.map(s => ({
+                studentName: s.name,
+                achievementType,
+                email: s.email,
+              })),
+              teacherName: teacherName || undefined,
+              schoolName: schoolName || undefined,
+              schoolLogoUrl: schoolLogo || undefined,
+              primaryColor,
+              secondaryColor,
+            });
+          }}
+          disabled={students.length === 0 || isIssuingAll}
+          variant="outline"
+          className="border-amber-500 text-amber-700 hover:bg-amber-50"
+        >
+          {isIssuingAll ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Issuing...
+            </>
+          ) : (
+            <>
+              <Star className="w-4 h-4 mr-2" />
+              Issue All with QR ({students.length})
+            </>
+          )}
+        </Button>
         <Button
           onClick={() => setIsEmailDialogOpen(true)}
           disabled={students.length === 0 || students.filter(s => s.email).length === 0}

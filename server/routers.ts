@@ -283,6 +283,43 @@ ${results.map(r => `- ${r.name}: ${r.success ? "✅ Sent" : "❌ Failed"}`).join
         return result;
       }),
 
+    bulkIssue: protectedProcedure
+      .input(z.object({
+        students: z.array(z.object({
+          studentName: z.string().min(1).max(100),
+          achievementType: z.string().min(1).max(50),
+          email: z.string().email().optional(),
+        })).min(1).max(100),
+        teacherName: z.string().max(100).optional(),
+        schoolName: z.string().max(200).optional(),
+        customMessage: z.string().optional(),
+        schoolLogoUrl: z.string().optional(),
+        primaryColor: z.string().max(20).optional(),
+        secondaryColor: z.string().max(20).optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const results = [];
+        for (const student of input.students) {
+          const result = await db.issueCertificate({
+            studentName: student.studentName,
+            achievementType: student.achievementType,
+            teacherName: input.teacherName,
+            schoolName: input.schoolName,
+            customMessage: input.customMessage,
+            schoolLogoUrl: input.schoolLogoUrl,
+            primaryColor: input.primaryColor,
+            secondaryColor: input.secondaryColor,
+            issuedBy: ctx.user.id,
+          });
+          results.push({
+            ...result,
+            studentName: student.studentName,
+            email: student.email,
+          });
+        }
+        return { certificates: results, count: results.length };
+      }),
+
     verify: publicProcedure
       .input(z.object({ certificateId: z.string().min(1).max(32) }))
       .query(async ({ input }) => {
