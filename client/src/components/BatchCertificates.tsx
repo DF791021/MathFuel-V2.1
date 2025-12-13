@@ -1,11 +1,13 @@
 import { useState, useRef } from "react";
+import JSZip from "jszip";
+import html2canvas from "html2canvas";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Printer, Upload, X, Users, FileText, Plus, Trash2, Star, ChevronLeft, ChevronRight, Mail, Send, Loader2 } from "lucide-react";
+import { Printer, Upload, X, Users, FileText, Plus, Trash2, Star, ChevronLeft, ChevronRight, Mail, Send, Loader2, Download } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { trpc } from "@/lib/trpc";
@@ -44,6 +46,8 @@ export default function BatchCertificates() {
   const [issuedCertificates, setIssuedCertificates] = useState<Array<{certificateId: string; studentName: string; signature: string}>>([]);
   const [primaryColor, setPrimaryColor] = useState("#2E7D32");
   const [secondaryColor, setSecondaryColor] = useState("#1B5E20");
+  const [isGeneratingZip, setIsGeneratingZip] = useState(false);
+  const certificateRef = useRef<HTMLDivElement>(null);
 
   const bulkIssueMutation = trpc.certificates.bulkIssue.useMutation({
     onSuccess: (data) => {
@@ -448,6 +452,117 @@ export default function BatchCertificates() {
     }, 1000);
   };
 
+  const handleDownloadZip = async () => {
+    if (students.length === 0) {
+      toast.error("Please add at least one student");
+      return;
+    }
+
+    setIsGeneratingZip(true);
+    toast.info(`Generating ${students.length} certificates...`);
+
+    try {
+      const zip = new JSZip();
+      const certificatesFolder = zip.folder("certificates");
+
+      for (let i = 0; i < students.length; i++) {
+        const student = students[i];
+        
+        // Create a temporary container for the certificate
+        const container = document.createElement("div");
+        container.style.position = "absolute";
+        container.style.left = "-9999px";
+        container.style.width = "1100px";
+        container.style.height = "850px";
+        container.innerHTML = `
+          <div style="
+            width: 1100px;
+            height: 850px;
+            background: linear-gradient(135deg, #FDF8F3 0%, #FFF9E6 50%, #FDF8F3 100%);
+            border: 12px solid #5D4E37;
+            border-radius: 8px;
+            padding: 40px;
+            position: relative;
+            font-family: 'Nunito', sans-serif;
+            box-sizing: border-box;
+          ">
+            <div style="position: absolute; top: 12px; left: 12px; right: 12px; bottom: 12px; border: 3px solid #8B7355; border-radius: 4px; pointer-events: none;"></div>
+            <div style="position: absolute; top: 20px; left: 20px; right: 20px; bottom: 20px; border: 1px dashed #C4A77D; border-radius: 4px; pointer-events: none;"></div>
+            
+            <div style="text-align: center; margin-bottom: 20px; position: relative;">
+              ${schoolLogo ? `<img src="${schoolLogo}" alt="School Logo" style="position: absolute; top: 0; left: 40px; width: 80px; height: 80px; object-fit: contain;" />` : ""}
+              <div style="font-size: 48px; margin-bottom: 10px;">${selectedAchievement?.icon || "🏆"}</div>
+              <h1 style="font-family: 'Playfair Display', serif; font-size: 36px; color: #5D4E37; font-weight: 700; text-transform: uppercase; letter-spacing: 4px; margin: 0 0 5px 0;">${getAchievementTitle()}</h1>
+              <p style="font-size: 18px; color: #2E7D32; font-weight: 600; margin: 0;">Wisconsin Food Explorer</p>
+            </div>
+            
+            <div style="text-align: center; padding: 30px 60px;">
+              <p style="font-size: 14px; color: #2E7D32; text-transform: uppercase; letter-spacing: 2px; margin: 0 0 10px 0;">This certificate is proudly presented to</p>
+              <h2 style="font-family: 'Playfair Display', serif; font-size: 42px; color: #5D4E37; font-weight: 700; margin: 0 0 20px 0; border-bottom: 2px solid #C4A77D; padding-bottom: 10px; display: inline-block; min-width: 300px;">${student.name}</h2>
+              <p style="font-size: 16px; color: #5D4E37; line-height: 1.6; max-width: 600px; margin: 0 auto;">${getDefaultMessage()}</p>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: flex-end; padding: 0 60px; position: absolute; bottom: 60px; left: 0; right: 0;">
+              <div style="text-align: center;">
+                <p style="font-size: 14px; color: #5D4E37; font-weight: 600; margin: 0; border-top: 2px solid #5D4E37; padding-top: 8px; min-width: 150px;">${teacherName || "Teacher Name"}</p>
+                <p style="font-size: 12px; color: #2E7D32; margin: 4px 0 0 0;">Teacher</p>
+              </div>
+              <div style="text-align: center;">
+                <p style="font-size: 14px; color: #5D4E37; font-weight: 600; margin: 0;">${new Date(date).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</p>
+                <p style="font-size: 12px; color: #2E7D32; margin: 4px 0 0 0;">Date Awarded</p>
+              </div>
+              <div style="text-align: center;">
+                <p style="font-size: 14px; color: #5D4E37; font-weight: 600; margin: 0; border-top: 2px solid #5D4E37; padding-top: 8px; min-width: 150px;">${schoolName || "School Name"}</p>
+                <p style="font-size: 12px; color: #2E7D32; margin: 4px 0 0 0;">School</p>
+              </div>
+            </div>
+            
+            <div style="position: absolute; bottom: 40px; right: 60px; width: 70px; height: 70px; background: linear-gradient(135deg, #FFA000, #FF6F00); border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
+              <span style="font-size: 20px;">⭐</span>
+              <span style="font-size: 8px; color: white; font-weight: 700; text-transform: uppercase;">Certified</span>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(container);
+
+        try {
+          const canvas = await html2canvas(container.firstElementChild as HTMLElement, {
+            scale: 2,
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: "#FDF8F3",
+          });
+
+          const blob = await new Promise<Blob>((resolve) => {
+            canvas.toBlob((b) => resolve(b!), "image/png", 0.95);
+          });
+
+          const sanitizedName = student.name.replace(/[^a-zA-Z0-9]/g, "_");
+          certificatesFolder?.file(`${String(i + 1).padStart(2, "0")}_${sanitizedName}_certificate.png`, blob);
+        } finally {
+          document.body.removeChild(container);
+        }
+      }
+
+      const content = await zip.generateAsync({ type: "blob" });
+      const url = URL.createObjectURL(content);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `certificates_${new Date().toISOString().split("T")[0]}.zip`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      toast.success(`Downloaded ${students.length} certificates as ZIP!`);
+    } catch (error) {
+      console.error("Error generating ZIP:", error);
+      toast.error("Failed to generate ZIP file");
+    } finally {
+      setIsGeneratingZip(false);
+    }
+  };
+
   const currentStudent = students[currentPreviewIndex];
 
   return (
@@ -802,6 +917,24 @@ export default function BatchCertificates() {
             <>
               <Printer className="w-4 h-4 mr-2" />
               Print All {students.length > 0 ? `(${students.length})` : ""} Certificates
+            </>
+          )}
+        </Button>
+        <Button
+          onClick={handleDownloadZip}
+          disabled={students.length === 0 || isGeneratingZip}
+          variant="outline"
+          className="border-purple-400 text-purple-700 hover:bg-purple-50"
+        >
+          {isGeneratingZip ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Generating ZIP...
+            </>
+          ) : (
+            <>
+              <Download className="w-4 h-4 mr-2" />
+              Download ZIP ({students.length})
             </>
           )}
         </Button>

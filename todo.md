@@ -121,3 +121,10 @@
 - [x] Generate unique IDs and QR codes for each certificate
 - [x] Show progress indicator during bulk issuance
 - [x] Display issued certificates with their QR codes
+
+## ZIP Download for Bulk Certificates
+- [x] Install JSZip library for client-side ZIP generation
+- [x] Generate certificate images for each student
+- [x] Bundle all certificates into a single ZIP file
+- [x] Add "Download All as ZIP" button after bulk issuance
+- [x] Include certificate metadata in filenames
