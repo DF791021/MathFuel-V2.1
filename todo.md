@@ -155,3 +155,20 @@
 - [x] Validate email content before sending
 - [x] Show character count for subject and body
 - [x] Add default email template suggestions
+
+## Email Template Save/Load Feature
+- [x] Create emailTemplates database table with fields: id, teacherId, name, subject, body, isDefault, createdAt, updatedAt
+- [x] Add database helper functions for template CRUD operations
+- [x] Create tRPC procedures: saveTemplate, getTemplates, deleteTemplate, setDefaultTemplate
+- [x] Add "Save as Template" button to email customization dialog
+- [x] Add template name input dialog when saving
+- [x] Add template selector dropdown to load saved templates
+- [x] Add "Load Template" button to populate subject and body from selected template
+- [x] Add "Delete Template" button with confirmation
+- [x] Add "Set as Default" option for templates
+- [x] Display template list with edit/delete options
+- [x] Show default template indicator
+- [x] Test saving multiple templates
+- [x] Test loading templates
+- [x] Test deleting templates
+- [x] Test setting default template

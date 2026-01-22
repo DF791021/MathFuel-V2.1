@@ -52,6 +52,10 @@ export default function BatchCertificates() {
   const [emailZipSubject, setEmailZipSubject] = useState("Your Certificate ZIP File - {school_name}");
   const [emailZipBody, setEmailZipBody] = useState("Dear {teacher_name},\n\nPlease find attached the ZIP file containing {student_count} certificates for your class.\n\nBest regards,\nWisconsin Food Explorer");
   const [showEmailPreview, setShowEmailPreview] = useState(false);
+  const [showTemplateManager, setShowTemplateManager] = useState(false);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<number | null>(null);
+  const [templateName, setTemplateName] = useState("");
+  const [isSavingTemplate, setIsSavingTemplate] = useState(false);
   const certificateRef = useRef<HTMLDivElement>(null);
   const zipDataRef = useRef<string>("");
 
@@ -99,6 +103,36 @@ export default function BatchCertificates() {
       setIsSendingZipEmail(false);
     },
   });
+
+  // Template queries and mutations
+  const { data: emailTemplates = [] } = trpc.emailTemplates.getAll.useQuery();
+  const saveTemplateMutation = trpc.emailTemplates.create.useMutation({
+    onSuccess: () => {
+      toast.success("Template saved successfully!");
+      setTemplateName("");
+      setShowTemplateManager(false);
+    },
+    onError: (error) => {
+      toast.error(`Failed to save template: ${error.message}`);
+    },
+  });
+  const deleteTemplateMutation = trpc.emailTemplates.delete.useMutation({
+    onSuccess: () => {
+      toast.success("Template deleted successfully!");
+    },
+    onError: (error) => {
+      toast.error(`Failed to delete template: ${error.message}`);
+    },
+  });
+  const setDefaultTemplateMutation = trpc.emailTemplates.update.useMutation({
+    onSuccess: () => {
+      toast.success("Default template set!");
+    },
+    onError: (error) => {
+      toast.error(`Failed to set default template: ${error.message}`);
+    },
+  });
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const csvInputRef = useRef<HTMLInputElement>(null);
 
@@ -701,6 +735,48 @@ export default function BatchCertificates() {
       setIsSendingZipEmail(false);
     }
   };
+
+  // Template handler functions
+  const handleSaveTemplate = async () => {
+    if (!templateName.trim()) {
+      toast.error("Please enter a template name");
+      return;
+    }
+
+    setIsSavingTemplate(true);
+    saveTemplateMutation.mutate({
+      name: templateName,
+      subject: emailZipSubject,
+      body: emailZipBody,
+      achievementType: achievementType,
+      isDefault: false,
+    });
+    setIsSavingTemplate(false);
+  };
+
+  const handleLoadTemplate = (templateId: number) => {
+    const template = emailTemplates.find(t => t.id === templateId);
+    if (template) {
+      setEmailZipSubject(template.subject);
+      setEmailZipBody(template.body);
+      setSelectedTemplateId(templateId);
+      toast.success(`Loaded template: ${template.name}`);
+    }
+  };
+
+  const handleDeleteTemplate = (templateId: number) => {
+    if (confirm("Are you sure you want to delete this template?")) {
+      deleteTemplateMutation.mutate({ id: templateId });
+    }
+  };
+
+  const handleSetDefaultTemplate = (templateId: number) => {
+    setDefaultTemplateMutation.mutate({
+      id: templateId,
+      isDefault: true,
+    });
+  };
+
   return (
     <div className="space-y-6">
       {/* Student List Input Section */}
@@ -1111,6 +1187,91 @@ export default function BatchCertificates() {
                 <li>High-resolution PNG images</li>
                 <li>Ready to print or share</li>
               </ul>
+            </div>
+
+            {/* Template Management Section */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
+              <p className="text-sm font-semibold text-blue-900 flex items-center gap-2">
+                <Star className="w-4 h-4" />
+                Email Templates
+              </p>
+              <div className="space-y-2">
+                {emailTemplates.length > 0 && (
+                  <div>
+                    <Label className="text-xs font-semibold text-gray-700">Load Saved Template</Label>
+                    <div className="grid grid-cols-1 gap-2 mt-2">
+                      {emailTemplates.map((template) => (
+                        <div key={template.id} className="flex items-center justify-between bg-white p-2 rounded border border-blue-200 text-sm">
+                          <div className="flex-1">
+                            <p className="font-medium text-gray-800">{template.name}</p>
+                            <p className="text-xs text-gray-500 truncate">{template.subject}</p>
+                          </div>
+                          <div className="flex gap-1">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleLoadTemplate(template.id)}
+                              className="text-xs"
+                            >
+                              Load
+                            </Button>
+                            {!template.isDefault && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleSetDefaultTemplate(template.id)}
+                                className="text-xs"
+                              >
+                                <Star className="w-3 h-3" />
+                              </Button>
+                            )}
+                            {template.isDefault && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                disabled
+                                className="text-xs text-yellow-600"
+                              >
+                                <Star className="w-3 h-3 fill-yellow-500" />
+                              </Button>
+                            )}
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleDeleteTemplate(template.id)}
+                              className="text-xs text-red-600 hover:text-red-700"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <Input
+                    value={templateName}
+                    onChange={(e) => setTemplateName(e.target.value)}
+                    placeholder="Template name..."
+                    className="text-sm"
+                  />
+                  <Button
+                    onClick={handleSaveTemplate}
+                    disabled={isSavingTemplate}
+                    className="bg-blue-600 hover:bg-blue-700 text-white text-sm"
+                  >
+                    {isSavingTemplate ? (
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                    ) : (
+                      <>
+                        <Plus className="w-3 h-3 mr-1" />
+                        Save
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
             </div>
 
             <div className="space-y-4 bg-gray-50 p-4 rounded-lg border border-gray-200">
