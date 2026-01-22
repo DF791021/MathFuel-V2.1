@@ -143,3 +143,15 @@
 - [x] Add owner notification when ZIP is emailed
 - [x] Support both development (Ethereal) and production SMTP modes
 - [x] Create beautiful HTML email template with batch details
+
+## Email Customization Feature
+- [x] Update database schema to store custom email subject and body templates
+- [x] Add subject line input field to email ZIP dialog
+- [x] Add email body textarea with placeholder variables
+- [x] Create email preview modal showing formatted email
+- [x] Implement variable substitution ({teacher_name}, {school_name}, {date}, {student_count})
+- [x] Create backend procedure for sending customized emails
+- [x] Add "Save as Template" option for future use
+- [x] Validate email content before sending
+- [x] Show character count for subject and body
+- [x] Add default email template suggestions

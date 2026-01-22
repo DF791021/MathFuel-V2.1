@@ -346,6 +346,8 @@ ${results.map(r => `- ${r.name}: ${r.success ? "✅ Sent" : "❌ Failed"}`).join
         studentNames: z.array(z.string()).min(1).max(100),
         teacherName: z.string().max(100),
         schoolName: z.string().max(200),
+        customSubject: z.string().max(255).optional(),
+        customBody: z.string().max(5000).optional(),
       }))
       .mutation(async ({ ctx, input }) => {
         try {
@@ -365,7 +367,9 @@ ${results.map(r => `- ${r.name}: ${r.success ? "✅ Sent" : "❌ Failed"}`).join
             input.schoolName,
             zipBuffer,
             input.zipFileName,
-            input.studentNames
+            input.studentNames,
+            input.customSubject,
+            input.customBody
           );
 
           if (!emailSent) {

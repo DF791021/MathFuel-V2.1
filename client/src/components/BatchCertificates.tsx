@@ -49,6 +49,9 @@ export default function BatchCertificates() {
   const [isGeneratingZip, setIsGeneratingZip] = useState(false);
   const [isEmailZipDialogOpen, setIsEmailZipDialogOpen] = useState(false);
   const [isSendingZipEmail, setIsSendingZipEmail] = useState(false);
+  const [emailZipSubject, setEmailZipSubject] = useState("Your Certificate ZIP File - {school_name}");
+  const [emailZipBody, setEmailZipBody] = useState("Dear {teacher_name},\n\nPlease find attached the ZIP file containing {student_count} certificates for your class.\n\nBest regards,\nWisconsin Food Explorer");
+  const [showEmailPreview, setShowEmailPreview] = useState(false);
   const certificateRef = useRef<HTMLDivElement>(null);
   const zipDataRef = useRef<string>("");
 
@@ -689,6 +692,8 @@ export default function BatchCertificates() {
         studentNames: students.map(s => s.name),
         teacherName: teacherName || "Teacher",
         schoolName: schoolName || "School",
+        customSubject: emailZipSubject,
+        customBody: emailZipBody,
       });
     } catch (error) {
       console.error("Error generating ZIP for email:", error);
@@ -1091,11 +1096,11 @@ export default function BatchCertificates() {
 
       {/* Email ZIP Dialog */}
       <Dialog open={isEmailZipDialogOpen} onOpenChange={setIsEmailZipDialogOpen}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Mail className="w-5 h-5 text-orange-600" />
-              Email Certificate ZIP
+              Customize & Send Certificate ZIP
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -1107,6 +1112,76 @@ export default function BatchCertificates() {
                 <li>Ready to print or share</li>
               </ul>
             </div>
+
+            <div className="space-y-4 bg-gray-50 p-4 rounded-lg border border-gray-200">
+              <div>
+                <Label htmlFor="emailSubject" className="text-sm font-semibold text-gray-700">
+                  Email Subject
+                </Label>
+                <Input
+                  id="emailSubject"
+                  value={emailZipSubject}
+                  onChange={(e) => setEmailZipSubject(e.target.value)}
+                  placeholder="Enter email subject..."
+                  className="mt-1"
+                  maxLength={255}
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Available variables: {'{teacher_name}'}, {'{school_name}'}, {'{student_count}'}, {'{date}'}
+                </p>
+              </div>
+
+              <div>
+                <Label htmlFor="emailBody" className="text-sm font-semibold text-gray-700">
+                  Email Body
+                </Label>
+                <Textarea
+                  id="emailBody"
+                  value={emailZipBody}
+                  onChange={(e) => setEmailZipBody(e.target.value)}
+                  placeholder="Enter email message..."
+                  className="mt-1 font-mono text-sm"
+                  rows={6}
+                  maxLength={5000}
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  {emailZipBody.length}/5000 characters | Available variables: {'{teacher_name}'}, {'{school_name}'}, {'{student_count}'}, {'{date}'}
+                </p>
+              </div>
+
+              <Button
+                onClick={() => setShowEmailPreview(!showEmailPreview)}
+                variant="outline"
+                className="w-full"
+              >
+                {showEmailPreview ? "Hide Preview" : "Preview Email"}
+              </Button>
+            </div>
+
+            {showEmailPreview && (
+              <div className="bg-white border-2 border-orange-300 rounded-lg p-4 space-y-2">
+                <p className="text-xs font-semibold text-gray-600 uppercase">Email Preview</p>
+                <div className="bg-gray-100 p-3 rounded border border-gray-300">
+                  <p className="text-xs text-gray-600 mb-1"><strong>Subject:</strong></p>
+                  <p className="text-sm font-semibold text-gray-800 mb-3">
+                    {emailZipSubject
+                      .replace(/{teacher_name}/g, teacherName || "Teacher Name")
+                      .replace(/{school_name}/g, schoolName || "School Name")
+                      .replace(/{student_count}/g, students.length.toString())
+                      .replace(/{date}/g, new Date().toLocaleDateString())}
+                  </p>
+                  <p className="text-xs text-gray-600 mb-1"><strong>Body:</strong></p>
+                  <div className="text-sm text-gray-700 whitespace-pre-wrap font-mono bg-white p-2 rounded border border-gray-200 max-h-48 overflow-y-auto">
+                    {emailZipBody
+                      .replace(/{teacher_name}/g, teacherName || "Teacher Name")
+                      .replace(/{school_name}/g, schoolName || "School Name")
+                      .replace(/{student_count}/g, students.length.toString())
+                      .replace(/{date}/g, new Date().toLocaleDateString())}
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
               <p className="font-medium mb-1">📧 Email will be sent to:</p>
               <p className="font-mono text-blue-700">Your registered email address</p>

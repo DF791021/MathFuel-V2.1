@@ -87,9 +87,21 @@ export async function sendEmailWithZipAttachment(
   schoolName: string,
   zipBuffer: Buffer,
   zipFileName: string,
-  studentNames: string[]
+  studentNames: string[],
+  customSubject?: string,
+  customBody?: string
 ): Promise<boolean> {
   const studentList = studentNames.slice(0, 5).join(", ") + (studentNames.length > 5 ? `, and ${studentNames.length - 5} more` : "");
+
+  // Function to substitute variables in custom text
+  const substituteVariables = (text: string): string => {
+    return text
+      .replace(/{teacher_name}/g, teacherName)
+      .replace(/{school_name}/g, schoolName)
+      .replace(/{student_count}/g, studentNames.length.toString())
+      .replace(/{date}/g, new Date().toLocaleDateString())
+      .replace(/\n/g, "<br>");
+  };
 
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -103,6 +115,7 @@ export async function sendEmailWithZipAttachment(
           Dear <strong>${teacherName}</strong>,
         </p>
         
+        ${customBody ? `<div style="font-size: 15px; color: #555; line-height: 1.6; margin-bottom: 20px;">${substituteVariables(customBody)}</div>` : `
         <p style="font-size: 15px; color: #555; line-height: 1.6; margin-bottom: 20px;">
           Your bulk certificate batch is ready! We've generated ${studentNames.length} certificates for your students at <strong>${schoolName}</strong>.
         </p>
@@ -131,6 +144,7 @@ export async function sendEmailWithZipAttachment(
             <strong>💡 Tip:</strong> You can print all certificates at once or share them individually with students and parents.
           </p>
         </div>
+        `}
         
         <p style="font-size: 14px; color: #888; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd;">
           Best regards,<br>
@@ -140,9 +154,12 @@ export async function sendEmailWithZipAttachment(
     </div>
   `;
 
+  // Use custom subject if provided, otherwise use default
+  const emailSubject = customSubject ? substituteVariables(customSubject) : `🎓 Your ${studentNames.length} Wisconsin Food Explorer Certificates - ${schoolName}`;
+
   return sendEmail({
     to: recipientEmail,
-    subject: `🎓 Your ${studentNames.length} Wisconsin Food Explorer Certificates - ${schoolName}`,
+    subject: emailSubject,
     html,
     attachments: [
       {
