@@ -5,6 +5,7 @@ import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import * as db from "./db";
 import { notifyOwner } from "./_core/notification";
+import { sendEmailWithZipAttachment } from "./_core/email";
 
 export const appRouter = router({
   system: systemRouter,
@@ -337,6 +338,71 @@ ${results.map(r => `- ${r.name}: ${r.success ? "✅ Sent" : "❌ Failed"}`).join
     getMyIssuedCertificates: protectedProcedure.query(async ({ ctx }) => {
       return db.getTeacherCertificates(ctx.user.id);
     }),
+
+    sendZipEmail: protectedProcedure
+      .input(z.object({
+        zipData: z.string(),
+        zipFileName: z.string().min(1).max(255),
+        studentNames: z.array(z.string()).min(1).max(100),
+        teacherName: z.string().max(100),
+        schoolName: z.string().max(200),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        try {
+          const teacher = await db.getUserById(ctx.user.id);
+          if (!teacher?.email) {
+            return {
+              success: false,
+              error: "Teacher email not found. Please update your profile.",
+            };
+          }
+
+          const zipBuffer = Buffer.from(input.zipData, "base64");
+
+          const emailSent = await sendEmailWithZipAttachment(
+            teacher.email,
+            input.teacherName,
+            input.schoolName,
+            zipBuffer,
+            input.zipFileName,
+            input.studentNames
+          );
+
+          if (!emailSent) {
+            return {
+              success: false,
+              error: "Failed to send email. Please try again later.",
+            };
+          }
+
+          await db.createZipEmailHistory({
+            teacherId: ctx.user.id,
+            recipientEmail: teacher.email,
+            certificateCount: input.studentNames.length,
+            studentNames: JSON.stringify(input.studentNames),
+            zipFileName: input.zipFileName,
+            zipFileSize: zipBuffer.length,
+            status: "sent",
+            sentAt: new Date(),
+          });
+
+          await notifyOwner({
+            title: `Email ZIP Certificates - ${input.studentNames.length} certificates`,
+            content: `Teacher: ${input.teacherName}\nSchool: ${input.schoolName}\nRecipient: ${teacher.email}\nCertificates: ${input.studentNames.length}\nFile: ${input.zipFileName}`,
+          });
+
+          return {
+            success: true,
+            message: `ZIP file with ${input.studentNames.length} certificates sent to ${teacher.email}`,
+          };
+        } catch (error) {
+          console.error("[Certificate ZIP Email] Error:", error);
+          return {
+            success: false,
+            error: error instanceof Error ? error.message : "Unknown error occurred",
+          };
+        }
+      }),
   }),
 
   scheduledEmails: router({

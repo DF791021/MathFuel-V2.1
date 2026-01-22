@@ -47,7 +47,10 @@ export default function BatchCertificates() {
   const [primaryColor, setPrimaryColor] = useState("#2E7D32");
   const [secondaryColor, setSecondaryColor] = useState("#1B5E20");
   const [isGeneratingZip, setIsGeneratingZip] = useState(false);
+  const [isEmailZipDialogOpen, setIsEmailZipDialogOpen] = useState(false);
+  const [isSendingZipEmail, setIsSendingZipEmail] = useState(false);
   const certificateRef = useRef<HTMLDivElement>(null);
+  const zipDataRef = useRef<string>("");
 
   const bulkIssueMutation = trpc.certificates.bulkIssue.useMutation({
     onSuccess: (data) => {
@@ -75,6 +78,22 @@ export default function BatchCertificates() {
     },
     onError: (error) => {
       toast.error(`Failed to send emails: ${error.message}`);
+    },
+  });
+
+  const sendZipEmailMutation = trpc.certificates.sendZipEmail.useMutation({
+    onSuccess: (data) => {
+      if (data.success) {
+        toast.success(data.message);
+        setIsEmailZipDialogOpen(false);
+      } else {
+        toast.error(data.error || "Failed to send ZIP email");
+      }
+      setIsSendingZipEmail(false);
+    },
+    onError: (error) => {
+      toast.error(`Failed to send ZIP email: ${error.message}`);
+      setIsSendingZipEmail(false);
     },
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -565,6 +584,118 @@ export default function BatchCertificates() {
 
   const currentStudent = students[currentPreviewIndex];
 
+
+  const handleEmailZip = async () => {
+    if (students.length === 0) {
+      toast.error("Please add at least one student");
+      return;
+    }
+
+    setIsSendingZipEmail(true);
+    toast.info(`Generating ${students.length} certificates for email...`);
+
+    try {
+      const zip = new JSZip();
+      const certificatesFolder = zip.folder("certificates");
+
+      for (let i = 0; i < students.length; i++) {
+        const student = students[i];
+        
+        const container = document.createElement("div");
+        container.style.position = "absolute";
+        container.style.left = "-9999px";
+        container.style.width = "1100px";
+        container.style.height = "850px";
+        container.innerHTML = `
+          <div style="
+            width: 1100px;
+            height: 850px;
+            background: linear-gradient(135deg, #FDF8F3 0%, #FFF9E6 50%, #FDF8F3 100%);
+            border: 12px solid #5D4E37;
+            border-radius: 8px;
+            padding: 40px;
+            position: relative;
+            font-family: 'Nunito', sans-serif;
+            box-sizing: border-box;
+          ">
+            <div style="position: absolute; top: 12px; left: 12px; right: 12px; bottom: 12px; border: 3px solid #8B7355; border-radius: 4px; pointer-events: none;"></div>
+            <div style="position: absolute; top: 20px; left: 20px; right: 20px; bottom: 20px; border: 1px dashed #C4A77D; border-radius: 4px; pointer-events: none;"></div>
+            
+            <div style="text-align: center; margin-bottom: 20px; position: relative;">
+              ${schoolLogo ? `<img src="${schoolLogo}" alt="School Logo" style="position: absolute; top: 0; left: 40px; width: 80px; height: 80px; object-fit: contain;" />` : ""}
+              <div style="font-size: 48px; margin-bottom: 10px;">${selectedAchievement?.icon || "🏆"}</div>
+              <h1 style="font-family: 'Playfair Display', serif; font-size: 36px; color: #5D4E37; font-weight: 700; text-transform: uppercase; letter-spacing: 4px; margin: 0 0 5px 0;">${getAchievementTitle()}</h1>
+              <p style="font-size: 18px; color: #2E7D32; font-weight: 600; margin: 0;">Wisconsin Food Explorer</p>
+            </div>
+            
+            <div style="text-align: center; padding: 30px 60px;">
+              <p style="font-size: 14px; color: #2E7D32; text-transform: uppercase; letter-spacing: 2px; margin: 0 0 10px 0;">This certificate is proudly presented to</p>
+              <h2 style="font-family: 'Playfair Display', serif; font-size: 42px; color: #5D4E37; font-weight: 700; margin: 0 0 20px 0; border-bottom: 2px solid #C4A77D; padding-bottom: 10px; display: inline-block; min-width: 300px;">${student.name}</h2>
+              <p style="font-size: 16px; color: #5D4E37; line-height: 1.6; max-width: 600px; margin: 0 auto;">${getDefaultMessage()}</p>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: flex-end; padding: 0 60px; position: absolute; bottom: 60px; left: 0; right: 0;">
+              <div style="text-align: center;">
+                <p style="font-size: 14px; color: #5D4E37; font-weight: 600; margin: 0; border-top: 2px solid #5D4E37; padding-top: 8px; min-width: 150px;">${teacherName || "Teacher Name"}</p>
+                <p style="font-size: 12px; color: #2E7D32; margin: 4px 0 0 0;">Teacher</p>
+              </div>
+              <div style="text-align: center;">
+                <p style="font-size: 14px; color: #5D4E37; font-weight: 600; margin: 0;">${new Date(date).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</p>
+                <p style="font-size: 12px; color: #2E7D32; margin: 4px 0 0 0;">Date Awarded</p>
+              </div>
+              <div style="text-align: center;">
+                <p style="font-size: 14px; color: #5D4E37; font-weight: 600; margin: 0; border-top: 2px solid #5D4E37; padding-top: 8px; min-width: 150px;">${schoolName || "School Name"}</p>
+                <p style="font-size: 12px; color: #2E7D32; margin: 4px 0 0 0;">School</p>
+              </div>
+            </div>
+            
+            <div style="position: absolute; bottom: 40px; right: 60px; width: 70px; height: 70px; background: linear-gradient(135deg, #FFA000, #FF6F00); border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
+              <span style="font-size: 20px;">⭐</span>
+              <span style="font-size: 8px; color: white; font-weight: 700; text-transform: uppercase;">Certified</span>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(container);
+
+        try {
+          const canvas = await html2canvas(container.firstElementChild as HTMLElement, {
+            scale: 2,
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: "#FDF8F3",
+          });
+
+          const blob = await new Promise<Blob>((resolve) => {
+            canvas.toBlob((b) => resolve(b!), "image/png", 0.95);
+          });
+
+          const sanitizedName = student.name.replace(/[^a-zA-Z0-9]/g, "_");
+          certificatesFolder?.file(`${String(i + 1).padStart(2, "0")}_${sanitizedName}_certificate.png`, blob);
+        } finally {
+          document.body.removeChild(container);
+        }
+      }
+
+      const content = await zip.generateAsync({ type: "blob" });
+      const arrayBuffer = await content.arrayBuffer();
+      const base64Zip = Buffer.from(arrayBuffer).toString("base64");
+      zipDataRef.current = base64Zip;
+
+      const zipFileName = `certificates_${new Date().toISOString().split("T")[0]}.zip`;
+      
+      sendZipEmailMutation.mutate({
+        zipData: base64Zip,
+        zipFileName,
+        studentNames: students.map(s => s.name),
+        teacherName: teacherName || "Teacher",
+        schoolName: schoolName || "School",
+      });
+    } catch (error) {
+      console.error("Error generating ZIP for email:", error);
+      toast.error("Failed to generate ZIP file for email");
+      setIsSendingZipEmail(false);
+    }
+  };
   return (
     <div className="space-y-6">
       {/* Student List Input Section */}
@@ -938,7 +1069,73 @@ export default function BatchCertificates() {
             </>
           )}
         </Button>
+        <Button
+          onClick={() => setIsEmailZipDialogOpen(true)}
+          disabled={students.length === 0 || isSendingZipEmail}
+          variant="outline"
+          className="border-orange-400 text-orange-700 hover:bg-orange-50"
+        >
+          {isSendingZipEmail ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Sending...
+            </>
+          ) : (
+            <>
+              <Mail className="w-4 h-4 mr-2" />
+              Email ZIP ({students.length})
+            </>
+          )}
+        </Button>
       </div>
+
+      {/* Email ZIP Dialog */}
+      <Dialog open={isEmailZipDialogOpen} onOpenChange={setIsEmailZipDialogOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Mail className="w-5 h-5 text-orange-600" />
+              Email Certificate ZIP
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 text-sm text-orange-800">
+              <p className="font-medium mb-1">📦 ZIP Details:</p>
+              <ul className="list-disc list-inside space-y-1 text-orange-700">
+                <li>{students.length} certificates</li>
+                <li>High-resolution PNG images</li>
+                <li>Ready to print or share</li>
+              </ul>
+            </div>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
+              <p className="font-medium mb-1">📧 Email will be sent to:</p>
+              <p className="font-mono text-blue-700">Your registered email address</p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEmailZipDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleEmailZip}
+              disabled={isSendingZipEmail}
+              className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white"
+            >
+              {isSendingZipEmail ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <Mail className="w-4 h-4 mr-2" />
+                  Send ZIP to Email
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Email Dialog */}
       <Dialog open={isEmailDialogOpen} onOpenChange={setIsEmailDialogOpen}>

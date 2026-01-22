@@ -128,3 +128,18 @@
 - [x] Bundle all certificates into a single ZIP file
 - [x] Add "Download All as ZIP" button after bulk issuance
 - [x] Include certificate metadata in filenames
+
+## Email ZIP Feature
+- [x] Create email service module with nodemailer integration (server/_core/email.ts)
+- [x] Add database table to track ZIP email history (zipEmailHistory)
+- [x] Add getUserById helper function to db.ts
+- [x] Create sendZipEmail tRPC procedure in routers.ts
+- [x] Add state variables for email ZIP dialog in BatchCertificates component
+- [x] Add sendZipEmailMutation hook in BatchCertificates component
+- [x] Add handleEmailZip function to generate and email ZIP files
+- [x] Add Email ZIP button next to Download ZIP button
+- [x] Add Email ZIP Dialog with confirmation UI
+- [x] Integrate email sending with ZIP attachment support
+- [x] Add owner notification when ZIP is emailed
+- [x] Support both development (Ethereal) and production SMTP modes
+- [x] Create beautiful HTML email template with batch details

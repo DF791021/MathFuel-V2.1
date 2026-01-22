@@ -1,6 +1,6 @@
 import { eq, desc, and, lt, gte } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, gameScores, InsertGameScore, customQuestions, InsertCustomQuestion, classes, InsertClass, classMembers, InsertClassMember, emailTemplates, InsertEmailTemplate, scheduledEmails, InsertScheduledEmail, issuedCertificates, InsertIssuedCertificate } from "../drizzle/schema";
+import { InsertUser, users, gameScores, InsertGameScore, customQuestions, InsertCustomQuestion, classes, InsertClass, classMembers, InsertClassMember, emailTemplates, InsertEmailTemplate, scheduledEmails, InsertScheduledEmail, issuedCertificates, InsertIssuedCertificate, zipEmailHistory, InsertZipEmailHistory } from "../drizzle/schema";
 import { nanoid } from 'nanoid';
 import { ENV } from './_core/env';
 
@@ -492,4 +492,77 @@ export async function getTeacherCertificates(teacherId: number) {
     .orderBy(desc(issuedCertificates.issuedAt));
   
   return result;
+}
+
+
+export async function createZipEmailHistory(data: InsertZipEmailHistory) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot create ZIP email history: database not available");
+    return;
+  }
+
+  try {
+    await db.insert(zipEmailHistory).values(data);
+  } catch (error) {
+    console.error("[Database] Failed to create ZIP email history:", error);
+    throw error;
+  }
+}
+
+export async function updateZipEmailStatus(
+  id: number,
+  status: "pending" | "sent" | "failed",
+  sentAt?: Date,
+  failureReason?: string
+) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot update ZIP email status: database not available");
+    return;
+  }
+
+  try {
+    const updateData: Record<string, unknown> = { status };
+    if (sentAt) {
+      updateData.sentAt = sentAt;
+    }
+    if (failureReason) {
+      updateData.failureReason = failureReason;
+    }
+
+    await db.update(zipEmailHistory).set(updateData).where(eq(zipEmailHistory.id, id));
+  } catch (error) {
+    console.error("[Database] Failed to update ZIP email status:", error);
+    throw error;
+  }
+}
+
+export async function getTeacherZipEmailHistory(teacherId: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  try {
+    const result = await db.select().from(zipEmailHistory)
+      .where(eq(zipEmailHistory.teacherId, teacherId))
+      .orderBy(desc(zipEmailHistory.createdAt));
+    
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to get ZIP email history:", error);
+    return [];
+  }
+}
+
+
+export async function getUserById(userId: number) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get user: database not available");
+    return undefined;
+  }
+
+  const result = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+
+  return result.length > 0 ? result[0] : undefined;
 }

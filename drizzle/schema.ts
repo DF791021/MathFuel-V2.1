@@ -147,3 +147,23 @@ export const issuedCertificates = mysqlTable("issuedCertificates", {
 
 export type IssuedCertificate = typeof issuedCertificates.$inferSelect;
 export type InsertIssuedCertificate = typeof issuedCertificates.$inferInsert;
+
+/**
+ * ZIP file email history for bulk certificate downloads
+ */
+export const zipEmailHistory = mysqlTable("zipEmailHistory", {
+  id: int("id").autoincrement().primaryKey(),
+  teacherId: int("teacherId").notNull(),
+  recipientEmail: varchar("recipientEmail", { length: 320 }).notNull(),
+  certificateCount: int("certificateCount").notNull(),
+  studentNames: text("studentNames").notNull(), // JSON array of student names
+  zipFileName: varchar("zipFileName", { length: 255 }).notNull(),
+  zipFileSize: int("zipFileSize").notNull(), // Size in bytes
+  status: mysqlEnum("status", ["pending", "sent", "failed"]).default("pending").notNull(),
+  sentAt: timestamp("sentAt"),
+  failureReason: text("failureReason"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type ZipEmailHistory = typeof zipEmailHistory.$inferSelect;
+export type InsertZipEmailHistory = typeof zipEmailHistory.$inferInsert;

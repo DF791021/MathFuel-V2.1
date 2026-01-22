@@ -43,6 +43,13 @@
       "when": 1765139780903,
       "tag": "0005_misty_sabra",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1769041524931,
+      "tag": "0006_optimal_komodo",
+      "breakpoints": true
     }
   ]
 }
