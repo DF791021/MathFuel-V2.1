@@ -172,3 +172,45 @@
 - [x] Test loading templates
 - [x] Test deleting templates
 - [x] Test setting default template
+
+## Email Template Sharing Feature
+- [ ] Add isShared and sharedWith fields to emailTemplates table
+- [ ] Create templateShares table to track sharing relationships
+- [ ] Add shareCode field to templates for easy sharing
+- [ ] Create tRPC procedure to share template with colleagues
+- [ ] Create tRPC procedure to view shared templates
+- [ ] Create tRPC procedure to import shared template
+- [ ] Create tRPC procedure to revoke template sharing
+- [ ] Add "Share Template" button to template list in dialog
+- [ ] Add share modal with colleague email input
+- [ ] Add copy-to-clipboard for share code
+- [ ] Add "Shared Templates" tab in email dialog
+- [ ] Display list of templates shared with current teacher
+- [ ] Add "Import" button to import shared templates
+- [ ] Show template owner/creator in shared templates list
+- [ ] Add sharing permissions UI (view-only, can-edit, can-share)
+- [ ] Test sharing template with colleague
+- [ ] Test importing shared template
+- [ ] Test revoking template sharing
+- [ ] Test permission levels
+
+## Template Sharing Backend Implementation - COMPLETED
+- [x] Database schema with templateShares, sharedTemplateLibrary, and templateImports tables
+- [x] tRPC procedures: shareTemplate, getSharedWithMe, revokeShare, publishToLibrary, getPublicTemplates, importTemplate, rateTemplate
+- [x] Database helper functions for all sharing operations
+- [x] Support for permission levels (view, edit, admin)
+- [x] Template library with public/private templates
+- [x] Usage tracking and rating system
+- [x] Template import with automatic copy creation
+
+## Template Sharing Frontend - TODO
+- [ ] Share Template modal in email customization dialog
+- [ ] Colleague email input with validation
+- [ ] Permission level selector
+- [ ] Copy-to-clipboard for share codes
+- [ ] Shared Templates tab showing received templates
+- [ ] Public Templates library browser
+- [ ] Search and filter for templates
+- [ ] Template rating UI
+- [ ] Import template button
+- [ ] Revoke sharing button

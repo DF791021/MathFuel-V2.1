@@ -1,6 +1,6 @@
-import { eq, desc, and, lt, gte } from "drizzle-orm";
+import { eq, desc, and, lt, gte, isNull } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, gameScores, InsertGameScore, customQuestions, InsertCustomQuestion, classes, InsertClass, classMembers, InsertClassMember, emailTemplates, InsertEmailTemplate, scheduledEmails, InsertScheduledEmail, issuedCertificates, InsertIssuedCertificate, zipEmailHistory, InsertZipEmailHistory } from "../drizzle/schema";
+import { InsertUser, users, gameScores, InsertGameScore, customQuestions, InsertCustomQuestion, classes, InsertClass, classMembers, InsertClassMember, emailTemplates, InsertEmailTemplate, scheduledEmails, InsertScheduledEmail, issuedCertificates, InsertIssuedCertificate, zipEmailHistory, InsertZipEmailHistory, templateShares, InsertTemplateShare, sharedTemplateLibrary, InsertSharedTemplateLibrary, templateImports, InsertTemplateImport } from "../drizzle/schema";
 import { nanoid } from 'nanoid';
 import { ENV } from './_core/env';
 
@@ -565,4 +565,238 @@ export async function getUserById(userId: number) {
   const result = await db.select().from(users).where(eq(users.id, userId)).limit(1);
 
   return result.length > 0 ? result[0] : undefined;
+}
+
+
+// ============================================================================
+// Template Sharing Functions
+// ============================================================================
+
+export async function shareTemplate(
+  templateId: number,
+  ownerId: number,
+  sharedWithId: number,
+  permission: "view" | "edit" | "admin" = "view"
+): Promise<string> {
+  const db = await getDb();
+  if (!db) {
+    throw new Error("[Database] Cannot share template: database not available");
+  }
+
+  try {
+    const shareCode = nanoid(12);
+    await db.insert(templateShares).values({
+      templateId,
+      ownerId,
+      sharedWithId,
+      shareCode,
+      permission,
+    });
+    return shareCode;
+  } catch (error) {
+    console.error("[Database] Failed to share template:", error);
+    throw error;
+  }
+}
+
+export async function getSharedTemplates(teacherId: number) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get shared templates: database not available");
+    return [];
+  }
+
+  try {
+    const result = await db
+      .select({
+        id: templateShares.id,
+        templateId: templateShares.templateId,
+        shareCode: templateShares.shareCode,
+        permission: templateShares.permission,
+        sharedAt: templateShares.sharedAt,
+        template: emailTemplates,
+        owner: users,
+      })
+      .from(templateShares)
+      .innerJoin(emailTemplates, eq(templateShares.templateId, emailTemplates.id))
+      .innerJoin(users, eq(templateShares.ownerId, users.id))
+      .where(
+        and(
+          eq(templateShares.sharedWithId, teacherId),
+          isNull(templateShares.revokedAt)
+        )
+      );
+
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to get shared templates:", error);
+    return [];
+  }
+}
+
+export async function revokeTemplateShare(shareId: number): Promise<void> {
+  const db = await getDb();
+  if (!db) {
+    throw new Error("[Database] Cannot revoke share: database not available");
+  }
+
+  try {
+    await db
+      .update(templateShares)
+      .set({ revokedAt: new Date() })
+      .where(eq(templateShares.id, shareId));
+  } catch (error) {
+    console.error("[Database] Failed to revoke template share:", error);
+    throw error;
+  }
+}
+
+export async function addToSharedLibrary(
+  templateId: number,
+  creatorId: number,
+  title: string,
+  description: string,
+  category: string = "general",
+  tags: string = "",
+  isPublic: boolean = false
+): Promise<number> {
+  const db = await getDb();
+  if (!db) {
+    throw new Error("[Database] Cannot add to library: database not available");
+  }
+
+  try {
+    const result = await db.insert(sharedTemplateLibrary).values({
+      templateId,
+      creatorId,
+      title,
+      description,
+      category,
+      tags,
+      isPublic,
+    });
+
+    return result[0].insertId;
+  } catch (error) {
+    console.error("[Database] Failed to add to shared library:", error);
+    throw error;
+  }
+}
+
+export async function getPublicTemplates(category?: string) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get public templates: database not available");
+    return [];
+  }
+
+  try {
+    const conditions = [eq(sharedTemplateLibrary.isPublic, true)];
+    if (category) {
+      conditions.push(eq(sharedTemplateLibrary.category, category));
+    }
+
+    const result = await db
+      .select({
+        id: sharedTemplateLibrary.id,
+        title: sharedTemplateLibrary.title,
+        description: sharedTemplateLibrary.description,
+        category: sharedTemplateLibrary.category,
+        tags: sharedTemplateLibrary.tags,
+        usageCount: sharedTemplateLibrary.usageCount,
+        rating: sharedTemplateLibrary.rating,
+        template: emailTemplates,
+        creator: users,
+      })
+      .from(sharedTemplateLibrary)
+      .innerJoin(emailTemplates, eq(sharedTemplateLibrary.templateId, emailTemplates.id))
+      .innerJoin(users, eq(sharedTemplateLibrary.creatorId, users.id))
+      .where(and(...conditions))
+      .orderBy(desc(sharedTemplateLibrary.usageCount));
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to get public templates:", error);
+    return [];
+  }
+}
+
+export async function importTemplate(
+  originalTemplateId: number,
+  importedByTeacherId: number,
+  newTemplateName: string
+): Promise<number> {
+  const db = await getDb();
+  if (!db) {
+    throw new Error("[Database] Cannot import template: database not available");
+  }
+
+  try {
+    // Get the original template
+    const original = await db
+      .select()
+      .from(emailTemplates)
+      .where(eq(emailTemplates.id, originalTemplateId))
+      .limit(1);
+
+    if (original.length === 0) {
+      throw new Error("Original template not found");
+    }
+
+    // Create a new template based on the original
+    const newTemplate = await db.insert(emailTemplates).values({
+      name: newTemplateName,
+      subject: original[0].subject,
+      body: original[0].body,
+      achievementType: original[0].achievementType,
+      teacherId: importedByTeacherId,
+    });
+
+    const newTemplateId = newTemplate[0].insertId;
+
+    // Record the import
+    await db.insert(templateImports).values({
+      originalTemplateId,
+      importedByTeacherId,
+      newTemplateId,
+    });
+
+    // Increment usage count in shared library
+    const libraryEntry = await db
+      .select()
+      .from(sharedTemplateLibrary)
+      .where(eq(sharedTemplateLibrary.templateId, originalTemplateId))
+      .limit(1);
+
+    if (libraryEntry.length > 0) {
+      await db
+        .update(sharedTemplateLibrary)
+        .set({ usageCount: libraryEntry[0].usageCount + 1 })
+        .where(eq(sharedTemplateLibrary.id, libraryEntry[0].id));
+    }
+
+    return newTemplateId;
+  } catch (error) {
+    console.error("[Database] Failed to import template:", error);
+    throw error;
+  }
+}
+
+export async function updateLibraryRating(
+  libraryId: number,
+  newRating: number
+): Promise<void> {
+  const db = await getDb();
+  if (!db) {
+    throw new Error("[Database] Cannot update rating: database not available");
+  }
+
+  try {
+    await db
+      .update(sharedTemplateLibrary)
+      .set({ rating: Math.max(0, Math.min(5, newRating)) })
+      .where(eq(sharedTemplateLibrary.id, libraryId));
+  } catch (error) {
+    console.error("[Database] Failed to update rating:", error);
+    throw error;
+  }
 }

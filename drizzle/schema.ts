@@ -167,3 +167,59 @@ export const zipEmailHistory = mysqlTable("zipEmailHistory", {
 
 export type ZipEmailHistory = typeof zipEmailHistory.$inferSelect;
 export type InsertZipEmailHistory = typeof zipEmailHistory.$inferInsert;
+
+
+/**
+ * Template sharing relationships - tracks which teachers have shared templates with which colleagues
+ */
+export const templateShares = mysqlTable("templateShares", {
+  id: int("id").autoincrement().primaryKey(),
+  templateId: int("templateId").notNull(),
+  ownerId: int("ownerId").notNull(), // Teacher who owns the template
+  sharedWithId: int("sharedWithId").notNull(), // Teacher who received the template
+  shareCode: varchar("shareCode", { length: 20 }).notNull().unique(), // Unique code for sharing
+  permission: mysqlEnum("permission", ["view", "edit", "admin"]).default("view").notNull(),
+  sharedAt: timestamp("sharedAt").defaultNow().notNull(),
+  revokedAt: timestamp("revokedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type TemplateShare = typeof templateShares.$inferSelect;
+export type InsertTemplateShare = typeof templateShares.$inferInsert;
+
+/**
+ * Shared template library - public templates that teachers can discover and import
+ */
+export const sharedTemplateLibrary = mysqlTable("sharedTemplateLibrary", {
+  id: int("id").autoincrement().primaryKey(),
+  templateId: int("templateId").notNull(),
+  creatorId: int("creatorId").notNull(),
+  title: varchar("title", { length: 100 }).notNull(),
+  description: text("description"),
+  category: varchar("category", { length: 50 }).default("general").notNull(),
+  tags: varchar("tags", { length: 255 }), // Comma-separated tags
+  isPublic: boolean("isPublic").default(false).notNull(),
+  usageCount: int("usageCount").default(0).notNull(),
+  rating: int("rating").default(0), // Rating as integer 0-5
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type SharedTemplateLibrary = typeof sharedTemplateLibrary.$inferSelect;
+export type InsertSharedTemplateLibrary = typeof sharedTemplateLibrary.$inferInsert;
+
+/**
+ * Template imports - tracks when teachers import shared templates
+ */
+export const templateImports = mysqlTable("templateImports", {
+  id: int("id").autoincrement().primaryKey(),
+  originalTemplateId: int("originalTemplateId").notNull(),
+  importedByTeacherId: int("importedByTeacherId").notNull(),
+  newTemplateId: int("newTemplateId"), // The new template created from the import
+  importedAt: timestamp("importedAt").defaultNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type TemplateImport = typeof templateImports.$inferSelect;
+export type InsertTemplateImport = typeof templateImports.$inferInsert;

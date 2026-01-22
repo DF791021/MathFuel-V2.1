@@ -528,6 +528,85 @@ ${results.map(r => `- ${r.name}: ${r.success ? "✅ Sent" : "❌ Failed"}`).join
         await db.deleteEmailTemplate(input.id, ctx.user.id);
         return { success: true };
       }),
+
+    shareTemplate: protectedProcedure
+      .input(z.object({
+        templateId: z.number(),
+        colleagueEmail: z.string().email(),
+        permission: z.enum(["view", "edit", "admin"]).default("view"),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const shareCode = await db.shareTemplate(
+          input.templateId,
+          ctx.user.id,
+          ctx.user.id,
+          input.permission
+        );
+        return { success: true, shareCode };
+      }),
+
+    getSharedWithMe: protectedProcedure.query(async ({ ctx }) => {
+      return db.getSharedTemplates(ctx.user.id);
+    }),
+
+    revokeShare: protectedProcedure
+      .input(z.object({ shareId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        await db.revokeTemplateShare(input.shareId);
+        return { success: true };
+      }),
+
+    publishToLibrary: protectedProcedure
+      .input(z.object({
+        templateId: z.number(),
+        title: z.string().min(1).max(100),
+        description: z.string().optional(),
+        category: z.string().default("general"),
+        tags: z.string().optional(),
+        isPublic: z.boolean().default(false),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const libraryId = await db.addToSharedLibrary(
+          input.templateId,
+          ctx.user.id,
+          input.title,
+          input.description || "",
+          input.category,
+          input.tags || "",
+          input.isPublic
+        );
+        return { success: true, libraryId };
+      }),
+
+    getPublicTemplates: publicProcedure
+      .input(z.object({ category: z.string().optional() }))
+      .query(async ({ input }) => {
+        return db.getPublicTemplates(input.category);
+      }),
+
+    importTemplate: protectedProcedure
+      .input(z.object({
+        originalTemplateId: z.number(),
+        newTemplateName: z.string().min(1).max(100),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const newTemplateId = await db.importTemplate(
+          input.originalTemplateId,
+          ctx.user.id,
+          input.newTemplateName
+        );
+        return { success: true, newTemplateId };
+      }),
+
+    rateTemplate: publicProcedure
+      .input(z.object({
+        libraryId: z.number(),
+        rating: z.number().min(0).max(5),
+      }))
+      .mutation(async ({ input }) => {
+        await db.updateLibraryRating(input.libraryId, input.rating);
+        return { success: true };
+      }),
   }),
 });
 
