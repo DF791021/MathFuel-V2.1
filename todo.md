@@ -214,3 +214,46 @@
 - [ ] Template rating UI
 - [ ] Import template button
 - [ ] Revoke sharing button
+
+
+## Template Library Page - TODO
+- [ ] Create TemplateLibrary.tsx page component
+- [ ] Add page layout with header and search bar
+- [ ] Implement template grid/list display
+- [ ] Add category filter sidebar
+- [ ] Add search functionality with debouncing
+- [ ] Add sort options (popularity, rating, newest)
+- [ ] Create template card component with preview
+- [ ] Add template details modal
+- [ ] Implement import button with confirmation
+- [ ] Add rating display and user ratings
+- [ ] Show template creator information
+- [ ] Add usage count display
+- [ ] Implement pagination for large result sets
+- [ ] Add empty state when no templates found
+- [ ] Add loading states and skeletons
+- [ ] Add "My Templates" section for user's own templates
+- [ ] Add "Recently Imported" section
+- [ ] Add breadcrumb navigation
+- [ ] Add route to template library page
+- [ ] Add link in teacher dashboard navigation
+
+## Public Template Library Page - COMPLETED
+- [x] Create TemplateLibrary.tsx page component with full layout
+- [x] Implement search functionality with debouncing
+- [x] Add category filtering sidebar
+- [x] Add sort options (popular, rating, newest)
+- [x] Create template card component with preview
+- [x] Add template details modal with full preview
+- [x] Implement import button with mutation handling
+- [x] Add rating display and statistics
+- [x] Show template creator information
+- [x] Display usage count
+- [x] Implement pagination for large result sets
+- [x] Add empty state with helpful messaging
+- [x] Add loading states and skeleton loaders
+- [x] Add stats footer showing totals
+- [x] Add route to template library page (/templates)
+- [x] Tested template library page loads correctly
+- [x] Verified search, filter, and sort UI elements are present
+- [x] Tested empty state display
