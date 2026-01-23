@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
+import TeacherChatbot from "@/components/TeacherChatbot";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,6 +39,7 @@ export default function TeacherPortal() {
   const [isAddQuestionOpen, setIsAddQuestionOpen] = useState(false);
   const [isAddClassOpen, setIsAddClassOpen] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<any>(null);
+  const [isChatbotOpen, setIsChatbotOpen] = useState(false);
   
   // Form states
   const [newQuestion, setNewQuestion] = useState({
@@ -157,6 +159,15 @@ export default function TeacherPortal() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsChatbotOpen(true)}
+              className="gap-2"
+            >
+              <Sparkles className="h-4 w-4" />
+              AI Assistant
+            </Button>
             <Badge variant="secondary" className="text-sm">
               <GraduationCap className="h-4 w-4 mr-1" />
               Teacher
@@ -164,6 +175,9 @@ export default function TeacherPortal() {
           </div>
         </div>
       </header>
+
+      {/* Chatbot */}
+      <TeacherChatbot isOpen={isChatbotOpen} onClose={() => setIsChatbotOpen(false)} />
 
       {/* Main Content */}
       <main className="container py-8">

@@ -6,9 +6,11 @@ import { z } from "zod";
 import * as db from "./db";
 import { notifyOwner } from "./_core/notification";
 import { sendEmailWithZipAttachment } from "./_core/email";
+import { teacherChatbotRouter } from "./routers/teacherChatbot";
 
 export const appRouter = router({
   system: systemRouter,
+  teacherChatbot: teacherChatbotRouter,
   
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
