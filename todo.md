@@ -274,3 +274,22 @@
 - [x] Add mode switching with badge buttons
 - [x] Add clear chat functionality
 - [x] Render markdown content with Streamdown component
+
+
+## Chat History Persistence - COMPLETED
+- [x] Create chatConversations and chatMessages database tables
+- [x] Add database helper functions for conversation CRUD
+- [x] Create tRPC procedures for saving/loading conversations (server/routers/chatHistory.ts)
+- [x] Add conversation list UI to chatbot with History sidebar
+- [x] Implement auto-save functionality for current conversation
+- [x] Add conversation title input and generation
+- [x] Implement conversation switching with message loading
+- [x] Add delete conversation functionality with confirmation
+- [x] Add New conversation button for starting fresh
+- [x] Add conversation message counter
+- [x] Test chat history save and load - VERIFIED
+- [x] Test conversation switching
+- [x] Test conversation deletion
+- [x] Implement mode-aware conversation tracking
+- [x] Add conversation timestamp tracking
+- [x] Verify persistence across browser sessions

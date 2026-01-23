@@ -1,6 +1,6 @@
 import { eq, desc, and, lt, gte, isNull } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, gameScores, InsertGameScore, customQuestions, InsertCustomQuestion, classes, InsertClass, classMembers, InsertClassMember, emailTemplates, InsertEmailTemplate, scheduledEmails, InsertScheduledEmail, issuedCertificates, InsertIssuedCertificate, zipEmailHistory, InsertZipEmailHistory, templateShares, InsertTemplateShare, sharedTemplateLibrary, InsertSharedTemplateLibrary, templateImports, InsertTemplateImport } from "../drizzle/schema";
+import { InsertUser, users, gameScores, InsertGameScore, customQuestions, InsertCustomQuestion, classes, InsertClass, classMembers, InsertClassMember, emailTemplates, InsertEmailTemplate, scheduledEmails, InsertScheduledEmail, issuedCertificates, InsertIssuedCertificate, zipEmailHistory, InsertZipEmailHistory, templateShares, InsertTemplateShare, sharedTemplateLibrary, InsertSharedTemplateLibrary, templateImports, InsertTemplateImport, chatConversations, InsertChatConversation, chatMessages, InsertChatMessage } from "../drizzle/schema";
 import { nanoid } from 'nanoid';
 import { ENV } from './_core/env';
 
@@ -799,4 +799,142 @@ export async function updateLibraryRating(
     console.error("[Database] Failed to update rating:", error);
     throw error;
   }
+}
+
+
+// ============================================================================
+// Chat Conversations & Messages
+// ============================================================================
+
+export async function createChatConversation(
+  teacherId: number,
+  title: string,
+  mode: "general" | "ideas" | "resources" | "trivia" | "challenges" = "general"
+): Promise<number> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.insert(chatConversations).values({
+    teacherId,
+    title,
+    mode,
+    messageCount: 0,
+  });
+
+  return result[0].insertId;
+}
+
+export async function getTeacherConversations(
+  teacherId: number
+): Promise<(typeof chatConversations.$inferSelect)[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  return await db
+    .select()
+    .from(chatConversations)
+    .where(eq(chatConversations.teacherId, teacherId))
+    .orderBy(desc(chatConversations.updatedAt));
+}
+
+export async function getConversation(
+  conversationId: number
+): Promise<(typeof chatConversations.$inferSelect) | null> {
+  const db = await getDb();
+  if (!db) return null;
+
+  const result = await db
+    .select()
+    .from(chatConversations)
+    .where(eq(chatConversations.id, conversationId))
+    .limit(1);
+
+  return result[0] || null;
+}
+
+export async function updateConversationTitle(
+  conversationId: number,
+  title: string
+): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+
+  await db
+    .update(chatConversations)
+    .set({ title, updatedAt: new Date() })
+    .where(eq(chatConversations.id, conversationId));
+}
+
+export async function deleteConversation(conversationId: number): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+
+  // Delete all messages first
+  await db
+    .delete(chatMessages)
+    .where(eq(chatMessages.conversationId, conversationId));
+
+  // Then delete the conversation
+  await db
+    .delete(chatConversations)
+    .where(eq(chatConversations.id, conversationId));
+}
+
+export async function addChatMessage(
+  conversationId: number,
+  role: "user" | "assistant",
+  content: string,
+  mode: "general" | "ideas" | "resources" | "trivia" | "challenges" = "general"
+): Promise<number> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.insert(chatMessages).values({
+    conversationId,
+    role,
+    content,
+    mode,
+  });
+
+  // Update message count
+  const conversation = await getConversation(conversationId);
+  if (conversation) {
+    await db
+      .update(chatConversations)
+      .set({
+        messageCount: (conversation.messageCount || 0) + 1,
+        updatedAt: new Date(),
+      })
+      .where(eq(chatConversations.id, conversationId));
+  }
+
+  return result[0].insertId;
+}
+
+export async function getConversationMessages(
+  conversationId: number
+): Promise<(typeof chatMessages.$inferSelect)[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  return await db
+    .select()
+    .from(chatMessages)
+    .where(eq(chatMessages.conversationId, conversationId))
+    .orderBy(chatMessages.createdAt);
+}
+
+export async function clearConversationMessages(conversationId: number): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+
+  await db
+    .delete(chatMessages)
+    .where(eq(chatMessages.conversationId, conversationId));
+
+  // Reset message count
+  await db
+    .update(chatConversations)
+    .set({ messageCount: 0, updatedAt: new Date() })
+    .where(eq(chatConversations.id, conversationId));
 }

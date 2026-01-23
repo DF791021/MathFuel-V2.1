@@ -1,11 +1,11 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Send, MessageCircle, X, Sparkles } from "lucide-react";
+import { Loader2, Send, MessageCircle, X, Sparkles, History, Trash2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Streamdown } from "streamdown";
 
@@ -30,12 +30,54 @@ export default function TeacherChatbot({ isOpen = true, onClose }: TeacherChatbo
   const [selectedMode, setSelectedMode] = useState<ChatMode>("general");
   const [isLoading, setIsLoading] = useState(false);
   const [showModeSelector, setShowModeSelector] = useState(messages.length === 0);
+  const [currentConversationId, setCurrentConversationId] = useState<number | null>(null);
+  const [showConversationList, setShowConversationList] = useState(false);
+  const [conversationTitle, setConversationTitle] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Queries and mutations
   const { data: modes = [] } = trpc.teacherChatbot.getModes.useQuery();
-  const sendMessageMutation = trpc.teacherChatbot.sendMessage.useMutation({
+  const conversationsQuery = trpc.chatHistory.getConversations.useQuery();
+  const messagesQuery = trpc.chatHistory.getMessages.useQuery(
+    { conversationId: currentConversationId! },
+    { enabled: !!currentConversationId }
+  );
+  
+  const createConversationMutation = trpc.chatHistory.createConversation.useMutation({
     onSuccess: (data) => {
+      setCurrentConversationId(data.id);
+      setMessages([]);
+      setShowModeSelector(true);
+      conversationsQuery.refetch();
+      toast.success("New conversation created");
+    },
+    onError: (error) => {
+      toast.error(`Failed to create conversation: ${error.message}`);
+    },
+  });
+
+  const addMessageMutation = trpc.chatHistory.addMessage.useMutation({
+    onSuccess: () => {
+      if (currentConversationId) {
+        messagesQuery.refetch();
+      }
+    },
+  });
+
+  const deleteConversationMutation = trpc.chatHistory.deleteConversation.useMutation({
+    onSuccess: () => {
+      setCurrentConversationId(null);
+      setMessages([]);
+      conversationsQuery.refetch();
+      toast.success("Conversation deleted");
+    },
+    onError: (error) => {
+      toast.error(`Failed to delete conversation: ${error.message}`);
+    },
+  });
+
+  const sendMessageMutation = trpc.teacherChatbot.sendMessage.useMutation({
+    onSuccess: async (data) => {
       const assistantMessage: Message = {
         id: `msg-${Date.now()}`,
         role: "assistant",
@@ -44,6 +86,17 @@ export default function TeacherChatbot({ isOpen = true, onClose }: TeacherChatbo
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, assistantMessage]);
+      
+      // Save assistant message to history if conversation exists
+      if (currentConversationId) {
+        await addMessageMutation.mutateAsync({
+          conversationId: currentConversationId,
+          role: "assistant",
+          content: data.message,
+          mode: selectedMode,
+        });
+      }
+      
       setIsLoading(false);
       setShowModeSelector(false);
     },
@@ -53,19 +106,41 @@ export default function TeacherChatbot({ isOpen = true, onClose }: TeacherChatbo
     },
   });
 
+  // Load messages when conversation changes
+  useEffect(() => {
+    if (messagesQuery.data) {
+      setMessages(
+        messagesQuery.data.map((msg) => ({
+          id: `msg-${msg.id}`,
+          role: msg.role as "user" | "assistant",
+          content: msg.content,
+          mode: msg.mode,
+          timestamp: new Date(msg.createdAt),
+        }))
+      );
+    }
+  }, [messagesQuery.data]);
+
   // Auto-scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim() || isLoading) return;
+  const handleSendMessage = async () => {
+    if (!input.trim()) return;
+
+    // Create new conversation if needed
+    if (!currentConversationId) {
+      const title = conversationTitle || `${selectedMode} Chat - ${new Date().toLocaleString()}`;
+      createConversationMutation.mutate({ title, mode: selectedMode });
+      return;
+    }
 
     const userMessage: Message = {
       id: `msg-${Date.now()}`,
       role: "user",
       content: input,
+      mode: selectedMode,
       timestamp: new Date(),
     };
 
@@ -73,192 +148,218 @@ export default function TeacherChatbot({ isOpen = true, onClose }: TeacherChatbo
     setInput("");
     setIsLoading(true);
 
-    // Convert messages to the format expected by the API
-    const conversationHistory = messages.map((msg) => ({
-      role: msg.role as "user" | "assistant",
-      content: msg.content,
-    }));
+    // Save user message to history
+    await addMessageMutation.mutateAsync({
+      conversationId: currentConversationId,
+      role: "user",
+      content: input,
+      mode: selectedMode,
+    });
 
-    await sendMessageMutation.mutateAsync({
+    // Send to chatbot
+    sendMessageMutation.mutate({
       message: input,
       mode: selectedMode,
-      conversationHistory,
     });
   };
 
-  const handleModeChange = (mode: ChatMode) => {
-    setSelectedMode(mode);
-    setShowModeSelector(false);
-    
-    // Add a system message about the mode change
-    const modeInfo = modes.find((m) => m.id === mode);
-    if (modeInfo) {
-      const systemMessage: Message = {
-        id: `msg-${Date.now()}`,
-        role: "assistant",
-        content: `I'm now in ${modeInfo.name} mode. ${modeInfo.description}. How can I help you?`,
-        mode: mode,
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, systemMessage]);
+  const handleLoadConversation = (conversationId: number) => {
+    setCurrentConversationId(conversationId);
+    setShowConversationList(false);
+  };
+
+  const handleNewConversation = () => {
+    setCurrentConversationId(null);
+    setMessages([]);
+    setShowModeSelector(true);
+    setConversationTitle("");
+  };
+
+  const handleDeleteConversation = (conversationId: number) => {
+    if (confirm("Are you sure you want to delete this conversation?")) {
+      deleteConversationMutation.mutate({ conversationId });
     }
   };
 
-  const handleClearChat = () => {
-    setMessages([]);
-    setShowModeSelector(true);
+  const modeConfig: Record<ChatMode, { icon: string; label: string; description: string }> = {
+    general: { icon: "💬", label: "General Support", description: "Get advice and support for teaching challenges" },
+    ideas: { icon: "💡", label: "Lesson Ideas", description: "Get creative lesson ideas and classroom strategies" },
+    resources: { icon: "📚", label: "Resources", description: "Find teaching resources and materials" },
+    trivia: { icon: "🌍", label: "Fun Trivia", description: "Learn interesting facts and trivia" },
+    challenges: { icon: "🎯", label: "Challenges", description: "Get fun challenges and activities for students" },
   };
 
-  if (!isOpen) return null;
-
-  const currentModeInfo = modes.find((m) => m.id === selectedMode);
+  const currentModeConfig = modeConfig[selectedMode];
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose?.()}>
-      <DialogContent className="max-w-2xl h-[600px] flex flex-col p-0">
-        {/* Header */}
-        <DialogHeader className="border-b p-4">
-          <div className="flex items-center justify-between w-full">
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-purple-600" />
-              <div>
-                <DialogTitle>Teacher Assistant AI</DialogTitle>
-                <DialogDescription>
-                  {currentModeInfo?.name} • {currentModeInfo?.description}
-                </DialogDescription>
-              </div>
-            </div>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl h-[600px] flex flex-col">
+        <DialogHeader className="flex flex-row items-center justify-between space-y-0">
+          <div>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5" />
+              Teacher Assistant AI
+            </DialogTitle>
+            <DialogDescription>
+              {currentModeConfig.icon} {currentModeConfig.label} • {currentModeConfig.description}
+            </DialogDescription>
+          </div>
+          <div className="flex gap-2">
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
-              onClick={() => onClose?.()}
-              className="h-6 w-6 p-0"
+              onClick={() => setShowConversationList(!showConversationList)}
+              className="gap-2"
             >
-              <X className="w-4 h-4" />
+              <History className="w-4 h-4" />
+              History
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleNewConversation}
+              className="gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              New
             </Button>
           </div>
         </DialogHeader>
 
-        {/* Messages Area */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {messages.length === 0 && !showModeSelector && (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-center space-y-4">
-                <MessageCircle className="w-12 h-12 mx-auto text-gray-400" />
-                <p className="text-gray-600">Start a conversation!</p>
-              </div>
-            </div>
-          )}
-
-          {/* Mode Selector */}
-          {showModeSelector && messages.length === 0 && (
-            <div className="space-y-3">
-              <p className="font-semibold text-sm text-gray-700">Choose a mode:</p>
-              <div className="grid grid-cols-2 gap-2">
-                {modes.map((mode) => (
-                  <Button
-                    key={mode.id}
-                    variant="outline"
-                    className="justify-start h-auto p-3 text-left"
-                    onClick={() => handleModeChange(mode.id as ChatMode)}
+        <div className="flex-1 overflow-hidden flex gap-4">
+          {/* Conversation List */}
+          {showConversationList && (
+            <Card className="w-64 flex flex-col">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm">Saved Conversations</CardTitle>
+              </CardHeader>
+              <CardContent className="flex-1 overflow-y-auto space-y-2">
+                {conversationsQuery.data?.map((conv) => (
+                  <div
+                    key={conv.id}
+                    className={`p-2 rounded cursor-pointer hover:bg-accent transition-colors ${
+                      currentConversationId === conv.id ? "bg-accent" : ""
+                    }`}
                   >
-                    <div>
-                      <div className="font-medium text-sm">{mode.icon} {mode.name}</div>
-                      <div className="text-xs text-gray-600">{mode.description}</div>
+                    <div
+                      onClick={() => handleLoadConversation(conv.id)}
+                      className="flex-1"
+                    >
+                      <p className="text-sm font-medium truncate">{conv.title}</p>
+                      <p className="text-xs text-muted-foreground">{conv.messageCount} messages</p>
                     </div>
-                  </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteConversation(conv.id);
+                      }}
+                      className="h-6 w-6 p-0"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </Button>
+                  </div>
                 ))}
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           )}
 
-          {/* Messages */}
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
-            >
-              <div
-                className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                  message.role === "user"
-                    ? "bg-purple-600 text-white rounded-br-none"
-                    : "bg-gray-100 text-gray-900 rounded-bl-none"
-                }`}
-              >
-                {message.role === "assistant" ? (
-                  <Streamdown>{message.content}</Streamdown>
-                ) : (
-                  <p className="text-sm">{message.content}</p>
-                )}
-              </div>
-            </div>
-          ))}
-
-          {/* Loading indicator */}
-          {isLoading && (
-            <div className="flex justify-start">
-              <div className="bg-gray-100 text-gray-900 px-4 py-2 rounded-lg rounded-bl-none">
-                <Loader2 className="w-4 h-4 animate-spin" />
-              </div>
-            </div>
-          )}
-
-          <div ref={messagesEndRef} />
-        </div>
-
-        {/* Input Area */}
-        <div className="border-t p-4 space-y-2">
-          {messages.length > 0 && (
-            <div className="flex justify-between items-center text-xs text-gray-600">
-              <span>{messages.length} messages</span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleClearChat}
-                className="h-6 text-xs"
-              >
-                Clear Chat
-              </Button>
-            </div>
-          )}
-
-          <form onSubmit={handleSendMessage} className="flex gap-2">
-            <Input
-              placeholder="Ask me anything..."
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              disabled={isLoading}
-              className="flex-1"
-            />
-            <Button
-              type="submit"
-              disabled={isLoading || !input.trim()}
-              size="sm"
-              className="gap-2"
-            >
-              {isLoading ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Send className="w-4 h-4" />
+          {/* Messages Area */}
+          <div className="flex-1 flex flex-col">
+            <div className="flex-1 overflow-y-auto space-y-4 p-4 bg-muted/50 rounded-lg">
+              {messages.length === 0 && showModeSelector && (
+                <div className="flex flex-col items-center justify-center h-full gap-4">
+                  <MessageCircle className="w-12 h-12 text-muted-foreground" />
+                  <p className="text-center text-muted-foreground">
+                    {currentConversationId ? "Start a new conversation" : "Select a mode to begin"}
+                  </p>
+                </div>
               )}
-            </Button>
-          </form>
 
-          {/* Mode Switcher */}
-          {messages.length > 0 && (
-            <div className="flex gap-2 flex-wrap">
-              {modes.map((mode) => (
-                <Badge
-                  key={mode.id}
-                  variant={selectedMode === mode.id ? "default" : "outline"}
-                  className="cursor-pointer"
-                  onClick={() => handleModeChange(mode.id as ChatMode)}
+              {messages.map((msg) => (
+                <div
+                  key={msg.id}
+                  className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
                 >
-                  {mode.icon} {mode.name}
-                </Badge>
+                  <div
+                    className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                      msg.role === "user"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-secondary text-secondary-foreground"
+                    }`}
+                  >
+                    {msg.role === "assistant" ? (
+                      <Streamdown>{msg.content}</Streamdown>
+                    ) : (
+                      <p className="text-sm">{msg.content}</p>
+                    )}
+                  </div>
+                </div>
               ))}
+
+              {isLoading && (
+                <div className="flex justify-start">
+                  <div className="bg-secondary text-secondary-foreground px-4 py-2 rounded-lg">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  </div>
+                </div>
+              )}
+
+              <div ref={messagesEndRef} />
             </div>
-          )}
+
+            {/* Mode Selector */}
+            {showModeSelector && messages.length === 0 && (
+              <div className="p-4 border-t space-y-3">
+                <p className="text-sm font-medium">Select a mode:</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {(Object.entries(modeConfig) as [ChatMode, typeof modeConfig.general][]).map(
+                    ([mode, config]) => (
+                      <Button
+                        key={mode}
+                        variant={selectedMode === mode ? "default" : "outline"}
+                        onClick={() => setSelectedMode(mode)}
+                        className="justify-start gap-2"
+                      >
+                        <span>{config.icon}</span>
+                        <span className="text-xs">{config.label}</span>
+                      </Button>
+                    )
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Input Area */}
+            <div className="p-4 border-t space-y-2">
+              {!currentConversationId && (
+                <Input
+                  placeholder="Conversation title (optional)"
+                  value={conversationTitle}
+                  onChange={(e) => setConversationTitle(e.target.value)}
+                  className="text-sm"
+                />
+              )}
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Ask me anything..."
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+                  disabled={isLoading}
+                  className="text-sm"
+                />
+                <Button
+                  onClick={handleSendMessage}
+                  disabled={isLoading || !input.trim()}
+                  size="sm"
+                >
+                  <Send className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

@@ -223,3 +223,35 @@ export const templateImports = mysqlTable("templateImports", {
 
 export type TemplateImport = typeof templateImports.$inferSelect;
 export type InsertTemplateImport = typeof templateImports.$inferInsert;
+
+
+/**
+ * Chat conversations - stores teacher conversations with the AI chatbot
+ */
+export const chatConversations = mysqlTable("chatConversations", {
+  id: int("id").autoincrement().primaryKey(),
+  teacherId: int("teacherId").notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  mode: mysqlEnum("mode", ["general", "ideas", "resources", "trivia", "challenges"]).default("general").notNull(),
+  messageCount: int("messageCount").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ChatConversation = typeof chatConversations.$inferSelect;
+export type InsertChatConversation = typeof chatConversations.$inferInsert;
+
+/**
+ * Chat messages - individual messages within conversations
+ */
+export const chatMessages = mysqlTable("chatMessages", {
+  id: int("id").autoincrement().primaryKey(),
+  conversationId: int("conversationId").notNull(),
+  role: mysqlEnum("role", ["user", "assistant"]).notNull(),
+  content: text("content").notNull(),
+  mode: mysqlEnum("mode", ["general", "ideas", "resources", "trivia", "challenges"]).default("general").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type ChatMessage = typeof chatMessages.$inferSelect;
+export type InsertChatMessage = typeof chatMessages.$inferInsert;
