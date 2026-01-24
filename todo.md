@@ -306,3 +306,13 @@
 - [x] Include step-by-step guides for all features
 - [x] Add real-world scenarios and examples
 - [x] Include troubleshooting section and FAQs
+
+
+## Video Tutorial Creation - COMPLETED
+- [x] Plan video content and create scripts for each tutorial
+- [x] Generate video: Creating Individual Certificates (2:30) - tutorial_01_individual_certificates.mp4
+- [x] Generate video: Bulk Certificate Generation and ZIP Download (2:45) - tutorial_02_bulk_certificates.mp4
+- [x] Generate video: Customizing and Sending Emails with Certificates (3:15) - tutorial_03_email_certificates.mp4
+- [x] Generate video: Saving and Managing Email Templates (3:00) - tutorial_04_email_templates.mp4
+- [x] Create summary document with video descriptions and links (VIDEO_TUTORIALS_GUIDE.md)
+- [x] Total training time: ~12 minutes across 4 tutorials
