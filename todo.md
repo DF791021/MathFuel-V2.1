@@ -445,3 +445,14 @@
 - [ ] Implement reflection insights and progress analysis
 - [ ] Write tests for journaling functionality
 - [ ] Integrate journaling feature into student portal
+
+
+## AI Journal Insights Feature - COMPLETED
+- [x] Design AI insight generation system and analysis requirements
+- [x] Create backend service for journal analysis using OpenAI (journalAnalysis.ts)
+- [x] Build tRPC procedures for generating and retrieving insights (generateInsights, getLatestInsights, getInsightHistory)
+- [x] Create UI components for displaying AI-generated insights (InsightCard, JournalInsightsPanel)
+- [x] Implement insight caching and optimization (insightCache.ts with TTL management)
+- [x] Add insight refresh and manual generation triggers (refresh button in JournalInsightsPanel)
+- [x] Write tests for AI insight analysis functions (17 tests passing)
+- [x] Integrate insights into student portal (Insights tab in StudentGoalPortal)

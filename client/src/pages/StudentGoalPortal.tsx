@@ -20,6 +20,7 @@ import StudentGoalCard from "@/components/StudentGoalCard";
 import StudentProgressChart from "@/components/StudentProgressChart";
 import MilestoneAchievements from "@/components/MilestoneAchievements";
 import EncouragementMessages from "@/components/EncouragementMessages";
+import JournalInsightsPanel from "@/components/JournalInsightsPanel";
 
 type GoalStatus = "active" | "completed" | "failed" | "paused";
 type SortBy = "dueDate" | "progress" | "priority" | "created";
@@ -179,7 +180,7 @@ export default function StudentGoalPortal() {
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="goals" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="goals">
             <Target className="w-4 h-4 mr-2" />
             Goals
@@ -195,6 +196,10 @@ export default function StudentGoalPortal() {
           <TabsTrigger value="encouragement">
             <Sparkles className="w-4 h-4 mr-2" />
             Motivation
+          </TabsTrigger>
+          <TabsTrigger value="insights">
+            <Sparkles className="w-4 h-4 mr-2" />
+            Insights
           </TabsTrigger>
         </TabsList>
 
@@ -280,6 +285,16 @@ export default function StudentGoalPortal() {
             achievements={(achievements || []) as any}
             studentName={user?.name || "Student"}
           />
+        </TabsContent>
+
+        {/* Insights Tab */}
+        <TabsContent value="insights" className="space-y-4">
+          {user?.id && user?.name && (
+            <JournalInsightsPanel
+              playerId={user.id}
+              playerName={user.name}
+            />
+          )}
         </TabsContent>
       </Tabs>
     </div>

@@ -12,6 +12,7 @@ import {
   getJournalInsights,
   getEntriesByGoal,
   getJournalStatistics,
+  createJournalInsight,
 } from "../db";
 
 export const journalRouter = router({
@@ -287,6 +288,161 @@ export const journalRouter = router({
           success: false,
           statistics: null,
           error: error instanceof Error ? error.message : "Failed to fetch statistics",
+        };
+      }
+    }),
+
+  /**
+   * Generate AI insights from journal entries
+   */
+  generateInsights: protectedProcedure
+    .input(z.object({ playerId: z.number(), playerName: z.string() }))
+    .mutation(async ({ input }) => {
+      try {
+        const { analyzeJournalEntries, generateRecommendations, validateAnalysisResults } = await import(
+          "../_core/journalAnalysis"
+        );
+
+        // Get student's journal entries
+        const entries = await getStudentJournalEntries(input.playerId, 50);
+
+        if (entries.length === 0) {
+          return {
+            success: false,
+            error: "No journal entries found to analyze",
+          };
+        }
+
+        // Analyze entries
+        const analysis = await analyzeJournalEntries(entries, input.playerName);
+
+        if (!analysis) {
+          return {
+            success: false,
+            error: "Failed to analyze journal entries",
+          };
+        }
+
+        // Validate analysis
+        if (!validateAnalysisResults(analysis)) {
+          return {
+            success: false,
+            error: "Analysis validation failed",
+          };
+        }
+
+        // Generate recommendations
+        const recommendations = await generateRecommendations(analysis, input.playerName);
+
+        // Save insights to database
+        const insightTypes = [
+          { type: "progress_trend" as const, data: analysis.progressTrend },
+          { type: "challenge_pattern" as const, data: analysis.challengePatterns },
+          { type: "strategy_effectiveness" as const, data: analysis.strategyEffectiveness },
+          { type: "motivation_level" as const, data: analysis.motivationLevel },
+          { type: "learning_style" as const, data: analysis.learningStyle },
+        ];
+
+        for (const { type, data } of insightTypes) {
+          await createJournalInsight({
+            playerId: input.playerId,
+            playerName: input.playerName,
+            insightType: type,
+            insight: data.insight,
+            supportingData: data.supportingData,
+          });
+        }
+
+        return {
+          success: true,
+          analysis,
+          recommendations,
+          message: "Insights generated successfully",
+        };
+      } catch (error) {
+        console.error("[tRPC] Error generating insights:", error);
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : "Failed to generate insights",
+        };
+      }
+    }),
+
+  /**
+   * Get latest insights for a student
+   */
+  getLatestInsights: protectedProcedure
+    .input(z.object({ playerId: z.number() }))
+    .query(async ({ input }) => {
+      try {
+        const insights = await getJournalInsights(input.playerId);
+
+        if (insights.length === 0) {
+          return {
+            success: false,
+            insights: null,
+            message: "No insights available yet. Generate insights from your journal entries.",
+          };
+        }
+
+        // Group insights by type and get the latest of each
+        const latestInsights: Record<string, any> = {};
+        for (const insight of insights) {
+          if (!latestInsights[insight.insightType]) {
+            latestInsights[insight.insightType] = insight;
+          }
+        }
+
+        return {
+          success: true,
+          insights: latestInsights,
+        };
+      } catch (error) {
+        console.error("[tRPC] Error fetching insights:", error);
+        return {
+          success: false,
+          insights: null,
+          error: error instanceof Error ? error.message : "Failed to fetch insights",
+        };
+      }
+    }),
+
+  /**
+   * Get insight history for a student
+   */
+  getInsightHistory: protectedProcedure
+    .input(z.object({ playerId: z.number(), limit: z.number().default(10) }))
+    .query(async ({ input }) => {
+      try {
+        const insights = await getJournalInsights(input.playerId);
+
+        // Group by generation date and return latest N generations
+        const grouped: Record<string, any[]> = {};
+        for (const insight of insights) {
+          const date = new Date(insight.generatedAt).toLocaleDateString();
+          if (!grouped[date]) {
+            grouped[date] = [];
+          }
+          grouped[date].push(insight);
+        }
+
+        const history = Object.entries(grouped)
+          .slice(0, input.limit)
+          .map(([date, insightsForDate]) => ({
+            date,
+            insights: insightsForDate,
+          }));
+
+        return {
+          success: true,
+          history,
+        };
+      } catch (error) {
+        console.error("[tRPC] Error fetching insight history:", error);
+        return {
+          success: false,
+          history: [],
+          error: error instanceof Error ? error.message : "Failed to fetch history",
         };
       }
     }),
