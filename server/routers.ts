@@ -9,12 +9,14 @@ import { sendEmailWithZipAttachment } from "./_core/email";
 import { teacherChatbotRouter } from "./routers/teacherChatbot";
 import { chatHistoryRouter } from "./routers/chatHistory";
 import { rouletteRouter } from "./routers/roulette";
+import { analyticsRouter } from "./routers/analytics";
 
 export const appRouter = router({
   system: systemRouter,
   teacherChatbot: teacherChatbotRouter,
   chatHistory: chatHistoryRouter,
   roulette: rouletteRouter,
+  analytics: analyticsRouter,
   
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),

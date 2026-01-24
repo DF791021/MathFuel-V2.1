@@ -159,6 +159,12 @@ export default function TeacherPortal() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <Link href="/analytics">
+              <Button variant="outline" size="sm" className="gap-2">
+                <BarChart3 className="h-4 w-4" />
+                Analytics
+              </Button>
+            </Link>
             <Button
               variant="outline"
               size="sm"
@@ -182,7 +188,7 @@ export default function TeacherPortal() {
       {/* Main Content */}
       <main className="container py-8">
         <Tabs defaultValue="questions" className="space-y-6">
-          <TabsList className="grid w-full max-w-2xl grid-cols-5 h-12">
+          <TabsList className="grid w-full max-w-3xl grid-cols-6 h-12">
             <TabsTrigger value="questions" className="text-sm">
               <ClipboardList className="h-4 w-4 mr-2" />
               Questions
@@ -194,6 +200,10 @@ export default function TeacherPortal() {
             <TabsTrigger value="stats" className="text-sm">
               <BarChart3 className="h-4 w-4 mr-2" />
               Stats
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="text-sm">
+              <Trophy className="h-4 w-4 mr-2" />
+              Analytics
             </TabsTrigger>
             <TabsTrigger value="certificates" className="text-sm">
               <Award className="h-4 w-4 mr-2" />
@@ -518,6 +528,28 @@ export default function TeacherPortal() {
                 </Card>
               </TabsContent>
             </Tabs>
+          </TabsContent>
+
+          {/* Analytics Tab */}
+          <TabsContent value="analytics" className="space-y-6">
+            <div>
+              <h2 className="text-xl font-bold flex items-center gap-2">
+                <BarChart3 className="h-6 w-6 text-blue-500" />
+                Game Analytics
+              </h2>
+              <p className="text-muted-foreground">View detailed performance reports and insights</p>
+            </div>
+            <Card>
+              <CardContent className="pt-6">
+                <p className="text-muted-foreground mb-4">Open the full analytics dashboard to view comprehensive reports:</p>
+                <Link href="/analytics">
+                  <Button className="gap-2">
+                    <BarChart3 className="h-4 w-4" />
+                    Open Analytics Dashboard
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* Scheduled Emails Tab */}

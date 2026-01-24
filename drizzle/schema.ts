@@ -387,3 +387,137 @@ export const roulettePlayerPowerUps = mysqlTable("roulettePlayerPowerUps", {
 
 export type RoulettePlayerPowerUp = typeof roulettePlayerPowerUps.$inferSelect;
 export type InsertRoulettePlayerPowerUp = typeof roulettePlayerPowerUps.$inferInsert;
+
+/**
+ * Game Analytics - Student Performance Summary
+ * Aggregated performance data for each student across all games
+ */
+export const gameAnalyticsStudentSummary = mysqlTable("gameAnalyticsStudentSummary", {
+  id: int("id").autoincrement().primaryKey(),
+  sessionId: int("sessionId").notNull(),
+  playerId: int("playerId").notNull(),
+  playerName: varchar("playerName", { length: 100 }).notNull(),
+  totalGamesPlayed: int("totalGamesPlayed").default(1).notNull(),
+  totalScore: int("totalScore").default(0).notNull(),
+  averageScore: int("averageScore").default(0).notNull(),
+  totalCorrectAnswers: int("totalCorrectAnswers").default(0).notNull(),
+  totalAnswers: int("totalAnswers").default(0).notNull(),
+  accuracyRate: int("accuracyRate").default(0).notNull(), // Percentage 0-100
+  bestScore: int("bestScore").default(0).notNull(),
+  longestStreak: int("longestStreak").default(0).notNull(),
+  totalTimeSpent: int("totalTimeSpent").default(0).notNull(), // In seconds
+  lastPlayedAt: timestamp("lastPlayedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type GameAnalyticsStudentSummary = typeof gameAnalyticsStudentSummary.$inferSelect;
+export type InsertGameAnalyticsStudentSummary = typeof gameAnalyticsStudentSummary.$inferInsert;
+
+/**
+ * Game Analytics - Question Performance
+ * Tracks how students perform on specific questions
+ */
+export const gameAnalyticsQuestionPerformance = mysqlTable("gameAnalyticsQuestionPerformance", {
+  id: int("id").autoincrement().primaryKey(),
+  challengeId: int("challengeId").notNull(),
+  title: varchar("title", { length: 200 }).notNull(),
+  difficulty: mysqlEnum("difficulty", ["easy", "medium", "hard"]).default("medium").notNull(),
+  totalAttempts: int("totalAttempts").default(0).notNull(),
+  correctAnswers: int("correctAnswers").default(0).notNull(),
+  incorrectAnswers: int("incorrectAnswers").default(0).notNull(),
+  accuracyRate: int("accuracyRate").default(0).notNull(), // Percentage 0-100
+  averageTimeSpent: int("averageTimeSpent").default(0).notNull(), // In seconds
+  averagePointsEarned: int("averagePointsEarned").default(0).notNull(),
+  lastAskedAt: timestamp("lastAskedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type GameAnalyticsQuestionPerformance = typeof gameAnalyticsQuestionPerformance.$inferSelect;
+export type InsertGameAnalyticsQuestionPerformance = typeof gameAnalyticsQuestionPerformance.$inferInsert;
+
+/**
+ * Game Analytics - Class Performance
+ * Aggregated performance data for entire classes
+ */
+export const gameAnalyticsClassPerformance = mysqlTable("gameAnalyticsClassPerformance", {
+  id: int("id").autoincrement().primaryKey(),
+  classId: int("classId").notNull(),
+  className: varchar("className", { length: 100 }).notNull(),
+  teacherId: int("teacherId").notNull(),
+  totalStudents: int("totalStudents").default(0).notNull(),
+  totalGamesPlayed: int("totalGamesPlayed").default(0).notNull(),
+  averageScore: int("averageScore").default(0).notNull(),
+  classAccuracyRate: int("classAccuracyRate").default(0).notNull(), // Percentage 0-100
+  highestScore: int("highestScore").default(0).notNull(),
+  lowestScore: int("lowestScore").default(0).notNull(),
+  averageTimePerGame: int("averageTimePerGame").default(0).notNull(), // In seconds
+  participationRate: int("participationRate").default(0).notNull(), // Percentage 0-100
+  lastGamePlayedAt: timestamp("lastGamePlayedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type GameAnalyticsClassPerformance = typeof gameAnalyticsClassPerformance.$inferSelect;
+export type InsertGameAnalyticsClassPerformance = typeof gameAnalyticsClassPerformance.$inferInsert;
+
+/**
+ * Game Analytics - Daily Engagement
+ * Tracks daily engagement metrics for trend analysis
+ */
+export const gameAnalyticsDailyEngagement = mysqlTable("gameAnalyticsDailyEngagement", {
+  id: int("id").autoincrement().primaryKey(),
+  teacherId: int("teacherId").notNull(),
+  date: varchar("date", { length: 10 }).notNull(), // YYYY-MM-DD format
+  gamesPlayedCount: int("gamesPlayedCount").default(0).notNull(),
+  uniquePlayersCount: int("uniquePlayersCount").default(0).notNull(),
+  totalPointsEarned: int("totalPointsEarned").default(0).notNull(),
+  averageAccuracy: int("averageAccuracy").default(0).notNull(), // Percentage 0-100
+  totalTimeSpent: int("totalTimeSpent").default(0).notNull(), // In seconds
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type GameAnalyticsDailyEngagement = typeof gameAnalyticsDailyEngagement.$inferSelect;
+export type InsertGameAnalyticsDailyEngagement = typeof gameAnalyticsDailyEngagement.$inferInsert;
+
+/**
+ * Game Analytics - Topic Mastery
+ * Tracks student mastery of different nutrition topics
+ */
+export const gameAnalyticsTopicMastery = mysqlTable("gameAnalyticsTopicMastery", {
+  id: int("id").autoincrement().primaryKey(),
+  playerId: int("playerId").notNull(),
+  playerName: varchar("playerName", { length: 100 }).notNull(),
+  topic: varchar("topic", { length: 100 }).notNull(), // e.g., "Vegetables", "Proteins", "Dairy"
+  totalQuestionsAsked: int("totalQuestionsAsked").default(0).notNull(),
+  correctAnswers: int("correctAnswers").default(0).notNull(),
+  masteryPercentage: int("masteryPercentage").default(0).notNull(), // 0-100
+  lastPracticedAt: timestamp("lastPracticedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type GameAnalyticsTopicMastery = typeof gameAnalyticsTopicMastery.$inferSelect;
+export type InsertGameAnalyticsTopicMastery = typeof gameAnalyticsTopicMastery.$inferInsert;
+
+/**
+ * Game Analytics - Difficulty Progression
+ * Tracks how students progress through difficulty levels
+ */
+export const gameAnalyticsDifficultyProgression = mysqlTable("gameAnalyticsDifficultyProgression", {
+  id: int("id").autoincrement().primaryKey(),
+  playerId: int("playerId").notNull(),
+  playerName: varchar("playerName", { length: 100 }).notNull(),
+  difficulty: mysqlEnum("difficulty", ["easy", "medium", "hard"]).notNull(),
+  totalAttempts: int("totalAttempts").default(0).notNull(),
+  correctAnswers: int("correctAnswers").default(0).notNull(),
+  accuracyRate: int("accuracyRate").default(0).notNull(), // 0-100
+  averageScore: int("averageScore").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type GameAnalyticsDifficultyProgression = typeof gameAnalyticsDifficultyProgression.$inferSelect;
+export type InsertGameAnalyticsDifficultyProgression = typeof gameAnalyticsDifficultyProgression.$inferInsert;

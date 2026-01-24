@@ -10,6 +10,7 @@ import LeaderboardPage from "./pages/LeaderboardPage";
 import VerifyCertificate from "./pages/VerifyCertificate";
 import TemplateLibrary from "./pages/TemplateLibrary";
 import { NutritionRoulette } from "./pages/NutritionRoulette";
+import GameAnalyticsDashboard from "./pages/GameAnalyticsDashboard";
 
 function Router() {
   return (
@@ -19,6 +20,7 @@ function Router() {
       <Route path="/leaderboard" component={LeaderboardPage} />
       <Route path="/templates" component={TemplateLibrary} />
       <Route path="/roulette" component={NutritionRoulette} />
+      <Route path="/analytics" component={GameAnalyticsDashboard} />
       <Route path="/verify/:id" component={VerifyCertificate} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />

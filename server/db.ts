@@ -1,6 +1,6 @@
-import { eq, desc, and, lt, gte, isNull } from "drizzle-orm";
+import { eq, desc, and, lt, gte, isNull, lte, asc, sql, count, countDistinct, avg, sum, max } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, gameScores, InsertGameScore, customQuestions, InsertCustomQuestion, classes, InsertClass, classMembers, InsertClassMember, emailTemplates, InsertEmailTemplate, scheduledEmails, InsertScheduledEmail, issuedCertificates, InsertIssuedCertificate, zipEmailHistory, InsertZipEmailHistory, templateShares, InsertTemplateShare, sharedTemplateLibrary, InsertSharedTemplateLibrary, templateImports, InsertTemplateImport, chatConversations, InsertChatConversation, chatMessages, InsertChatMessage } from "../drizzle/schema";
+import { InsertUser, users, gameScores, InsertGameScore, customQuestions, InsertCustomQuestion, classes, InsertClass, classMembers, InsertClassMember, emailTemplates, InsertEmailTemplate, scheduledEmails, InsertScheduledEmail, issuedCertificates, InsertIssuedCertificate, zipEmailHistory, InsertZipEmailHistory, templateShares, InsertTemplateShare, sharedTemplateLibrary, InsertSharedTemplateLibrary, templateImports, InsertTemplateImport, chatConversations, InsertChatConversation, chatMessages, InsertChatMessage, gameAnalyticsStudentSummary, InsertGameAnalyticsStudentSummary, gameAnalyticsQuestionPerformance, InsertGameAnalyticsQuestionPerformance, gameAnalyticsClassPerformance, InsertGameAnalyticsClassPerformance, gameAnalyticsDailyEngagement, InsertGameAnalyticsDailyEngagement, gameAnalyticsTopicMastery, InsertGameAnalyticsTopicMastery, gameAnalyticsDifficultyProgression, InsertGameAnalyticsDifficultyProgression, rouletteGameSessions, rouletteGamePlayers, rouletteRoundResults } from "../drizzle/schema";
 import { nanoid } from 'nanoid';
 import { ENV } from './_core/env';
 
@@ -937,4 +937,451 @@ export async function clearConversationMessages(conversationId: number): Promise
     .update(chatConversations)
     .set({ messageCount: 0, updatedAt: new Date() })
     .where(eq(chatConversations.id, conversationId));
+}
+
+
+// ============================================================================
+// ANALYTICS HELPERS - Game Performance Tracking and Aggregation
+// ============================================================================
+
+/**
+ * Calculate and update student performance summary
+ */
+export async function updateStudentPerformanceSummary(
+  sessionId: number,
+  playerId: number,
+  playerName: string,
+  totalScore: number,
+  correctAnswers: number,
+  totalAnswers: number,
+  timeSpent: number
+): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+
+  const accuracyRate = totalAnswers > 0 ? Math.round((correctAnswers / totalAnswers) * 100) : 0;
+
+  await db
+    .insert(gameAnalyticsStudentSummary)
+    .values({
+      sessionId,
+      playerId,
+      playerName,
+      totalGamesPlayed: 1,
+      totalScore,
+      averageScore: totalScore,
+      totalCorrectAnswers: correctAnswers,
+      totalAnswers,
+      accuracyRate,
+      bestScore: totalScore,
+      longestStreak: 0,
+      totalTimeSpent: timeSpent,
+      lastPlayedAt: new Date(),
+    })
+    .onDuplicateKeyUpdate({
+      set: {
+        totalGamesPlayed: sql`totalGamesPlayed + 1`,
+        totalScore: sql`totalScore + ${totalScore}`,
+        averageScore: sql`ROUND((totalScore + ${totalScore}) / (totalGamesPlayed + 1))`,
+        totalCorrectAnswers: sql`totalCorrectAnswers + ${correctAnswers}`,
+        totalAnswers: sql`totalAnswers + ${totalAnswers}`,
+        accuracyRate: sql`ROUND((totalCorrectAnswers + ${correctAnswers}) / (totalAnswers + ${totalAnswers}) * 100)`,
+        bestScore: sql`GREATEST(bestScore, ${totalScore})`,
+        totalTimeSpent: sql`totalTimeSpent + ${timeSpent}`,
+        lastPlayedAt: new Date(),
+        updatedAt: new Date(),
+      },
+    });
+}
+
+/**
+ * Update question performance analytics
+ */
+export async function updateQuestionPerformance(
+  challengeId: number,
+  title: string,
+  difficulty: "easy" | "medium" | "hard",
+  isCorrect: boolean,
+  timeSpent: number,
+  pointsEarned: number
+): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+
+  const correctAnswers = isCorrect ? 1 : 0;
+  const incorrectAnswers = isCorrect ? 0 : 1;
+
+  await db
+    .insert(gameAnalyticsQuestionPerformance)
+    .values({
+      challengeId,
+      title,
+      difficulty,
+      totalAttempts: 1,
+      correctAnswers,
+      incorrectAnswers,
+      accuracyRate: isCorrect ? 100 : 0,
+      averageTimeSpent: timeSpent,
+      averagePointsEarned: pointsEarned,
+      lastAskedAt: new Date(),
+    })
+    .onDuplicateKeyUpdate({
+      set: {
+        totalAttempts: sql`totalAttempts + 1`,
+        correctAnswers: sql`correctAnswers + ${correctAnswers}`,
+        incorrectAnswers: sql`incorrectAnswers + ${incorrectAnswers}`,
+        accuracyRate: sql`ROUND((correctAnswers + ${correctAnswers}) / (totalAttempts + 1) * 100)`,
+        averageTimeSpent: sql`ROUND((averageTimeSpent * totalAttempts + ${timeSpent}) / (totalAttempts + 1))`,
+        averagePointsEarned: sql`ROUND((averagePointsEarned * totalAttempts + ${pointsEarned}) / (totalAttempts + 1))`,
+        lastAskedAt: new Date(),
+        updatedAt: new Date(),
+      },
+    });
+}
+
+/**
+ * Get student performance summary for a teacher
+ */
+export async function getStudentPerformanceSummary(
+  teacherId: number,
+  startDate?: Date,
+  endDate?: Date
+): Promise<(typeof gameAnalyticsStudentSummary.$inferSelect)[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  // Get all analytics for this teacher's games
+  const results = await db
+    .select()
+    .from(gameAnalyticsStudentSummary)
+    .orderBy(desc(gameAnalyticsStudentSummary.totalScore));
+
+  // Filter by date range if provided
+  if (startDate && endDate) {
+    return results.filter(
+      (r) => r.lastPlayedAt && r.lastPlayedAt >= startDate && r.lastPlayedAt <= endDate
+    );
+  }
+
+  return results;
+}
+
+/**
+ * Get question performance analytics
+ */
+export async function getQuestionPerformanceAnalytics(
+  teacherId: number,
+  limit: number = 20
+): Promise<(typeof gameAnalyticsQuestionPerformance.$inferSelect)[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  return await db
+    .select()
+    .from(gameAnalyticsQuestionPerformance)
+    .orderBy(desc(gameAnalyticsQuestionPerformance.totalAttempts))
+    .limit(limit);
+}
+
+/**
+ * Get difficult questions (lowest accuracy rate)
+ */
+export async function getDifficultQuestions(
+  teacherId: number,
+  limit: number = 10
+): Promise<(typeof gameAnalyticsQuestionPerformance.$inferSelect)[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  return await db
+    .select()
+    .from(gameAnalyticsQuestionPerformance)
+    .where(gte(gameAnalyticsQuestionPerformance.totalAttempts, 3)) // At least 3 attempts
+    .orderBy(asc(gameAnalyticsQuestionPerformance.accuracyRate))
+    .limit(limit);
+}
+
+/**
+ * Update class performance analytics
+ */
+export async function updateClassPerformance(
+  classId: number,
+  className: string,
+  teacherId: number,
+  totalStudents: number,
+  averageScore: number,
+  classAccuracyRate: number,
+  highestScore: number,
+  lowestScore: number,
+  averageTimePerGame: number,
+  participationRate: number
+): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+
+  await db
+    .insert(gameAnalyticsClassPerformance)
+    .values({
+      classId,
+      className,
+      teacherId,
+      totalStudents,
+      totalGamesPlayed: 1,
+      averageScore,
+      classAccuracyRate,
+      highestScore,
+      lowestScore,
+      averageTimePerGame,
+      participationRate,
+      lastGamePlayedAt: new Date(),
+    })
+    .onDuplicateKeyUpdate({
+      set: {
+        totalGamesPlayed: sql`totalGamesPlayed + 1`,
+        averageScore: sql`ROUND((averageScore * (totalGamesPlayed - 1) + ${averageScore}) / totalGamesPlayed)`,
+        classAccuracyRate: sql`ROUND((classAccuracyRate * (totalGamesPlayed - 1) + ${classAccuracyRate}) / totalGamesPlayed)`,
+        highestScore: sql`GREATEST(highestScore, ${highestScore})`,
+        lowestScore: sql`LEAST(lowestScore, ${lowestScore})`,
+        averageTimePerGame: sql`ROUND((averageTimePerGame * (totalGamesPlayed - 1) + ${averageTimePerGame}) / totalGamesPlayed)`,
+        participationRate: sql`ROUND((participationRate * (totalGamesPlayed - 1) + ${participationRate}) / totalGamesPlayed)`,
+        lastGamePlayedAt: new Date(),
+        updatedAt: new Date(),
+      },
+    });
+}
+
+/**
+ * Get class performance analytics
+ */
+export async function getClassPerformanceAnalytics(
+  teacherId: number
+): Promise<(typeof gameAnalyticsClassPerformance.$inferSelect)[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  return await db
+    .select()
+    .from(gameAnalyticsClassPerformance)
+    .where(eq(gameAnalyticsClassPerformance.teacherId, teacherId))
+    .orderBy(desc(gameAnalyticsClassPerformance.averageScore));
+}
+
+/**
+ * Record daily engagement metrics
+ */
+export async function recordDailyEngagement(
+  teacherId: number,
+  date: string,
+  gamesPlayedCount: number,
+  uniquePlayersCount: number,
+  totalPointsEarned: number,
+  averageAccuracy: number,
+  totalTimeSpent: number
+): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+
+  await db
+    .insert(gameAnalyticsDailyEngagement)
+    .values({
+      teacherId,
+      date,
+      gamesPlayedCount,
+      uniquePlayersCount,
+      totalPointsEarned,
+      averageAccuracy,
+      totalTimeSpent,
+    })
+    .onDuplicateKeyUpdate({
+      set: {
+        gamesPlayedCount: sql`gamesPlayedCount + ${gamesPlayedCount}`,
+        uniquePlayersCount: sql`GREATEST(uniquePlayersCount, ${uniquePlayersCount})`,
+        totalPointsEarned: sql`totalPointsEarned + ${totalPointsEarned}`,
+        averageAccuracy: sql`ROUND((averageAccuracy + ${averageAccuracy}) / 2)`,
+        totalTimeSpent: sql`totalTimeSpent + ${totalTimeSpent}`,
+        updatedAt: new Date(),
+      },
+    });
+}
+
+/**
+ * Get daily engagement trend data
+ */
+export async function getDailyEngagementTrend(
+  teacherId: number,
+  days: number = 30
+): Promise<(typeof gameAnalyticsDailyEngagement.$inferSelect)[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - days);
+  const dateStr = startDate.toISOString().split("T")[0];
+
+  return await db
+    .select()
+    .from(gameAnalyticsDailyEngagement)
+    .where(
+      and(
+        eq(gameAnalyticsDailyEngagement.teacherId, teacherId),
+        gte(gameAnalyticsDailyEngagement.date, dateStr)
+      )
+    )
+    .orderBy(asc(gameAnalyticsDailyEngagement.date));
+}
+
+/**
+ * Update topic mastery for a player
+ */
+export async function updateTopicMastery(
+  playerId: number,
+  playerName: string,
+  topic: string,
+  isCorrect: boolean
+): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+
+  const correctAnswers = isCorrect ? 1 : 0;
+
+  await db
+    .insert(gameAnalyticsTopicMastery)
+    .values({
+      playerId,
+      playerName,
+      topic,
+      totalQuestionsAsked: 1,
+      correctAnswers,
+      masteryPercentage: isCorrect ? 100 : 0,
+      lastPracticedAt: new Date(),
+    })
+    .onDuplicateKeyUpdate({
+      set: {
+        totalQuestionsAsked: sql`totalQuestionsAsked + 1`,
+        correctAnswers: sql`correctAnswers + ${correctAnswers}`,
+        masteryPercentage: sql`ROUND((correctAnswers + ${correctAnswers}) / (totalQuestionsAsked + 1) * 100)`,
+        lastPracticedAt: new Date(),
+        updatedAt: new Date(),
+      },
+    });
+}
+
+/**
+ * Get topic mastery data for a player
+ */
+export async function getPlayerTopicMastery(
+  playerId: number
+): Promise<(typeof gameAnalyticsTopicMastery.$inferSelect)[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  return await db
+    .select()
+    .from(gameAnalyticsTopicMastery)
+    .where(eq(gameAnalyticsTopicMastery.playerId, playerId))
+    .orderBy(desc(gameAnalyticsTopicMastery.masteryPercentage));
+}
+
+/**
+ * Update difficulty progression for a player
+ */
+export async function updateDifficultyProgression(
+  playerId: number,
+  playerName: string,
+  difficulty: "easy" | "medium" | "hard",
+  isCorrect: boolean,
+  score: number
+): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+
+  const correctAnswers = isCorrect ? 1 : 0;
+  const accuracyRate = isCorrect ? 100 : 0;
+
+  await db
+    .insert(gameAnalyticsDifficultyProgression)
+    .values({
+      playerId,
+      playerName,
+      difficulty,
+      totalAttempts: 1,
+      correctAnswers,
+      accuracyRate,
+      averageScore: score,
+    })
+    .onDuplicateKeyUpdate({
+      set: {
+        totalAttempts: sql`totalAttempts + 1`,
+        correctAnswers: sql`correctAnswers + ${correctAnswers}`,
+        accuracyRate: sql`ROUND((correctAnswers + ${correctAnswers}) / (totalAttempts + 1) * 100)`,
+        averageScore: sql`ROUND((averageScore * totalAttempts + ${score}) / (totalAttempts + 1))`,
+        updatedAt: new Date(),
+      },
+    });
+}
+
+/**
+ * Get difficulty progression for a player
+ */
+export async function getPlayerDifficultyProgression(
+  playerId: number
+): Promise<(typeof gameAnalyticsDifficultyProgression.$inferSelect)[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  return await db
+    .select()
+    .from(gameAnalyticsDifficultyProgression)
+    .where(eq(gameAnalyticsDifficultyProgression.playerId, playerId))
+    .orderBy(asc(gameAnalyticsDifficultyProgression.difficulty));
+}
+
+/**
+ * Get overall teacher analytics summary
+ */
+export async function getTeacherAnalyticsSummary(teacherId: number): Promise<{
+  totalGamesPlayed: number;
+  totalStudents: number;
+  averageAccuracy: number;
+  averageScore: number;
+  totalTimeSpent: number;
+  lastGameDate: Date | null;
+}> {
+  const db = await getDb();
+  if (!db) {
+    return {
+      totalGamesPlayed: 0,
+      totalStudents: 0,
+      averageAccuracy: 0,
+      averageScore: 0,
+      totalTimeSpent: 0,
+      lastGameDate: null,
+    };
+  }
+
+  const result = await db
+    .select({
+      totalGamesPlayed: count(),
+      totalStudents: countDistinct(rouletteGamePlayers.userId),
+      averageAccuracy: avg(rouletteGamePlayers.correctAnswers),
+      averageScore: avg(rouletteGamePlayers.totalScore),
+      totalTimeSpent: sql`0`,
+      lastGameDate: max(rouletteGameSessions.endedAt),
+    })
+    .from(rouletteGameSessions)
+    .leftJoin(
+      rouletteGamePlayers,
+      eq(rouletteGameSessions.id, rouletteGamePlayers.sessionId)
+    )
+    .where(eq(rouletteGameSessions.teacherId, teacherId));
+
+  const data = result[0];
+  return {
+    totalGamesPlayed: data?.totalGamesPlayed || 0,
+    totalStudents: data?.totalStudents || 0,
+    averageAccuracy: data?.averageAccuracy ? Number(data.averageAccuracy) : 0,
+    averageScore: data?.averageScore ? Number(data.averageScore) : 0,
+    totalTimeSpent: data?.totalTimeSpent ? Number(data.totalTimeSpent) : 0,
+    lastGameDate: data?.lastGameDate || null,
+  };
 }
