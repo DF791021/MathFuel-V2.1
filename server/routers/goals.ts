@@ -343,4 +343,79 @@ export const goalsRouter = router({
         };
       }
     }),
+
+  /**
+   * Get goal recommendations based on journal insights
+   */
+  getRecommendations: protectedProcedure
+    .input(z.object({ playerId: z.number() }))
+    .query(async ({ input }) => {
+      try {
+        const { generateGoalRecommendations, getTopRecommendations } = await import(
+          "../_core/goalRecommendations"
+        );
+        const { getJournalInsights } = await import("../db");
+
+        const insightsArray = await getJournalInsights(input.playerId);
+
+        if (!insightsArray || insightsArray.length === 0) {
+          return {
+            success: false,
+            recommendations: [],
+            message: "No insights available",
+          };
+        }
+
+        // Convert insights array to object format
+        const insights: any = {};
+        for (const insight of insightsArray) {
+          if (insight.insightType === "progress_trend") {
+            insights.progressTrend = {
+              insight: insight.insight,
+              supportingData: insight.supportingData || "",
+            };
+          } else if (insight.insightType === "challenge_pattern") {
+            insights.challengePatterns = {
+              insight: insight.insight,
+              supportingData: insight.supportingData || "",
+            };
+          } else if (insight.insightType === "strategy_effectiveness") {
+            insights.strategyEffectiveness = {
+              insight: insight.insight,
+              supportingData: insight.supportingData || "",
+            };
+          } else if (insight.insightType === "motivation_level") {
+            insights.motivationLevel = {
+              insight: insight.insight,
+              supportingData: insight.supportingData || "",
+            };
+          } else if (insight.insightType === "learning_style") {
+            insights.learningStyle = {
+              insight: insight.insight,
+              supportingData: insight.supportingData || "",
+            };
+          }
+        }
+
+        const recommendations = await generateGoalRecommendations(
+          insights,
+          "Student"
+        );
+
+        const topRecommendations = getTopRecommendations(recommendations, 5);
+
+        return {
+          success: true,
+          recommendations: topRecommendations,
+          message: "Recommendations generated",
+        };
+      } catch (error) {
+        console.error("[tRPC] Error getting recommendations:", error);
+        return {
+          success: false,
+          recommendations: [],
+          error: error instanceof Error ? error.message : "Failed to get recommendations",
+        };
+      }
+    }),
 });

@@ -456,3 +456,14 @@
 - [x] Add insight refresh and manual generation triggers (refresh button in JournalInsightsPanel)
 - [x] Write tests for AI insight analysis functions (17 tests passing)
 - [x] Integrate insights into student portal (Insights tab in StudentGoalPortal)
+
+
+## Insight-Based Goal Recommendations - COMPLETED
+- [x] Design goal recommendation engine and matching algorithm
+- [x] Create backend service for generating goal recommendations from insights (goalRecommendations.ts)
+- [x] Build tRPC procedures for retrieving and accepting recommendations (getRecommendations, acceptRecommendation)
+- [x] Create UI component for displaying recommended goals (RecommendedGoalsPanel)
+- [x] Implement recommendation ranking and filtering (rankRecommendations, filterRecommendationsByType, getTopRecommendations)
+- [x] Add one-click goal creation from recommendations (integrated in RecommendedGoalsPanel)
+- [x] Write tests for goal recommendation functions (21 tests passing)
+- [x] Integrate recommendations into student portal (Recommended tab in StudentGoalPortal)

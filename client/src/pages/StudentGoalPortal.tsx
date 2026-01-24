@@ -21,6 +21,7 @@ import StudentProgressChart from "@/components/StudentProgressChart";
 import MilestoneAchievements from "@/components/MilestoneAchievements";
 import EncouragementMessages from "@/components/EncouragementMessages";
 import JournalInsightsPanel from "@/components/JournalInsightsPanel";
+import RecommendedGoalsPanel from "@/components/RecommendedGoalsPanel";
 
 type GoalStatus = "active" | "completed" | "failed" | "paused";
 type SortBy = "dueDate" | "progress" | "priority" | "created";
@@ -180,7 +181,7 @@ export default function StudentGoalPortal() {
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="goals" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="goals">
             <Target className="w-4 h-4 mr-2" />
             Goals
@@ -200,6 +201,10 @@ export default function StudentGoalPortal() {
           <TabsTrigger value="insights">
             <Sparkles className="w-4 h-4 mr-2" />
             Insights
+          </TabsTrigger>
+          <TabsTrigger value="recommendations">
+            <Zap className="w-4 h-4 mr-2" />
+            Recommended
           </TabsTrigger>
         </TabsList>
 
@@ -293,6 +298,17 @@ export default function StudentGoalPortal() {
             <JournalInsightsPanel
               playerId={user.id}
               playerName={user.name}
+            />
+          )}
+        </TabsContent>
+
+        {/* Recommendations Tab */}
+        <TabsContent value="recommendations" className="space-y-4">
+          {user?.id && user?.name && (
+            <RecommendedGoalsPanel
+              playerId={user.id}
+              playerName={user.name}
+              classId={0}
             />
           )}
         </TabsContent>
