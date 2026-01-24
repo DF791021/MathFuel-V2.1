@@ -434,3 +434,14 @@
 - [x] Add goal filtering and sorting features (by status, priority, due date, progress)
 - [x] Write tests for student portal functionality
 - [x] Integrate student portal into main navigation (added /goals route and My Goals link)
+
+
+## Student Journaling Feature - IN PROGRESS
+- [ ] Design journal data model and database schema
+- [ ] Create database tables for journal entries and reflections
+- [ ] Build backend procedures for journal CRUD operations
+- [ ] Create journal entry editor and reflection prompt components
+- [ ] Build journal timeline and reflection history view
+- [ ] Implement reflection insights and progress analysis
+- [ ] Write tests for journaling functionality
+- [ ] Integrate journaling feature into student portal

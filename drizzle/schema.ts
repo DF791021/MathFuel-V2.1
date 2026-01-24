@@ -743,3 +743,78 @@ export const goalFeedback = mysqlTable("goalFeedback", {
 });
 export type GoalFeedback = typeof goalFeedback.$inferSelect;
 export type InsertGoalFeedback = typeof goalFeedback.$inferInsert;
+
+
+/**
+ * Student Journal Entries
+ * Students write reflections on their goal progress and learning strategies
+ */
+export const journalEntries = mysqlTable("journalEntries", {
+  id: int("id").autoincrement().primaryKey(),
+  playerId: int("playerId").notNull(),
+  playerName: varchar("playerName", { length: 100 }).notNull(),
+  goalId: int("goalId"),
+  entryDate: timestamp("entryDate").defaultNow().notNull(),
+  title: varchar("title", { length: 200 }).notNull(),
+  content: text("content").notNull(),
+  mood: mysqlEnum("mood", ["excellent", "good", "neutral", "struggling", "discouraged"]).default("neutral").notNull(),
+  challengesFaced: text("challengesFaced"),
+  strategiesUsed: text("strategiesUsed"),
+  lessonsLearned: text("lessonsLearned"),
+  nextSteps: text("nextSteps"),
+  isPrivate: boolean("isPrivate").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type JournalEntry = typeof journalEntries.$inferSelect;
+export type InsertJournalEntry = typeof journalEntries.$inferInsert;
+
+/**
+ * Reflection Prompts
+ * Pre-defined prompts to guide student reflection
+ */
+export const reflectionPrompts = mysqlTable("reflectionPrompts", {
+  id: int("id").autoincrement().primaryKey(),
+  category: mysqlEnum("category", ["goal_progress", "challenges", "strategies", "learning", "motivation"]).default("goal_progress").notNull(),
+  prompt: text("prompt").notNull(),
+  description: text("description"),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type ReflectionPrompt = typeof reflectionPrompts.$inferSelect;
+export type InsertReflectionPrompt = typeof reflectionPrompts.$inferInsert;
+
+/**
+ * Journal Insights
+ * AI-generated insights from student journal entries
+ */
+export const journalInsights = mysqlTable("journalInsights", {
+  id: int("id").autoincrement().primaryKey(),
+  playerId: int("playerId").notNull(),
+  playerName: varchar("playerName", { length: 100 }).notNull(),
+  insightType: mysqlEnum("insightType", ["progress_trend", "challenge_pattern", "strategy_effectiveness", "motivation_level", "learning_style"]).default("progress_trend").notNull(),
+  insight: text("insight").notNull(),
+  supportingData: text("supportingData"),
+  generatedAt: timestamp("generatedAt").defaultNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type JournalInsight = typeof journalInsights.$inferSelect;
+export type InsertJournalInsight = typeof journalInsights.$inferInsert;
+
+/**
+ * Journal Reflections Summary
+ * Aggregated reflection data for quick overview
+ */
+export const journalReflectionsSummary = mysqlTable("journalReflectionsSummary", {
+  id: int("id").autoincrement().primaryKey(),
+  playerId: int("playerId").notNull(),
+  playerName: varchar("playerName", { length: 100 }).notNull(),
+  totalEntries: int("totalEntries").default(0).notNull(),
+  averageMood: varchar("averageMood", { length: 20 }).default("neutral"),
+  mostCommonChallenge: text("mostCommonChallenge"),
+  mostEffectiveStrategy: text("mostEffectiveStrategy"),
+  lastEntryDate: timestamp("lastEntryDate"),
+  lastUpdated: timestamp("lastUpdated").defaultNow().onUpdateNow().notNull(),
+});
+export type JournalReflectionsSummary = typeof journalReflectionsSummary.$inferSelect;
+export type InsertJournalReflectionsSummary = typeof journalReflectionsSummary.$inferInsert;

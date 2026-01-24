@@ -1,6 +1,6 @@
 import { eq, desc, and, lt, gte, isNull, lte, asc, sql, count, countDistinct, avg, sum, max } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, gameScores, InsertGameScore, customQuestions, InsertCustomQuestion, classes, InsertClass, classMembers, InsertClassMember, emailTemplates, InsertEmailTemplate, scheduledEmails, InsertScheduledEmail, issuedCertificates, InsertIssuedCertificate, zipEmailHistory, InsertZipEmailHistory, templateShares, InsertTemplateShare, sharedTemplateLibrary, InsertSharedTemplateLibrary, templateImports, InsertTemplateImport, chatConversations, InsertChatConversation, chatMessages, InsertChatMessage, gameAnalyticsStudentSummary, InsertGameAnalyticsStudentSummary, gameAnalyticsQuestionPerformance, InsertGameAnalyticsQuestionPerformance, gameAnalyticsClassPerformance, InsertGameAnalyticsClassPerformance, gameAnalyticsDailyEngagement, InsertGameAnalyticsDailyEngagement, gameAnalyticsTopicMastery, InsertGameAnalyticsTopicMastery, gameAnalyticsDifficultyProgression, InsertGameAnalyticsDifficultyProgression, gameAnalyticsHistoricalSnapshots, InsertGameAnalyticsHistoricalSnapshot, gameAnalyticsStudentImprovement, InsertGameAnalyticsStudentImprovement, gameAnalyticsClassImprovement, InsertGameAnalyticsClassImprovement, gameAnalyticsRankingHistory, InsertGameAnalyticsRankingHistory, gameAnalyticsPerformanceMilestones, InsertGameAnalyticsPerformanceMilestone, rouletteGameSessions, rouletteGamePlayers, rouletteRoundResults, studentPerformanceGoals, InsertStudentPerformanceGoal, goalProgressHistory, InsertGoalProgressHistory, goalAchievements, InsertGoalAchievement, goalFeedback, InsertGoalFeedback } from "../drizzle/schema";
+import { InsertUser, users, gameScores, InsertGameScore, customQuestions, InsertCustomQuestion, classes, InsertClass, classMembers, InsertClassMember, emailTemplates, InsertEmailTemplate, scheduledEmails, InsertScheduledEmail, issuedCertificates, InsertIssuedCertificate, zipEmailHistory, InsertZipEmailHistory, templateShares, InsertTemplateShare, sharedTemplateLibrary, InsertSharedTemplateLibrary, templateImports, InsertTemplateImport, chatConversations, InsertChatConversation, chatMessages, InsertChatMessage, gameAnalyticsStudentSummary, InsertGameAnalyticsStudentSummary, gameAnalyticsQuestionPerformance, InsertGameAnalyticsQuestionPerformance, gameAnalyticsClassPerformance, InsertGameAnalyticsClassPerformance, gameAnalyticsDailyEngagement, InsertGameAnalyticsDailyEngagement, gameAnalyticsTopicMastery, InsertGameAnalyticsTopicMastery, gameAnalyticsDifficultyProgression, InsertGameAnalyticsDifficultyProgression, gameAnalyticsHistoricalSnapshots, InsertGameAnalyticsHistoricalSnapshot, gameAnalyticsStudentImprovement, InsertGameAnalyticsStudentImprovement, gameAnalyticsClassImprovement, InsertGameAnalyticsClassImprovement, gameAnalyticsRankingHistory, InsertGameAnalyticsRankingHistory, gameAnalyticsPerformanceMilestones, InsertGameAnalyticsPerformanceMilestone, rouletteGameSessions, rouletteGamePlayers, rouletteRoundResults, studentPerformanceGoals, InsertStudentPerformanceGoal, goalProgressHistory, InsertGoalProgressHistory, goalAchievements, InsertGoalAchievement, goalFeedback, InsertGoalFeedback, journalEntries, InsertJournalEntry, reflectionPrompts, InsertReflectionPrompt, journalInsights, InsertJournalInsight, journalReflectionsSummary, InsertJournalReflectionsSummary } from "../drizzle/schema";
 import { nanoid } from 'nanoid';
 import { ENV } from './_core/env';
 
@@ -2485,5 +2485,278 @@ export async function saveAISuggestedGoals(
   } catch (error) {
     console.error("[Database] Error saving AI suggested goals:", error);
     return [];
+  }
+}
+
+
+/**
+ * Journal Entry Functions
+ */
+
+export async function createJournalEntry(entry: InsertJournalEntry) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  try {
+    const result = await db.insert(journalEntries).values(entry);
+    return result;
+  } catch (error) {
+    console.error("[Database] Error creating journal entry:", error);
+    throw error;
+  }
+}
+
+export async function getStudentJournalEntries(playerId: number, limit = 50, offset = 0) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  try {
+    return await db
+      .select()
+      .from(journalEntries)
+      .where(eq(journalEntries.playerId, playerId))
+      .orderBy(desc(journalEntries.entryDate))
+      .limit(limit)
+      .offset(offset);
+  } catch (error) {
+    console.error("[Database] Error fetching journal entries:", error);
+    return [];
+  }
+}
+
+export async function getJournalEntryById(entryId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  try {
+    const result = await db
+      .select()
+      .from(journalEntries)
+      .where(eq(journalEntries.id, entryId));
+    return result[0] || null;
+  } catch (error) {
+    console.error("[Database] Error fetching journal entry:", error);
+    return null;
+  }
+}
+
+export async function updateJournalEntry(entryId: number, updates: Partial<InsertJournalEntry>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  try {
+    return await db
+      .update(journalEntries)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(journalEntries.id, entryId));
+  } catch (error) {
+    console.error("[Database] Error updating journal entry:", error);
+    throw error;
+  }
+}
+
+export async function deleteJournalEntry(entryId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  try {
+    return await db
+      .delete(journalEntries)
+      .where(eq(journalEntries.id, entryId));
+  } catch (error) {
+    console.error("[Database] Error deleting journal entry:", error);
+    throw error;
+  }
+}
+
+export async function getReflectionPrompts(category?: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  try {
+    if (category) {
+      return await db
+        .select()
+        .from(reflectionPrompts)
+        .where(and(eq(reflectionPrompts.isActive, true), eq(reflectionPrompts.category, category as any)));
+    } else {
+      return await db
+        .select()
+        .from(reflectionPrompts)
+        .where(eq(reflectionPrompts.isActive, true));
+    }
+  } catch (error) {
+    console.error("[Database] Error fetching reflection prompts:", error);
+    return [];
+  }
+}
+
+export async function getJournalReflectionsSummary(playerId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  try {
+    const result = await db
+      .select()
+      .from(journalReflectionsSummary)
+      .where(eq(journalReflectionsSummary.playerId, playerId));
+    return result[0] || null;
+  } catch (error) {
+    console.error("[Database] Error fetching journal summary:", error);
+    return null;
+  }
+}
+
+export async function updateJournalReflectionsSummary(playerId: number, playerName: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  try {
+    const entries = await db
+      .select()
+      .from(journalEntries)
+      .where(eq(journalEntries.playerId, playerId));
+
+    if (entries.length === 0) {
+      return null;
+    }
+
+    // Calculate mood distribution
+    const moodCounts: Record<string, number> = {};
+    entries.forEach((entry) => {
+      moodCounts[entry.mood] = (moodCounts[entry.mood] || 0) + 1;
+    });
+
+    const averageMood = Object.keys(moodCounts).reduce((a, b) =>
+      moodCounts[a] > moodCounts[b] ? a : b
+    );
+
+    // Find most common challenges and strategies
+    const challenges = entries
+      .filter((e) => e.challengesFaced)
+      .map((e) => e.challengesFaced);
+    const strategies = entries
+      .filter((e) => e.strategiesUsed)
+      .map((e) => e.strategiesUsed);
+
+    const mostCommonChallenge = challenges.length > 0 ? challenges[0] : null;
+    const mostEffectiveStrategy = strategies.length > 0 ? strategies[0] : null;
+
+    // Upsert summary
+    const existing = await db
+      .select()
+      .from(journalReflectionsSummary)
+      .where(eq(journalReflectionsSummary.playerId, playerId));
+
+    if (existing.length > 0) {
+      return await db
+        .update(journalReflectionsSummary)
+        .set({
+          totalEntries: entries.length,
+          averageMood,
+          mostCommonChallenge,
+          mostEffectiveStrategy,
+          lastEntryDate: entries[0].entryDate,
+        })
+        .where(eq(journalReflectionsSummary.playerId, playerId));
+    } else {
+      return await db.insert(journalReflectionsSummary).values({
+        playerId,
+        playerName,
+        totalEntries: entries.length,
+        averageMood,
+        mostCommonChallenge,
+        mostEffectiveStrategy,
+        lastEntryDate: entries[0].entryDate,
+      });
+    }
+  } catch (error) {
+    console.error("[Database] Error updating journal summary:", error);
+    throw error;
+  }
+}
+
+export async function getJournalInsights(playerId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  try {
+    return await db
+      .select()
+      .from(journalInsights)
+      .where(eq(journalInsights.playerId, playerId))
+      .orderBy(desc(journalInsights.generatedAt));
+  } catch (error) {
+    console.error("[Database] Error fetching journal insights:", error);
+    return [];
+  }
+}
+
+export async function createJournalInsight(insight: InsertJournalInsight) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  try {
+    return await db.insert(journalInsights).values(insight);
+  } catch (error) {
+    console.error("[Database] Error creating journal insight:", error);
+    throw error;
+  }
+}
+
+export async function getEntriesByGoal(goalId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  try {
+    return await db
+      .select()
+      .from(journalEntries)
+      .where(eq(journalEntries.goalId, goalId))
+      .orderBy(desc(journalEntries.entryDate));
+  } catch (error) {
+    console.error("[Database] Error fetching entries by goal:", error);
+    return [];
+  }
+}
+
+export async function getJournalStatistics(playerId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  try {
+    const entries = await db
+      .select()
+      .from(journalEntries)
+      .where(eq(journalEntries.playerId, playerId));
+
+    const totalEntries = entries.length;
+    const averageMoodScore = entries.length > 0
+      ? entries.reduce((sum, e) => {
+          const moodValues = { excellent: 5, good: 4, neutral: 3, struggling: 2, discouraged: 1 };
+          return sum + (moodValues[e.mood as keyof typeof moodValues] || 3);
+        }, 0) / entries.length
+      : 0;
+
+    const entriesThisWeek = entries.filter((e) => {
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      return new Date(e.entryDate) >= weekAgo;
+    }).length;
+
+    return {
+      totalEntries,
+      averageMoodScore: Math.round(averageMoodScore * 10) / 10,
+      entriesThisWeek,
+      lastEntryDate: entries.length > 0 ? entries[0].entryDate : null,
+    };
+  } catch (error) {
+    console.error("[Database] Error calculating journal statistics:", error);
+    return {
+      totalEntries: 0,
+      averageMoodScore: 0,
+      entriesThisWeek: 0,
+      lastEntryDate: null,
+    };
   }
 }
