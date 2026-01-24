@@ -9,6 +9,7 @@ import TeacherPortal from "./pages/TeacherPortal";
 import LeaderboardPage from "./pages/LeaderboardPage";
 import VerifyCertificate from "./pages/VerifyCertificate";
 import TemplateLibrary from "./pages/TemplateLibrary";
+import { NutritionRoulette } from "./pages/NutritionRoulette";
 
 function Router() {
   return (
@@ -17,6 +18,7 @@ function Router() {
       <Route path="/teacher" component={TeacherPortal} />
       <Route path="/leaderboard" component={LeaderboardPage} />
       <Route path="/templates" component={TemplateLibrary} />
+      <Route path="/roulette" component={NutritionRoulette} />
       <Route path="/verify/:id" component={VerifyCertificate} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />

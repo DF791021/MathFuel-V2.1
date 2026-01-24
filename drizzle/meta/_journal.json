@@ -64,6 +64,13 @@
       "when": 1769155100298,
       "tag": "0008_nifty_hellion",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "5",
+      "when": 1769229008249,
+      "tag": "0009_spicy_fenris",
+      "breakpoints": true
     }
   ]
 }

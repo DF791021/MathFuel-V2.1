@@ -255,3 +255,135 @@ export const chatMessages = mysqlTable("chatMessages", {
 
 export type ChatMessage = typeof chatMessages.$inferSelect;
 export type InsertChatMessage = typeof chatMessages.$inferInsert;
+
+
+/**
+ * Nutrition Roulette Game - Game Sessions
+ * Represents an active or completed game session
+ */
+export const rouletteGameSessions = mysqlTable("rouletteGameSessions", {
+  id: int("id").autoincrement().primaryKey(),
+  teacherId: int("teacherId").notNull(),
+  sessionCode: varchar("sessionCode", { length: 10 }).notNull().unique(),
+  gameStatus: mysqlEnum("gameStatus", ["waiting", "active", "paused", "completed"]).default("waiting").notNull(),
+  currentRound: int("currentRound").default(0).notNull(),
+  totalRounds: int("totalRounds").default(5).notNull(),
+  difficulty: mysqlEnum("difficulty", ["easy", "medium", "hard"]).default("medium").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  startedAt: timestamp("startedAt"),
+  endedAt: timestamp("endedAt"),
+});
+
+export type RouletteGameSession = typeof rouletteGameSessions.$inferSelect;
+export type InsertRouletteGameSession = typeof rouletteGameSessions.$inferInsert;
+
+/**
+ * Nutrition Roulette Game - Player Participation
+ * Tracks which players are in which game session
+ */
+export const rouletteGamePlayers = mysqlTable("rouletteGamePlayers", {
+  id: int("id").autoincrement().primaryKey(),
+  sessionId: int("sessionId").notNull(),
+  userId: int("userId"),
+  playerName: varchar("playerName", { length: 100 }).notNull(),
+  totalScore: int("totalScore").default(0).notNull(),
+  correctAnswers: int("correctAnswers").default(0).notNull(),
+  totalAnswers: int("totalAnswers").default(0).notNull(),
+  streak: int("streak").default(0).notNull(),
+  joinedAt: timestamp("joinedAt").defaultNow().notNull(),
+});
+
+export type RouletteGamePlayer = typeof rouletteGamePlayers.$inferSelect;
+export type InsertRouletteGamePlayer = typeof rouletteGamePlayers.$inferInsert;
+
+/**
+ * Nutrition Roulette Game - Challenge Types
+ * Defines the types of challenges that can appear on the roulette wheel
+ */
+export const rouletteChallengeTypes = mysqlTable("rouletteChallengeTypes", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 50 }).notNull(),
+  description: text("description"),
+  icon: varchar("icon", { length: 50 }),
+  color: varchar("color", { length: 20 }),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type RouletteChallengeType = typeof rouletteChallengeTypes.$inferSelect;
+export type InsertRouletteChallengeType = typeof rouletteChallengeTypes.$inferInsert;
+
+/**
+ * Nutrition Roulette Game - Challenges
+ * Individual challenges that appear in the game
+ */
+export const rouletteChallenges = mysqlTable("rouletteChallenges", {
+  id: int("id").autoincrement().primaryKey(),
+  typeId: int("typeId").notNull(),
+  teacherId: int("teacherId"),
+  title: varchar("title", { length: 200 }).notNull(),
+  description: text("description"),
+  content: text("content").notNull(),
+  correctAnswer: text("correctAnswer"),
+  difficulty: mysqlEnum("difficulty", ["easy", "medium", "hard"]).default("medium").notNull(),
+  pointsReward: int("pointsReward").default(100).notNull(),
+  timeLimit: int("timeLimit").default(30).notNull(),
+  isCustom: boolean("isCustom").default(false).notNull(),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type RouletteChallenge = typeof rouletteChallenges.$inferSelect;
+export type InsertRouletteChallenge = typeof rouletteChallenges.$inferInsert;
+
+/**
+ * Nutrition Roulette Game - Round Results
+ * Tracks results for each round in a game session
+ */
+export const rouletteRoundResults = mysqlTable("rouletteRoundResults", {
+  id: int("id").autoincrement().primaryKey(),
+  sessionId: int("sessionId").notNull(),
+  roundNumber: int("roundNumber").notNull(),
+  challengeId: int("challengeId").notNull(),
+  playerId: int("playerId").notNull(),
+  playerAnswer: text("playerAnswer"),
+  isCorrect: boolean("isCorrect").notNull(),
+  pointsEarned: int("pointsEarned").default(0).notNull(),
+  timeSpent: int("timeSpent").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type RouletteRoundResult = typeof rouletteRoundResults.$inferSelect;
+export type InsertRouletteRoundResult = typeof rouletteRoundResults.$inferInsert;
+
+/**
+ * Nutrition Roulette Game - Power-ups
+ * Special bonuses that can be earned during gameplay
+ */
+export const roulettePowerUps = mysqlTable("roulettePowerUps", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 50 }).notNull(),
+  description: text("description"),
+  icon: varchar("icon", { length: 50 }),
+  effect: varchar("effect", { length: 100 }).notNull(),
+  pointsBonus: int("pointsBonus").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type RoulettePowerUp = typeof roulettePowerUps.$inferSelect;
+export type InsertRoulettePowerUp = typeof roulettePowerUps.$inferInsert;
+
+/**
+ * Nutrition Roulette Game - Player Power-ups
+ * Tracks which power-ups a player has earned
+ */
+export const roulettePlayerPowerUps = mysqlTable("roulettePlayerPowerUps", {
+  id: int("id").autoincrement().primaryKey(),
+  playerId: int("playerId").notNull(),
+  powerUpId: int("powerUpId").notNull(),
+  usedAt: timestamp("usedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type RoulettePlayerPowerUp = typeof roulettePlayerPowerUps.$inferSelect;
+export type InsertRoulettePlayerPowerUp = typeof roulettePlayerPowerUps.$inferInsert;

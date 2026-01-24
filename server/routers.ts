@@ -8,11 +8,13 @@ import { notifyOwner } from "./_core/notification";
 import { sendEmailWithZipAttachment } from "./_core/email";
 import { teacherChatbotRouter } from "./routers/teacherChatbot";
 import { chatHistoryRouter } from "./routers/chatHistory";
+import { rouletteRouter } from "./routers/roulette";
 
 export const appRouter = router({
   system: systemRouter,
   teacherChatbot: teacherChatbotRouter,
   chatHistory: chatHistoryRouter,
+  roulette: rouletteRouter,
   
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
