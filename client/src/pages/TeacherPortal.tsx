@@ -19,7 +19,7 @@ import {
   Plus, Trash2, Edit, Users, BookOpen, Trophy, 
   Copy, CheckCircle, XCircle, ArrowLeft, Sparkles,
   GraduationCap, ClipboardList, BarChart3, Award, Clock, Target
-} from "lucide-react";
+, Bell } from "lucide-react";
 import Certificate from "@/components/Certificate";
 import BatchCertificates from "@/components/BatchCertificates";
 import ScheduledEmails from "@/components/ScheduledEmails";
@@ -537,7 +537,26 @@ export default function TeacherPortal() {
                   </CardContent>
                 </Card>
               </TabsContent>
-            </Tabs>
+                    <TabsContent value="alerts" className="space-y-6">
+          {myClasses && myClasses.length > 0 ? (
+            <div className="space-y-6">
+              {myClasses.map((classData) => (
+                <div key={classData.id}>
+                  <AlertEngagementDashboard classId={classData.id} />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <Card className="border-2">
+              <CardContent className="p-8 text-center">
+                <Bell className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                <p className="text-gray-500">No classes found</p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+      </Tabs>
           </TabsContent>
 
           {/* Analytics Tab */}
@@ -601,7 +620,26 @@ export default function TeacherPortal() {
             </div>
             <GoalsManagement />
           </TabsContent>
-        </Tabs>
+                <TabsContent value="alerts" className="space-y-6">
+          {myClasses && myClasses.length > 0 ? (
+            <div className="space-y-6">
+              {myClasses.map((classData) => (
+                <div key={classData.id}>
+                  <AlertEngagementDashboard classId={classData.id} />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <Card className="border-2">
+              <CardContent className="p-8 text-center">
+                <Bell className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                <p className="text-gray-500">No classes found</p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+      </Tabs>
       </main>
     </div>
   );

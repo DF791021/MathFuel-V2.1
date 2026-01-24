@@ -3032,3 +3032,151 @@ export async function getPendingDeadlineAlerts(daysWindow: number = 7) {
   
   return result;
 }
+
+// ============ ALERT ENGAGEMENT ANALYTICS FUNCTIONS ============
+
+export async function getAlertEngagementMetrics(classId: number, startDate?: Date, endDate?: Date) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const whereConditions = [eq(classMembers.classId, classId)];
+  if (startDate) whereConditions.push(gte(alertHistory.sentAt, startDate));
+  if (endDate) whereConditions.push(lte(alertHistory.sentAt, endDate));
+  
+  const result = await db
+    .select({
+      totalStudents: countDistinct(classMembers.studentId),
+      totalAlertsSent: count(alertHistory.id),
+      studentsWithAlerts: countDistinct(alertHistory.playerId),
+      avgAlertsPerStudent: avg(sql`COUNT(*)`),
+    })
+    .from(classMembers)
+    .leftJoin(alertHistory, eq(classMembers.studentId, alertHistory.playerId))
+    .where(and(...whereConditions))
+    .groupBy(classMembers.classId);
+  
+  return result.length > 0 ? result[0] : null;
+}
+
+export async function getStudentAlertEngagement(classId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const result = await db
+    .select({
+      studentId: classMembers.studentId,
+      studentName: users.name,
+      alertsReceived: count(alertHistory.id),
+      lastAlertDate: max(alertHistory.sentAt),
+      alertPreferences: alertPreferences.alertFrequency,
+      alertsEnabled: alertPreferences.enableDeadlineAlerts,
+    })
+    .from(classMembers)
+    .innerJoin(users, eq(classMembers.studentId, users.id))
+    .leftJoin(alertHistory, eq(classMembers.studentId, alertHistory.playerId))
+    .leftJoin(alertPreferences, eq(classMembers.studentId, alertPreferences.playerId))
+    .where(eq(classMembers.classId, classId))
+    .groupBy(classMembers.studentId)
+    .orderBy(desc(count(alertHistory.id)));
+  
+  return result;
+}
+
+export async function getGoalCompletionByAlertStatus(classId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const withAlerts = await db
+    .select({
+      completedGoals: count(studentPerformanceGoals.id),
+      totalGoals: countDistinct(studentPerformanceGoals.id),
+    })
+    .from(classMembers)
+    .innerJoin(studentPerformanceGoals, eq(classMembers.studentId, studentPerformanceGoals.playerId))
+    .innerJoin(alertHistory, eq(studentPerformanceGoals.playerId, alertHistory.playerId))
+    .where(and(
+      eq(classMembers.classId, classId),
+      eq(studentPerformanceGoals.status, "completed")
+    ));
+  
+  const withoutAlerts = await db
+    .select({
+      completedGoals: count(studentPerformanceGoals.id),
+      totalGoals: countDistinct(studentPerformanceGoals.id),
+    })
+    .from(classMembers)
+    .innerJoin(studentPerformanceGoals, eq(classMembers.studentId, studentPerformanceGoals.playerId))
+    .leftJoin(alertHistory, eq(studentPerformanceGoals.playerId, alertHistory.playerId))
+    .where(and(
+      eq(classMembers.classId, classId),
+      eq(studentPerformanceGoals.status, "completed"),
+      isNull(alertHistory.id)
+    ));
+  
+  return {
+    withAlerts: withAlerts.length > 0 ? withAlerts[0] : { completedGoals: 0, totalGoals: 0 },
+    withoutAlerts: withoutAlerts.length > 0 ? withoutAlerts[0] : { completedGoals: 0, totalGoals: 0 },
+  };
+}
+
+export async function getAlertEngagementTrends(classId: number, days: number = 30) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - days);
+  
+  const result = await db
+    .select({
+      date: sql`DATE(${alertHistory.sentAt})`,
+      alertsCount: count(alertHistory.id),
+      uniqueStudents: countDistinct(alertHistory.playerId),
+    })
+    .from(alertHistory)
+    .innerJoin(classMembers, eq(alertHistory.playerId, classMembers.studentId))
+    .where(and(
+      eq(classMembers.classId, classId),
+      gte(alertHistory.sentAt, startDate)
+    ))
+    .groupBy(sql`DATE(${alertHistory.sentAt})`)
+    .orderBy(sql`DATE(${alertHistory.sentAt})`);
+  
+  return result;
+}
+
+export async function getAlertPreferenceDistribution(classId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const result = await db
+    .select({
+      frequency: alertPreferences.alertFrequency,
+      count: count(alertPreferences.id),
+      enabled: alertPreferences.enableDeadlineAlerts,
+    })
+    .from(classMembers)
+    .innerJoin(alertPreferences, eq(classMembers.studentId, alertPreferences.playerId))
+    .where(eq(classMembers.classId, classId))
+    .groupBy(alertPreferences.alertFrequency, alertPreferences.enableDeadlineAlerts);
+  
+  return result;
+}
+
+export async function getStudentGoalCompletionRate(studentId: number) {
+  const db = await getDb();
+  if (!db) return 0;
+  
+  const result = await db
+    .select({
+      completed: count(studentPerformanceGoals.id),
+      total: countDistinct(studentPerformanceGoals.id),
+    })
+    .from(studentPerformanceGoals)
+    .where(and(
+      eq(studentPerformanceGoals.playerId, studentId),
+      eq(studentPerformanceGoals.status, "completed")
+    ));
+  
+  if (result.length === 0 || !result[0].total) return 0;
+  return Math.round((Number(result[0].completed) / Number(result[0].total)) * 100);
+}
