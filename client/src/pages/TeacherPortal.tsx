@@ -18,11 +18,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Plus, Trash2, Edit, Users, BookOpen, Trophy, 
   Copy, CheckCircle, XCircle, ArrowLeft, Sparkles,
-  GraduationCap, ClipboardList, BarChart3, Award, Clock
+  GraduationCap, ClipboardList, BarChart3, Award, Clock, Target
 } from "lucide-react";
 import Certificate from "@/components/Certificate";
 import BatchCertificates from "@/components/BatchCertificates";
 import ScheduledEmails from "@/components/ScheduledEmails";
+import GoalsManagement from "@/components/GoalsManagement";
 import { getLoginUrl } from "@/const";
 
 const CATEGORIES = [
@@ -188,7 +189,7 @@ export default function TeacherPortal() {
       {/* Main Content */}
       <main className="container py-8">
         <Tabs defaultValue="questions" className="space-y-6">
-          <TabsList className="grid w-full max-w-3xl grid-cols-6 h-12">
+          <TabsList className="grid w-full max-w-4xl grid-cols-7 h-12">
             <TabsTrigger value="questions" className="text-sm">
               <ClipboardList className="h-4 w-4 mr-2" />
               Questions
@@ -212,6 +213,10 @@ export default function TeacherPortal() {
             <TabsTrigger value="scheduled" className="text-sm">
               <Clock className="h-4 w-4 mr-2" />
               Scheduled
+            </TabsTrigger>
+            <TabsTrigger value="goals" className="text-sm">
+              <Target className="h-4 w-4 mr-2" />
+              Goals
             </TabsTrigger>
           </TabsList>
 
@@ -555,6 +560,17 @@ export default function TeacherPortal() {
           {/* Scheduled Emails Tab */}
           <TabsContent value="scheduled" className="space-y-6">
             <ScheduledEmails />
+          </TabsContent>
+
+          {/* Goals Tab */}
+          <TabsContent value="goals" className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-3xl font-bold text-gray-900">Student Performance Goals</h2>
+                <p className="text-gray-600 mt-2">Set and track performance targets for your students</p>
+              </div>
+            </div>
+            <GoalsManagement />
           </TabsContent>
         </Tabs>
       </main>

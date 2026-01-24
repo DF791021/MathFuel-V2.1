@@ -654,3 +654,92 @@ export const gameAnalyticsPerformanceMilestones = mysqlTable("gameAnalyticsPerfo
 });
 export type GameAnalyticsPerformanceMilestone = typeof gameAnalyticsPerformanceMilestones.$inferSelect;
 export type InsertGameAnalyticsPerformanceMilestone = typeof gameAnalyticsPerformanceMilestones.$inferInsert;
+
+
+/**
+ * Student Performance Goals
+ * Tracks goals set by teachers for students to achieve
+ */
+export const studentPerformanceGoals = mysqlTable("studentPerformanceGoals", {
+  id: int("id").autoincrement().primaryKey(),
+  playerId: int("playerId").notNull(),
+  playerName: varchar("playerName", { length: 100 }).notNull(),
+  teacherId: int("teacherId").notNull(),
+  classId: int("classId").notNull(),
+  goalType: mysqlEnum("goalType", [
+    "accuracy",
+    "score",
+    "games_played",
+    "streak",
+    "topic_mastery",
+  ]).notNull(),
+  goalName: varchar("goalName", { length: 200 }).notNull(),
+  goalDescription: text("goalDescription"),
+  targetValue: int("targetValue").notNull(), // Target accuracy %, score, games, etc.
+  currentValue: int("currentValue").default(0).notNull(), // Current progress
+  startDate: timestamp("startDate").notNull(),
+  dueDate: timestamp("dueDate").notNull(),
+  status: mysqlEnum("status", ["active", "completed", "failed", "paused"]).default("active").notNull(),
+  priority: mysqlEnum("priority", ["low", "medium", "high"]).default("medium").notNull(),
+  progressPercentage: int("progressPercentage").default(0).notNull(),
+  completedDate: timestamp("completedDate"),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type StudentPerformanceGoal = typeof studentPerformanceGoals.$inferSelect;
+export type InsertStudentPerformanceGoal = typeof studentPerformanceGoals.$inferInsert;
+
+/**
+ * Goal Progress History
+ * Tracks progress updates for each goal over time
+ */
+export const goalProgressHistory = mysqlTable("goalProgressHistory", {
+  id: int("id").autoincrement().primaryKey(),
+  goalId: int("goalId").notNull(),
+  playerId: int("playerId").notNull(),
+  previousValue: int("previousValue").notNull(),
+  currentValue: int("currentValue").notNull(),
+  progressPercentage: int("progressPercentage").notNull(),
+  updateReason: varchar("updateReason", { length: 200 }), // e.g., "Game played", "Accuracy improved"
+  recordedDate: timestamp("recordedDate").defaultNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type GoalProgressHistory = typeof goalProgressHistory.$inferSelect;
+export type InsertGoalProgressHistory = typeof goalProgressHistory.$inferInsert;
+
+/**
+ * Goal Achievements
+ * Records when students achieve their goals
+ */
+export const goalAchievements = mysqlTable("goalAchievements", {
+  id: int("id").autoincrement().primaryKey(),
+  goalId: int("goalId").notNull(),
+  playerId: int("playerId").notNull(),
+  playerName: varchar("playerName", { length: 100 }).notNull(),
+  teacherId: int("teacherId").notNull(),
+  goalName: varchar("goalName", { length: 200 }).notNull(),
+  achievedDate: timestamp("achievedDate").notNull(),
+  daysToComplete: int("daysToComplete"), // How many days it took to complete
+  rewardPoints: int("rewardPoints").default(10).notNull(),
+  celebrationMessage: text("celebrationMessage"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type GoalAchievement = typeof goalAchievements.$inferSelect;
+export type InsertGoalAchievement = typeof goalAchievements.$inferInsert;
+
+/**
+ * Goal Feedback
+ * Teachers can provide feedback on student progress toward goals
+ */
+export const goalFeedback = mysqlTable("goalFeedback", {
+  id: int("id").autoincrement().primaryKey(),
+  goalId: int("goalId").notNull(),
+  playerId: int("playerId").notNull(),
+  teacherId: int("teacherId").notNull(),
+  feedbackText: text("feedbackText").notNull(),
+  feedbackType: mysqlEnum("feedbackType", ["encouragement", "suggestion", "warning", "celebration"]).default("encouragement").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type GoalFeedback = typeof goalFeedback.$inferSelect;
+export type InsertGoalFeedback = typeof goalFeedback.$inferInsert;

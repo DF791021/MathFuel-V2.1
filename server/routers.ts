@@ -10,6 +10,7 @@ import { teacherChatbotRouter } from "./routers/teacherChatbot";
 import { chatHistoryRouter } from "./routers/chatHistory";
 import { rouletteRouter } from "./routers/roulette";
 import { analyticsRouter } from "./routers/analytics";
+import { goalsRouter } from "./routers/goals";
 
 export const appRouter = router({
   system: systemRouter,
@@ -17,6 +18,7 @@ export const appRouter = router({
   chatHistory: chatHistoryRouter,
   roulette: rouletteRouter,
   analytics: analyticsRouter,
+  goals: goalsRouter,
   
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),

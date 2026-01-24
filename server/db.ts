@@ -1,6 +1,6 @@
 import { eq, desc, and, lt, gte, isNull, lte, asc, sql, count, countDistinct, avg, sum, max } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, gameScores, InsertGameScore, customQuestions, InsertCustomQuestion, classes, InsertClass, classMembers, InsertClassMember, emailTemplates, InsertEmailTemplate, scheduledEmails, InsertScheduledEmail, issuedCertificates, InsertIssuedCertificate, zipEmailHistory, InsertZipEmailHistory, templateShares, InsertTemplateShare, sharedTemplateLibrary, InsertSharedTemplateLibrary, templateImports, InsertTemplateImport, chatConversations, InsertChatConversation, chatMessages, InsertChatMessage, gameAnalyticsStudentSummary, InsertGameAnalyticsStudentSummary, gameAnalyticsQuestionPerformance, InsertGameAnalyticsQuestionPerformance, gameAnalyticsClassPerformance, InsertGameAnalyticsClassPerformance, gameAnalyticsDailyEngagement, InsertGameAnalyticsDailyEngagement, gameAnalyticsTopicMastery, InsertGameAnalyticsTopicMastery, gameAnalyticsDifficultyProgression, InsertGameAnalyticsDifficultyProgression, gameAnalyticsHistoricalSnapshots, InsertGameAnalyticsHistoricalSnapshot, gameAnalyticsStudentImprovement, InsertGameAnalyticsStudentImprovement, gameAnalyticsClassImprovement, InsertGameAnalyticsClassImprovement, gameAnalyticsRankingHistory, InsertGameAnalyticsRankingHistory, gameAnalyticsPerformanceMilestones, InsertGameAnalyticsPerformanceMilestone, rouletteGameSessions, rouletteGamePlayers, rouletteRoundResults } from "../drizzle/schema";
+import { InsertUser, users, gameScores, InsertGameScore, customQuestions, InsertCustomQuestion, classes, InsertClass, classMembers, InsertClassMember, emailTemplates, InsertEmailTemplate, scheduledEmails, InsertScheduledEmail, issuedCertificates, InsertIssuedCertificate, zipEmailHistory, InsertZipEmailHistory, templateShares, InsertTemplateShare, sharedTemplateLibrary, InsertSharedTemplateLibrary, templateImports, InsertTemplateImport, chatConversations, InsertChatConversation, chatMessages, InsertChatMessage, gameAnalyticsStudentSummary, InsertGameAnalyticsStudentSummary, gameAnalyticsQuestionPerformance, InsertGameAnalyticsQuestionPerformance, gameAnalyticsClassPerformance, InsertGameAnalyticsClassPerformance, gameAnalyticsDailyEngagement, InsertGameAnalyticsDailyEngagement, gameAnalyticsTopicMastery, InsertGameAnalyticsTopicMastery, gameAnalyticsDifficultyProgression, InsertGameAnalyticsDifficultyProgression, gameAnalyticsHistoricalSnapshots, InsertGameAnalyticsHistoricalSnapshot, gameAnalyticsStudentImprovement, InsertGameAnalyticsStudentImprovement, gameAnalyticsClassImprovement, InsertGameAnalyticsClassImprovement, gameAnalyticsRankingHistory, InsertGameAnalyticsRankingHistory, gameAnalyticsPerformanceMilestones, InsertGameAnalyticsPerformanceMilestone, rouletteGameSessions, rouletteGamePlayers, rouletteRoundResults, studentPerformanceGoals, InsertStudentPerformanceGoal, goalProgressHistory, InsertGoalProgressHistory, goalAchievements, InsertGoalAchievement, goalFeedback, InsertGoalFeedback } from "../drizzle/schema";
 import { nanoid } from 'nanoid';
 import { ENV } from './_core/env';
 
@@ -1845,4 +1845,497 @@ export async function getStudentsNeedingAttention(
     )
     .orderBy(asc(gameAnalyticsStudentImprovement.improvementPercentage))
     .limit(limit);
+}
+
+
+// ============================================================================
+// GOAL MANAGEMENT FUNCTIONS
+// ============================================================================
+
+/**
+ * Create a new performance goal for a student
+ */
+export async function createGoal(
+  playerId: number,
+  playerName: string,
+  teacherId: number,
+  classId: number,
+  goal: InsertStudentPerformanceGoal
+): Promise<typeof studentPerformanceGoals.$inferSelect | null> {
+  const db = await getDb();
+  if (!db) return null;
+
+  try {
+    const result = await db
+      .insert(studentPerformanceGoals)
+      .values({
+        ...goal,
+        playerId,
+        playerName,
+        teacherId,
+        classId,
+      })
+      .$returningId();
+
+    if (result.length === 0) return null;
+
+    const goals = await db
+      .select()
+      .from(studentPerformanceGoals)
+      .where(eq(studentPerformanceGoals.id, result[0].id));
+
+    return goals[0] || null;
+  } catch (error) {
+    console.error("[Database] Error creating goal:", error);
+    return null;
+  }
+}
+
+/**
+ * Get all goals for a student
+ */
+export async function getStudentGoals(
+  playerId: number
+): Promise<(typeof studentPerformanceGoals.$inferSelect)[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  try {
+    return await db
+      .select()
+      .from(studentPerformanceGoals)
+      .where(eq(studentPerformanceGoals.playerId, playerId))
+      .orderBy(desc(studentPerformanceGoals.createdAt));
+  } catch (error) {
+    console.error("[Database] Error fetching student goals:", error);
+    return [];
+  }
+}
+
+/**
+ * Get all goals for a class
+ */
+export async function getClassGoals(
+  classId: number
+): Promise<(typeof studentPerformanceGoals.$inferSelect)[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  try {
+    return await db
+      .select()
+      .from(studentPerformanceGoals)
+      .where(eq(studentPerformanceGoals.classId, classId))
+      .orderBy(desc(studentPerformanceGoals.createdAt));
+  } catch (error) {
+    console.error("[Database] Error fetching class goals:", error);
+    return [];
+  }
+}
+
+/**
+ * Get active goals for a student
+ */
+export async function getActiveStudentGoals(
+  playerId: number
+): Promise<(typeof studentPerformanceGoals.$inferSelect)[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  try {
+    return await db
+      .select()
+      .from(studentPerformanceGoals)
+      .where(
+        and(
+          eq(studentPerformanceGoals.playerId, playerId),
+          eq(studentPerformanceGoals.status, "active")
+        )
+      )
+      .orderBy(asc(studentPerformanceGoals.dueDate));
+  } catch (error) {
+    console.error("[Database] Error fetching active goals:", error);
+    return [];
+  }
+}
+
+/**
+ * Update a goal
+ */
+export async function updateGoal(
+  goalId: number,
+  updates: Partial<InsertStudentPerformanceGoal>
+): Promise<typeof studentPerformanceGoals.$inferSelect | null> {
+  const db = await getDb();
+  if (!db) return null;
+
+  try {
+    await db
+      .update(studentPerformanceGoals)
+      .set(updates)
+      .where(eq(studentPerformanceGoals.id, goalId));
+
+    const goals = await db
+      .select()
+      .from(studentPerformanceGoals)
+      .where(eq(studentPerformanceGoals.id, goalId));
+
+    return goals[0] || null;
+  } catch (error) {
+    console.error("[Database] Error updating goal:", error);
+    return null;
+  }
+}
+
+/**
+ * Update goal progress
+ */
+export async function updateGoalProgress(
+  goalId: number,
+  currentValue: number,
+  targetValue: number,
+  updateReason: string
+): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+
+  try {
+    const progressPercentage = Math.min(
+      Math.round((currentValue / targetValue) * 100),
+      100
+    );
+
+    // Get the goal to find the player ID
+    const goals = await db
+      .select()
+      .from(studentPerformanceGoals)
+      .where(eq(studentPerformanceGoals.id, goalId));
+
+    if (goals.length === 0) return false;
+
+    const goal = goals[0];
+    const previousValue = goal.currentValue;
+
+    // Update goal
+    await db
+      .update(studentPerformanceGoals)
+      .set({
+        currentValue,
+        progressPercentage,
+        status:
+          progressPercentage >= 100
+            ? "completed"
+            : goal.status,
+        completedDate:
+          progressPercentage >= 100
+            ? new Date()
+            : goal.completedDate,
+      })
+      .where(eq(studentPerformanceGoals.id, goalId));
+
+    // Record progress history
+    await db.insert(goalProgressHistory).values({
+      goalId,
+      playerId: goal.playerId,
+      previousValue,
+      currentValue,
+      progressPercentage,
+      updateReason,
+    });
+
+    // Record achievement if goal is completed
+    if (progressPercentage >= 100 && goal.status !== "completed") {
+      const daysToComplete = goal.startDate
+        ? Math.floor(
+            (Date.now() - new Date(goal.startDate).getTime()) /
+              (1000 * 60 * 60 * 24)
+          )
+        : 0;
+
+      await db.insert(goalAchievements).values({
+        goalId,
+        playerId: goal.playerId,
+        playerName: goal.playerName,
+        teacherId: goal.teacherId,
+        goalName: goal.goalName,
+        achievedDate: new Date(),
+        daysToComplete,
+        rewardPoints: 10,
+      });
+    }
+
+    return true;
+  } catch (error) {
+    console.error("[Database] Error updating goal progress:", error);
+    return false;
+  }
+}
+
+/**
+ * Get goal progress history
+ */
+export async function getGoalProgressHistory(
+  goalId: number
+): Promise<(typeof goalProgressHistory.$inferSelect)[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  try {
+    return await db
+      .select()
+      .from(goalProgressHistory)
+      .where(eq(goalProgressHistory.goalId, goalId))
+      .orderBy(desc(goalProgressHistory.recordedDate));
+  } catch (error) {
+    console.error("[Database] Error fetching goal progress history:", error);
+    return [];
+  }
+}
+
+/**
+ * Get goal achievements for a student
+ */
+export async function getStudentAchievements(
+  playerId: number
+): Promise<(typeof goalAchievements.$inferSelect)[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  try {
+    return await db
+      .select()
+      .from(goalAchievements)
+      .where(eq(goalAchievements.playerId, playerId))
+      .orderBy(desc(goalAchievements.achievedDate));
+  } catch (error) {
+    console.error("[Database] Error fetching student achievements:", error);
+    return [];
+  }
+}
+
+/**
+ * Get class goal achievements
+ */
+export async function getClassAchievements(
+  teacherId: number,
+  limit: number = 20
+): Promise<(typeof goalAchievements.$inferSelect)[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  try {
+    return await db
+      .select()
+      .from(goalAchievements)
+      .where(eq(goalAchievements.teacherId, teacherId))
+      .orderBy(desc(goalAchievements.achievedDate))
+      .limit(limit);
+  } catch (error) {
+    console.error("[Database] Error fetching class achievements:", error);
+    return [];
+  }
+}
+
+/**
+ * Add feedback to a goal
+ */
+export async function addGoalFeedback(
+  goalId: number,
+  playerId: number,
+  teacherId: number,
+  feedbackText: string,
+  feedbackType: "encouragement" | "suggestion" | "warning" | "celebration"
+): Promise<typeof goalFeedback.$inferSelect | null> {
+  const db = await getDb();
+  if (!db) return null;
+
+  try {
+    const result = await db
+      .insert(goalFeedback)
+      .values({
+        goalId,
+        playerId,
+        teacherId,
+        feedbackText,
+        feedbackType,
+      })
+      .$returningId();
+
+    if (result.length === 0) return null;
+
+    const feedback = await db
+      .select()
+      .from(goalFeedback)
+      .where(eq(goalFeedback.id, result[0].id));
+
+    return feedback[0] || null;
+  } catch (error) {
+    console.error("[Database] Error adding goal feedback:", error);
+    return null;
+  }
+}
+
+/**
+ * Get feedback for a goal
+ */
+export async function getGoalFeedback(
+  goalId: number
+): Promise<(typeof goalFeedback.$inferSelect)[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  try {
+    return await db
+      .select()
+      .from(goalFeedback)
+      .where(eq(goalFeedback.goalId, goalId))
+      .orderBy(desc(goalFeedback.createdAt));
+  } catch (error) {
+    console.error("[Database] Error fetching goal feedback:", error);
+    return [];
+  }
+}
+
+/**
+ * Get goals due soon (next 7 days)
+ */
+export async function getGoalsDueSoon(
+  teacherId: number
+): Promise<(typeof studentPerformanceGoals.$inferSelect)[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  try {
+    const now = new Date();
+    const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+    return await db
+      .select()
+      .from(studentPerformanceGoals)
+      .where(
+        and(
+          eq(studentPerformanceGoals.teacherId, teacherId),
+          eq(studentPerformanceGoals.status, "active"),
+          gte(studentPerformanceGoals.dueDate, now),
+          lte(studentPerformanceGoals.dueDate, sevenDaysFromNow)
+        )
+      )
+      .orderBy(asc(studentPerformanceGoals.dueDate));
+  } catch (error) {
+    console.error("[Database] Error fetching goals due soon:", error);
+    return [];
+  }
+}
+
+/**
+ * Get overdue goals
+ */
+export async function getOverdueGoals(
+  teacherId: number
+): Promise<(typeof studentPerformanceGoals.$inferSelect)[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  try {
+    const now = new Date();
+
+    return await db
+      .select()
+      .from(studentPerformanceGoals)
+      .where(
+        and(
+          eq(studentPerformanceGoals.teacherId, teacherId),
+          eq(studentPerformanceGoals.status, "active"),
+          lt(studentPerformanceGoals.dueDate, now)
+        )
+      )
+      .orderBy(asc(studentPerformanceGoals.dueDate));
+  } catch (error) {
+    console.error("[Database] Error fetching overdue goals:", error);
+    return [];
+  }
+}
+
+/**
+ * Get goal statistics for a teacher
+ */
+export async function getGoalStatistics(
+  teacherId: number
+): Promise<{
+  totalGoals: number;
+  activeGoals: number;
+  completedGoals: number;
+  failedGoals: number;
+  completionRate: number;
+  averageProgressPercentage: number;
+}> {
+  const db = await getDb();
+  if (!db) {
+    return {
+      totalGoals: 0,
+      activeGoals: 0,
+      completedGoals: 0,
+      failedGoals: 0,
+      completionRate: 0,
+      averageProgressPercentage: 0,
+    };
+  }
+
+  try {
+    const goals = await db
+      .select()
+      .from(studentPerformanceGoals)
+      .where(eq(studentPerformanceGoals.teacherId, teacherId));
+
+    const totalGoals = goals.length;
+    const activeGoals = goals.filter((g) => g.status === "active").length;
+    const completedGoals = goals.filter((g) => g.status === "completed").length;
+    const failedGoals = goals.filter((g) => g.status === "failed").length;
+    const completionRate =
+      totalGoals > 0 ? Math.round((completedGoals / totalGoals) * 100) : 0;
+    const averageProgressPercentage =
+      totalGoals > 0
+        ? Math.round(
+            goals.reduce((sum, g) => sum + (g.progressPercentage || 0), 0) /
+              totalGoals
+          )
+        : 0;
+
+    return {
+      totalGoals,
+      activeGoals,
+      completedGoals,
+      failedGoals,
+      completionRate,
+      averageProgressPercentage,
+    };
+  } catch (error) {
+    console.error("[Database] Error fetching goal statistics:", error);
+    return {
+      totalGoals: 0,
+      activeGoals: 0,
+      completedGoals: 0,
+      failedGoals: 0,
+      completionRate: 0,
+      averageProgressPercentage: 0,
+    };
+  }
+}
+
+/**
+ * Delete a goal
+ */
+export async function deleteGoal(goalId: number): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+
+  try {
+    await db
+      .delete(studentPerformanceGoals)
+      .where(eq(studentPerformanceGoals.id, goalId));
+    return true;
+  } catch (error) {
+    console.error("[Database] Error deleting goal:", error);
+    return false;
+  }
 }
