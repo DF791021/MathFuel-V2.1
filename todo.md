@@ -478,3 +478,14 @@
 - [x] Implement filtering, sorting, and export functionality (CSV export, at-risk goals highlighting, sorting by progress)
 - [x] Write tests for goal monitoring functions
 - [x] Integrate dashboard into teacher portal (Goal Monitor tab in TeacherPortal with per-class views)
+
+
+## Goal Deadline Alerts Feature - IN PROGRESS
+- [x] Design goal deadline alert system and scheduling logic
+- [x] Create database tables for tracking goal deadline alerts (3 tables: goalDeadlineAlerts, alertPreferences, alertHistory)
+- [x] Build backend service for calculating upcoming deadlines (getUpcomingGoalDeadlines, getPendingDeadlineAlerts)
+- [x] Create email template and notification service (deadlineAlertService.ts with HTML/text templates)
+- [ ] Implement scheduled job for sending deadline alerts (scheduled task)
+- [ ] Create UI for configuring alert preferences (student settings component)
+- [ ] Write tests for deadline alert functions
+- [ ] Integrate alerts into system and send test emails

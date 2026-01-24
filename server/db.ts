@@ -1,6 +1,6 @@
 import { eq, desc, and, lt, gte, isNull, lte, asc, sql, count, countDistinct, avg, sum, max } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, gameScores, InsertGameScore, customQuestions, InsertCustomQuestion, classes, InsertClass, classMembers, InsertClassMember, emailTemplates, InsertEmailTemplate, scheduledEmails, InsertScheduledEmail, issuedCertificates, InsertIssuedCertificate, zipEmailHistory, InsertZipEmailHistory, templateShares, InsertTemplateShare, sharedTemplateLibrary, InsertSharedTemplateLibrary, templateImports, InsertTemplateImport, chatConversations, InsertChatConversation, chatMessages, InsertChatMessage, gameAnalyticsStudentSummary, InsertGameAnalyticsStudentSummary, gameAnalyticsQuestionPerformance, InsertGameAnalyticsQuestionPerformance, gameAnalyticsClassPerformance, InsertGameAnalyticsClassPerformance, gameAnalyticsDailyEngagement, InsertGameAnalyticsDailyEngagement, gameAnalyticsTopicMastery, InsertGameAnalyticsTopicMastery, gameAnalyticsDifficultyProgression, InsertGameAnalyticsDifficultyProgression, gameAnalyticsHistoricalSnapshots, InsertGameAnalyticsHistoricalSnapshot, gameAnalyticsStudentImprovement, InsertGameAnalyticsStudentImprovement, gameAnalyticsClassImprovement, InsertGameAnalyticsClassImprovement, gameAnalyticsRankingHistory, InsertGameAnalyticsRankingHistory, gameAnalyticsPerformanceMilestones, InsertGameAnalyticsPerformanceMilestone, rouletteGameSessions, rouletteGamePlayers, rouletteRoundResults, studentPerformanceGoals, InsertStudentPerformanceGoal, goalProgressHistory, InsertGoalProgressHistory, goalAchievements, InsertGoalAchievement, goalFeedback, InsertGoalFeedback, journalEntries, InsertJournalEntry, reflectionPrompts, InsertReflectionPrompt, journalInsights, InsertJournalInsight, journalReflectionsSummary, InsertJournalReflectionsSummary } from "../drizzle/schema";
+import { InsertUser, users, gameScores, InsertGameScore, customQuestions, InsertCustomQuestion, classes, InsertClass, classMembers, InsertClassMember, emailTemplates, InsertEmailTemplate, scheduledEmails, InsertScheduledEmail, issuedCertificates, InsertIssuedCertificate, zipEmailHistory, InsertZipEmailHistory, templateShares, InsertTemplateShare, sharedTemplateLibrary, InsertSharedTemplateLibrary, templateImports, InsertTemplateImport, chatConversations, InsertChatConversation, chatMessages, InsertChatMessage, gameAnalyticsStudentSummary, InsertGameAnalyticsStudentSummary, gameAnalyticsQuestionPerformance, InsertGameAnalyticsQuestionPerformance, gameAnalyticsClassPerformance, InsertGameAnalyticsClassPerformance, gameAnalyticsDailyEngagement, InsertGameAnalyticsDailyEngagement, gameAnalyticsTopicMastery, InsertGameAnalyticsTopicMastery, gameAnalyticsDifficultyProgression, InsertGameAnalyticsDifficultyProgression, gameAnalyticsHistoricalSnapshots, InsertGameAnalyticsHistoricalSnapshot, gameAnalyticsStudentImprovement, InsertGameAnalyticsStudentImprovement, gameAnalyticsClassImprovement, InsertGameAnalyticsClassImprovement, gameAnalyticsRankingHistory, InsertGameAnalyticsRankingHistory, gameAnalyticsPerformanceMilestones, InsertGameAnalyticsPerformanceMilestone, rouletteGameSessions, rouletteGamePlayers, rouletteRoundResults, studentPerformanceGoals, InsertStudentPerformanceGoal, goalProgressHistory, InsertGoalProgressHistory, goalAchievements, InsertGoalAchievement, goalFeedback, InsertGoalFeedback, journalEntries, InsertJournalEntry, reflectionPrompts, InsertReflectionPrompt, journalInsights, InsertJournalInsight, journalReflectionsSummary, InsertJournalReflectionsSummary, goalDeadlineAlerts, InsertGoalDeadlineAlert, alertPreferences, InsertAlertPreferences, alertHistory, InsertAlertHistory } from "../drizzle/schema";
 import { nanoid } from 'nanoid';
 import { ENV } from './_core/env';
 
@@ -2905,5 +2905,130 @@ export async function getGoalTypeDistribution(classId: number) {
     .groupBy(studentPerformanceGoals.goalType)
     .orderBy(desc(count()));
 
+  return result;
+}
+
+// ============ GOAL DEADLINE ALERTS FUNCTIONS ============
+
+export async function getUpcomingGoalDeadlines(playerId: number, daysWindow: number = 7) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const futureDate = new Date();
+  futureDate.setDate(futureDate.getDate() + daysWindow);
+  
+  const result = await db
+    .select({
+      goal: studentPerformanceGoals,
+      alert: goalDeadlineAlerts,
+    })
+    .from(studentPerformanceGoals)
+    .leftJoin(goalDeadlineAlerts, eq(goalDeadlineAlerts.goalId, studentPerformanceGoals.id))
+    .where(and(
+      eq(studentPerformanceGoals.playerId, playerId),
+      eq(studentPerformanceGoals.status, "active"),
+      lte(studentPerformanceGoals.dueDate, futureDate),
+      gte(studentPerformanceGoals.dueDate, new Date())
+    ))
+    .orderBy(studentPerformanceGoals.dueDate);
+  
+  return result;
+}
+
+export async function createGoalDeadlineAlert(data: InsertGoalDeadlineAlert) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const result = await db.insert(goalDeadlineAlerts).values(data);
+  return result;
+}
+
+export async function updateGoalAlertStatus(alertId: number, status: "pending" | "sent" | "dismissed") {
+  const db = await getDb();
+  if (!db) return;
+  
+  const updateData: Record<string, unknown> = { alertStatus: status };
+  if (status === "sent") {
+    updateData.sentAt = new Date();
+  } else if (status === "dismissed") {
+    updateData.dismissedAt = new Date();
+  }
+  
+  await db.update(goalDeadlineAlerts)
+    .set(updateData)
+    .where(eq(goalDeadlineAlerts.id, alertId));
+}
+
+export async function getAlertPreferences(playerId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const result = await db.select().from(alertPreferences)
+    .where(eq(alertPreferences.playerId, playerId))
+    .limit(1);
+  
+  return result.length > 0 ? result[0] : null;
+}
+
+export async function createOrUpdateAlertPreferences(data: InsertAlertPreferences) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const existing = await getAlertPreferences(data.playerId);
+  
+  if (existing) {
+    await db.update(alertPreferences)
+      .set(data)
+      .where(eq(alertPreferences.playerId, data.playerId));
+  } else {
+    await db.insert(alertPreferences).values(data);
+  }
+  
+  return data;
+}
+
+export async function recordAlertHistory(data: InsertAlertHistory) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const result = await db.insert(alertHistory).values(data);
+  return result;
+}
+
+export async function getStudentAlertHistory(playerId: number, limit: number = 50) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const result = await db.select().from(alertHistory)
+    .where(eq(alertHistory.playerId, playerId))
+    .orderBy(desc(alertHistory.sentAt))
+    .limit(limit);
+  
+  return result;
+}
+
+export async function getPendingDeadlineAlerts(daysWindow: number = 7) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const futureDate = new Date();
+  futureDate.setDate(futureDate.getDate() + daysWindow);
+  
+  const result = await db
+    .select({
+      alert: goalDeadlineAlerts,
+      goal: studentPerformanceGoals,
+      student: users,
+    })
+    .from(goalDeadlineAlerts)
+    .innerJoin(studentPerformanceGoals, eq(goalDeadlineAlerts.goalId, studentPerformanceGoals.id))
+    .innerJoin(users, eq(studentPerformanceGoals.playerId, users.id))
+    .where(and(
+      eq(goalDeadlineAlerts.alertStatus, "pending"),
+      lte(studentPerformanceGoals.dueDate, futureDate),
+      gte(studentPerformanceGoals.dueDate, new Date())
+    ))
+    .orderBy(studentPerformanceGoals.dueDate);
+  
   return result;
 }

@@ -818,3 +818,61 @@ export const journalReflectionsSummary = mysqlTable("journalReflectionsSummary",
 });
 export type JournalReflectionsSummary = typeof journalReflectionsSummary.$inferSelect;
 export type InsertJournalReflectionsSummary = typeof journalReflectionsSummary.$inferInsert;
+
+
+/**
+ * Goal Deadline Alerts
+ * Tracks reminder preferences and alert history for goal deadlines
+ */
+export const goalDeadlineAlerts = mysqlTable("goalDeadlineAlerts", {
+  id: int("id").autoincrement().primaryKey(),
+  playerId: int("playerId").notNull(),
+  goalId: int("goalId").notNull(),
+  reminderDaysBefore: int("reminderDaysBefore").default(3).notNull(), // Days before deadline to send alert
+  alertStatus: mysqlEnum("alertStatus", ["pending", "sent", "dismissed"]).default("pending").notNull(),
+  sentAt: timestamp("sentAt"),
+  dismissedAt: timestamp("dismissedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type GoalDeadlineAlert = typeof goalDeadlineAlerts.$inferSelect;
+export type InsertGoalDeadlineAlert = typeof goalDeadlineAlerts.$inferInsert;
+
+/**
+ * Alert Preferences
+ * User preferences for deadline reminder notifications
+ */
+export const alertPreferences = mysqlTable("alertPreferences", {
+  id: int("id").autoincrement().primaryKey(),
+  playerId: int("playerId").notNull().unique(),
+  enableDeadlineAlerts: boolean("enableDeadlineAlerts").default(true).notNull(),
+  defaultReminderDays: int("defaultReminderDays").default(3).notNull(), // Default days before deadline
+  alertFrequency: mysqlEnum("alertFrequency", ["immediate", "daily", "weekly"]).default("immediate").notNull(),
+  preferredAlertTime: varchar("preferredAlertTime", { length: 5 }).default("09:00"), // HH:MM format
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type AlertPreferences = typeof alertPreferences.$inferSelect;
+export type InsertAlertPreferences = typeof alertPreferences.$inferInsert;
+
+/**
+ * Alert History
+ * Complete history of all alerts sent to students
+ */
+export const alertHistory = mysqlTable("alertHistory", {
+  id: int("id").autoincrement().primaryKey(),
+  playerId: int("playerId").notNull(),
+  goalId: int("goalId").notNull(),
+  goalName: varchar("goalName", { length: 255 }).notNull(),
+  daysUntilDeadline: int("daysUntilDeadline").notNull(),
+  emailSent: boolean("emailSent").default(false).notNull(),
+  emailAddress: varchar("emailAddress", { length: 320 }),
+  sentAt: timestamp("sentAt").defaultNow().notNull(),
+  status: mysqlEnum("status", ["sent", "bounced", "failed", "opened"]).default("sent").notNull(),
+  errorMessage: text("errorMessage"),
+});
+
+export type AlertHistory = typeof alertHistory.$inferSelect;
+export type InsertAlertHistory = typeof alertHistory.$inferInsert;
