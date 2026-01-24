@@ -1,6 +1,6 @@
 import { eq, desc, and, lt, gte, isNull, lte, asc, sql, count, countDistinct, avg, sum, max } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, gameScores, InsertGameScore, customQuestions, InsertCustomQuestion, classes, InsertClass, classMembers, InsertClassMember, emailTemplates, InsertEmailTemplate, scheduledEmails, InsertScheduledEmail, issuedCertificates, InsertIssuedCertificate, zipEmailHistory, InsertZipEmailHistory, templateShares, InsertTemplateShare, sharedTemplateLibrary, InsertSharedTemplateLibrary, templateImports, InsertTemplateImport, chatConversations, InsertChatConversation, chatMessages, InsertChatMessage, gameAnalyticsStudentSummary, InsertGameAnalyticsStudentSummary, gameAnalyticsQuestionPerformance, InsertGameAnalyticsQuestionPerformance, gameAnalyticsClassPerformance, InsertGameAnalyticsClassPerformance, gameAnalyticsDailyEngagement, InsertGameAnalyticsDailyEngagement, gameAnalyticsTopicMastery, InsertGameAnalyticsTopicMastery, gameAnalyticsDifficultyProgression, InsertGameAnalyticsDifficultyProgression, rouletteGameSessions, rouletteGamePlayers, rouletteRoundResults } from "../drizzle/schema";
+import { InsertUser, users, gameScores, InsertGameScore, customQuestions, InsertCustomQuestion, classes, InsertClass, classMembers, InsertClassMember, emailTemplates, InsertEmailTemplate, scheduledEmails, InsertScheduledEmail, issuedCertificates, InsertIssuedCertificate, zipEmailHistory, InsertZipEmailHistory, templateShares, InsertTemplateShare, sharedTemplateLibrary, InsertSharedTemplateLibrary, templateImports, InsertTemplateImport, chatConversations, InsertChatConversation, chatMessages, InsertChatMessage, gameAnalyticsStudentSummary, InsertGameAnalyticsStudentSummary, gameAnalyticsQuestionPerformance, InsertGameAnalyticsQuestionPerformance, gameAnalyticsClassPerformance, InsertGameAnalyticsClassPerformance, gameAnalyticsDailyEngagement, InsertGameAnalyticsDailyEngagement, gameAnalyticsTopicMastery, InsertGameAnalyticsTopicMastery, gameAnalyticsDifficultyProgression, InsertGameAnalyticsDifficultyProgression, gameAnalyticsHistoricalSnapshots, InsertGameAnalyticsHistoricalSnapshot, gameAnalyticsStudentImprovement, InsertGameAnalyticsStudentImprovement, gameAnalyticsClassImprovement, InsertGameAnalyticsClassImprovement, gameAnalyticsRankingHistory, InsertGameAnalyticsRankingHistory, gameAnalyticsPerformanceMilestones, InsertGameAnalyticsPerformanceMilestone, rouletteGameSessions, rouletteGamePlayers, rouletteRoundResults } from "../drizzle/schema";
 import { nanoid } from 'nanoid';
 import { ENV } from './_core/env';
 
@@ -1384,4 +1384,465 @@ export async function getTeacherAnalyticsSummary(teacherId: number): Promise<{
     totalTimeSpent: data?.totalTimeSpent ? Number(data.totalTimeSpent) : 0,
     lastGameDate: data?.lastGameDate || null,
   };
+}
+
+
+/**
+ * Record historical performance snapshot for a student
+ */
+export async function recordHistoricalSnapshot(
+  playerId: number,
+  playerName: string,
+  teacherId: number,
+  stats: {
+    totalGamesPlayed: number;
+    accuracyRate: number;
+    averageScore: number;
+    totalCorrectAnswers: number;
+    totalAnswers: number;
+    streakCount: number;
+    averageTimePerGame: number;
+  }
+): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+
+  await db.insert(gameAnalyticsHistoricalSnapshots).values({
+    playerId,
+    playerName,
+    teacherId,
+    snapshotDate: new Date(),
+    totalGamesPlayed: stats.totalGamesPlayed,
+    accuracyRate: stats.accuracyRate,
+    averageScore: stats.averageScore,
+    totalCorrectAnswers: stats.totalCorrectAnswers,
+    totalAnswers: stats.totalAnswers,
+    streakCount: stats.streakCount,
+    averageTimePerGame: stats.averageTimePerGame,
+  });
+}
+
+/**
+ * Get historical performance snapshots for a student
+ */
+export async function getHistoricalSnapshots(
+  playerId: number,
+  limit: number = 30
+): Promise<(typeof gameAnalyticsHistoricalSnapshots.$inferSelect)[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  return await db
+    .select()
+    .from(gameAnalyticsHistoricalSnapshots)
+    .where(eq(gameAnalyticsHistoricalSnapshots.playerId, playerId))
+    .orderBy(desc(gameAnalyticsHistoricalSnapshots.snapshotDate))
+    .limit(limit);
+}
+
+/**
+ * Calculate student improvement metrics for a period
+ */
+export async function calculateStudentImprovement(
+  playerId: number,
+  playerName: string,
+  teacherId: number,
+  period: "week" | "month" | "semester"
+): Promise<(typeof gameAnalyticsStudentImprovement.$inferSelect) | null> {
+  const db = await getDb();
+  if (!db) return null;
+
+  const now = new Date();
+  let startDate = new Date();
+
+  if (period === "week") {
+    startDate.setDate(now.getDate() - 7);
+  } else if (period === "month") {
+    startDate.setMonth(now.getMonth() - 1);
+  } else {
+    startDate.setMonth(now.getMonth() - 4); // Roughly 4 months for semester
+  }
+
+  // Get current performance
+  const current = await db
+    .select()
+    .from(gameAnalyticsStudentSummary)
+    .where(eq(gameAnalyticsStudentSummary.playerId, playerId))
+    .limit(1);
+
+  // Get previous performance from snapshots
+  const previous = await db
+    .select()
+    .from(gameAnalyticsHistoricalSnapshots)
+    .where(
+      and(
+        eq(gameAnalyticsHistoricalSnapshots.playerId, playerId),
+        lt(gameAnalyticsHistoricalSnapshots.snapshotDate, startDate)
+      )
+    )
+    .orderBy(desc(gameAnalyticsHistoricalSnapshots.snapshotDate))
+    .limit(1);
+
+  if (!current.length) return null;
+
+  const curr = current[0];
+  const prev = previous.length > 0 ? previous[0] : null;
+
+  const previousAccuracy = prev?.accuracyRate ?? curr.accuracyRate;
+  const previousScore = prev?.averageScore ?? curr.averageScore;
+  const currentAccuracy = curr.accuracyRate;
+  const currentScore = curr.averageScore;
+
+  const accuracyChange = currentAccuracy - previousAccuracy;
+  const scoreChange = currentScore - previousScore;
+  const gamesPlayedChange = (curr.totalGamesPlayed || 0) - (prev?.totalGamesPlayed ?? 0);
+
+  let improvementTrend: "improving" | "stable" | "declining" = "stable";
+  if (accuracyChange > 5 || scoreChange > 50) {
+    improvementTrend = "improving";
+  } else if (accuracyChange < -5 || scoreChange < -50) {
+    improvementTrend = "declining";
+  }
+
+  const improvementPercentage = Math.max(
+    0,
+    Math.min(100, Math.round(((accuracyChange + 100) / 200) * 100))
+  );
+
+  return await db
+    .insert(gameAnalyticsStudentImprovement)
+    .values({
+      playerId,
+      playerName,
+      teacherId,
+      period,
+      accuracyChange,
+      scoreChange,
+      gamesPlayedChange,
+      improvementTrend,
+      improvementPercentage,
+      previousAccuracy,
+      currentAccuracy,
+      previousScore,
+      currentScore,
+      periodStartDate: startDate,
+      periodEndDate: now,
+    })
+    .then(() => ({
+      id: 0,
+      playerId,
+      playerName,
+      teacherId,
+      period,
+      accuracyChange,
+      scoreChange,
+      gamesPlayedChange,
+      improvementTrend,
+      improvementPercentage,
+      previousAccuracy,
+      currentAccuracy,
+      previousScore,
+      currentScore,
+      periodStartDate: startDate,
+      periodEndDate: now,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }));
+}
+
+/**
+ * Get student improvement metrics
+ */
+export async function getStudentImprovement(
+  playerId: number,
+  period?: "week" | "month" | "semester"
+): Promise<(typeof gameAnalyticsStudentImprovement.$inferSelect)[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  const whereConditions = period
+    ? and(
+        eq(gameAnalyticsStudentImprovement.playerId, playerId),
+        eq(gameAnalyticsStudentImprovement.period, period)
+      )
+    : eq(gameAnalyticsStudentImprovement.playerId, playerId);
+
+  return await db
+    .select()
+    .from(gameAnalyticsStudentImprovement)
+    .where(whereConditions)
+    .orderBy(desc(gameAnalyticsStudentImprovement.createdAt));
+}
+
+/**
+ * Calculate class improvement metrics
+ */
+export async function calculateClassImprovement(
+  classId: number,
+  className: string,
+  teacherId: number,
+  period: "week" | "month" | "semester"
+): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+
+  const now = new Date();
+  let startDate = new Date();
+
+  if (period === "week") {
+    startDate.setDate(now.getDate() - 7);
+  } else if (period === "month") {
+    startDate.setMonth(now.getMonth() - 1);
+  } else {
+    startDate.setMonth(now.getMonth() - 4);
+  }
+
+  // Get current class performance
+  const current = await db
+    .select()
+    .from(gameAnalyticsClassPerformance)
+    .where(eq(gameAnalyticsClassPerformance.classId, classId))
+    .limit(1);
+
+  if (!current.length) return;
+
+  const curr = current[0];
+
+  // Count students by improvement trend
+  const improvements = await db
+    .select({
+      trend: gameAnalyticsStudentImprovement.improvementTrend,
+      count: countDistinct(gameAnalyticsStudentImprovement.playerId),
+    })
+    .from(gameAnalyticsStudentImprovement)
+    .where(
+      and(
+        eq(gameAnalyticsStudentImprovement.teacherId, teacherId),
+        eq(gameAnalyticsStudentImprovement.period, period)
+      )
+    )
+    .groupBy(gameAnalyticsStudentImprovement.improvementTrend);
+
+  let improvingCount = 0;
+  let stableCount = 0;
+  let decliningCount = 0;
+
+  improvements.forEach((imp) => {
+    if (imp.trend === "improving") improvingCount = Number(imp.count) || 0;
+    else if (imp.trend === "stable") stableCount = Number(imp.count) || 0;
+    else if (imp.trend === "declining") decliningCount = Number(imp.count) || 0;
+  });
+
+  await db.insert(gameAnalyticsClassImprovement).values({
+    classId,
+    className,
+    teacherId,
+    period,
+    classAccuracyChange: 0,
+    classScoreChange: 0,
+    participationChange: 0,
+    improvingStudentCount: improvingCount,
+    stableStudentCount: stableCount,
+    decliningStudentCount: decliningCount,
+    previousClassAccuracy: curr.classAccuracyRate,
+    currentClassAccuracy: curr.classAccuracyRate,
+    previousAverageScore: curr.averageScore,
+    currentAverageScore: curr.averageScore,
+    periodStartDate: startDate,
+    periodEndDate: now,
+  });
+}
+
+/**
+ * Get class improvement metrics
+ */
+export async function getClassImprovement(
+  classId: number,
+  period?: "week" | "month" | "semester"
+): Promise<(typeof gameAnalyticsClassImprovement.$inferSelect)[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  const whereConditions = period
+    ? and(
+        eq(gameAnalyticsClassImprovement.classId, classId),
+        eq(gameAnalyticsClassImprovement.period, period)
+      )
+    : eq(gameAnalyticsClassImprovement.classId, classId);
+
+  return await db
+    .select()
+    .from(gameAnalyticsClassImprovement)
+    .where(whereConditions)
+    .orderBy(desc(gameAnalyticsClassImprovement.createdAt));
+}
+
+/**
+ * Record student ranking for a specific date
+ */
+export async function recordStudentRanking(
+  playerId: number,
+  playerName: string,
+  classId: number,
+  teacherId: number,
+  currentRank: number,
+  totalScore: number,
+  accuracyRate: number,
+  gamesPlayed: number
+): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+
+  // Get previous rank
+  const previous = await db
+    .select()
+    .from(gameAnalyticsRankingHistory)
+    .where(eq(gameAnalyticsRankingHistory.playerId, playerId))
+    .orderBy(desc(gameAnalyticsRankingHistory.recordDate))
+    .limit(1);
+
+  const previousRank = previous.length > 0 ? previous[0].currentRank : null;
+  const rankChange = previousRank ? previousRank - currentRank : 0;
+
+  await db.insert(gameAnalyticsRankingHistory).values({
+    playerId,
+    playerName,
+    classId,
+    teacherId,
+    recordDate: new Date(),
+    currentRank,
+    previousRank,
+    rankChange,
+    totalScore,
+    accuracyRate,
+    gamesPlayed,
+  });
+}
+
+/**
+ * Get student ranking history
+ */
+export async function getStudentRankingHistory(
+  playerId: number,
+  limit: number = 30
+): Promise<(typeof gameAnalyticsRankingHistory.$inferSelect)[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  return await db
+    .select()
+    .from(gameAnalyticsRankingHistory)
+    .where(eq(gameAnalyticsRankingHistory.playerId, playerId))
+    .orderBy(desc(gameAnalyticsRankingHistory.recordDate))
+    .limit(limit);
+}
+
+/**
+ * Record performance milestone for a student
+ */
+export async function recordPerformanceMilestone(
+  playerId: number,
+  playerName: string,
+  teacherId: number,
+  milestoneType: string,
+  description: string,
+  rewardPoints: number = 0
+): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+
+  await db.insert(gameAnalyticsPerformanceMilestones).values({
+    playerId,
+    playerName,
+    teacherId,
+    milestoneType: milestoneType as any,
+    milestoneDescription: description,
+    rewardPoints,
+  });
+}
+
+/**
+ * Get performance milestones for a student
+ */
+export async function getStudentMilestones(
+  playerId: number,
+  limit: number = 20
+): Promise<(typeof gameAnalyticsPerformanceMilestones.$inferSelect)[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  return await db
+    .select()
+    .from(gameAnalyticsPerformanceMilestones)
+    .where(eq(gameAnalyticsPerformanceMilestones.playerId, playerId))
+    .orderBy(desc(gameAnalyticsPerformanceMilestones.achievedDate))
+    .limit(limit);
+}
+
+/**
+ * Get all milestones achieved by a class
+ */
+export async function getClassMilestones(
+  teacherId: number,
+  limit: number = 50
+): Promise<(typeof gameAnalyticsPerformanceMilestones.$inferSelect)[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  return await db
+    .select()
+    .from(gameAnalyticsPerformanceMilestones)
+    .where(eq(gameAnalyticsPerformanceMilestones.teacherId, teacherId))
+    .orderBy(desc(gameAnalyticsPerformanceMilestones.achievedDate))
+    .limit(limit);
+}
+
+/**
+ * Get top improving students in a class
+ */
+export async function getTopImprovingStudents(
+  teacherId: number,
+  period: "week" | "month" | "semester" = "month",
+  limit: number = 10
+): Promise<(typeof gameAnalyticsStudentImprovement.$inferSelect)[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  return await db
+    .select()
+    .from(gameAnalyticsStudentImprovement)
+    .where(
+      and(
+        eq(gameAnalyticsStudentImprovement.teacherId, teacherId),
+        eq(gameAnalyticsStudentImprovement.period, period),
+        eq(gameAnalyticsStudentImprovement.improvementTrend, "improving")
+      )
+    )
+    .orderBy(desc(gameAnalyticsStudentImprovement.improvementPercentage))
+    .limit(limit);
+}
+
+/**
+ * Get students needing attention (declining performance)
+ */
+export async function getStudentsNeedingAttention(
+  teacherId: number,
+  period: "week" | "month" | "semester" = "month",
+  limit: number = 10
+): Promise<(typeof gameAnalyticsStudentImprovement.$inferSelect)[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  return await db
+    .select()
+    .from(gameAnalyticsStudentImprovement)
+    .where(
+      and(
+        eq(gameAnalyticsStudentImprovement.teacherId, teacherId),
+        eq(gameAnalyticsStudentImprovement.period, period),
+        eq(gameAnalyticsStudentImprovement.improvementTrend, "declining")
+      )
+    )
+    .orderBy(asc(gameAnalyticsStudentImprovement.improvementPercentage))
+    .limit(limit);
 }

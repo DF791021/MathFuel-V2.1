@@ -35,6 +35,9 @@ import {
   downloadCSV,
   downloadReport,
 } from "@/lib/analyticsExport";
+import StudentImprovementTracker from "@/components/StudentImprovementTracker";
+import ClassImprovementComparison from "@/components/ClassImprovementComparison";
+import ImprovementInsights from "@/components/ImprovementInsights";
 import { toast } from "sonner";
 
 const COLORS = ["#10b981", "#f59e0b", "#ef4444", "#3b82f6", "#8b5cf6"];
@@ -281,11 +284,13 @@ export default function GameAnalyticsDashboard() {
 
         {/* Main Tabs */}
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="students">Students</TabsTrigger>
             <TabsTrigger value="questions">Questions</TabsTrigger>
             <TabsTrigger value="trends">Trends</TabsTrigger>
+            <TabsTrigger value="improvement">Improvement</TabsTrigger>
+            <TabsTrigger value="insights">Insights</TabsTrigger>
           </TabsList>
 
           {/* Overview Tab */}
@@ -615,6 +620,41 @@ export default function GameAnalyticsDashboard() {
                 </Card>
               </div>
             )}
+          </TabsContent>
+
+          {/* Improvement Tab */}
+          <TabsContent value="improvement" className="space-y-6">
+            <div className="grid grid-cols-1 gap-6">
+              {/* Class Improvement Comparison */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Class Performance Improvement</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ClassImprovementComparison classId={1} className="Class" />
+                </CardContent>
+              </Card>
+
+              {/* Student Improvement Tracker */}
+              {selectedStudent && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Student Improvement Tracking</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <StudentImprovementTracker
+                      playerId={selectedStudent}
+                      playerName={students.find((s) => s.id === selectedStudent)?.playerName || "Student"}
+                    />
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </TabsContent>
+
+          {/* Insights Tab */}
+          <TabsContent value="insights" className="space-y-6">
+            <ImprovementInsights period="month" />
           </TabsContent>
         </Tabs>
       </div>

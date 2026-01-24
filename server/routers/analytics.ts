@@ -9,6 +9,14 @@ import {
   getPlayerTopicMastery,
   getPlayerDifficultyProgression,
   getTeacherAnalyticsSummary,
+  getStudentImprovement,
+  getHistoricalSnapshots,
+  getClassImprovement,
+  getStudentRankingHistory,
+  getStudentMilestones,
+  getClassMilestones,
+  getTopImprovingStudents,
+  getStudentsNeedingAttention,
 } from "../db";
 
 /**
@@ -164,4 +172,140 @@ export const analyticsRouter = {
         difficultyProgression,
       };
     }),
-};
+
+  /**
+   * Get student improvement metrics
+   */
+  getStudentImprovement: protectedProcedure
+    .input(
+      z.object({
+        playerId: z.number(),
+        period: z.enum(["week", "month", "semester"]).optional(),
+      })
+    )
+    .query(async ({ input }) => {
+      return await getStudentImprovement(input.playerId, input.period);
+    }),
+
+  /**
+   * Get historical performance snapshots for a student
+   */
+  getHistoricalSnapshots: protectedProcedure
+    .input(
+      z.object({
+        playerId: z.number(),
+        limit: z.number().min(1).max(100).default(30),
+      })
+    )
+    .query(async ({ input }) => {
+      return await getHistoricalSnapshots(input.playerId, input.limit);
+    }),
+
+  /**
+   * Get class improvement metrics
+   */
+  getClassImprovement: protectedProcedure
+    .input(
+      z.object({
+        classId: z.number(),
+        period: z.enum(["week", "month", "semester"]).optional(),
+      })
+    )
+    .query(async ({ input }) => {
+      return await getClassImprovement(input.classId, input.period);
+    }),
+
+  /**
+   * Get student ranking history
+   */
+  getStudentRankingHistory: protectedProcedure
+    .input(
+      z.object({
+        playerId: z.number(),
+        limit: z.number().min(1).max(100).default(30),
+      })
+    )
+    .query(async ({ input }) => {
+      return await getStudentRankingHistory(input.playerId, input.limit);
+    }),
+
+  /**
+   * Get performance milestones for a student
+   */
+  getStudentMilestones: protectedProcedure
+    .input(
+      z.object({
+        playerId: z.number(),
+        limit: z.number().min(1).max(50).default(20),
+      })
+    )
+    .query(async ({ input }) => {
+      return await getStudentMilestones(input.playerId, input.limit);
+    }),
+
+  /**
+   * Get all milestones achieved by a class
+   */
+  getClassMilestones: protectedProcedure
+    .input(
+      z.object({
+        limit: z.number().min(1).max(100).default(50),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      return await getClassMilestones(ctx.user.id, input.limit);
+    }),
+
+  /**
+   * Get top improving students in a class
+   */
+  getTopImprovingStudents: protectedProcedure
+    .input(
+      z.object({
+        period: z.enum(["week", "month", "semester"]).default("month"),
+        limit: z.number().min(1).max(50).default(10),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      return await getTopImprovingStudents(ctx.user.id, input.period, input.limit);
+    }),
+
+  /**
+   * Get students needing attention (declining performance)
+   */
+  getStudentsNeedingAttention: protectedProcedure
+    .input(
+      z.object({
+        period: z.enum(["week", "month", "semester"]).default("month"),
+        limit: z.number().min(1).max(50).default(10),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      return await getStudentsNeedingAttention(ctx.user.id, input.period, input.limit);
+    }),
+
+  /**
+   * Get comprehensive improvement dashboard data
+   */
+  getImprovementDashboard: protectedProcedure
+    .input(
+      z.object({
+        period: z.enum(["week", "month", "semester"]).default("month"),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const [improving, declining, milestones] = await Promise.all([
+        getTopImprovingStudents(ctx.user.id, input.period, 5),
+        getStudentsNeedingAttention(ctx.user.id, input.period, 5),
+        getClassMilestones(ctx.user.id, 10),
+      ]);
+
+      return {
+        improving,
+        declining,
+        milestones,
+        period: input.period,
+      };
+    }),
+}
+;

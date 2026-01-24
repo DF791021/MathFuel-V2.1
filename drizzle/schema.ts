@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, boolean } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, boolean, date } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -521,3 +521,136 @@ export const gameAnalyticsDifficultyProgression = mysqlTable("gameAnalyticsDiffi
 
 export type GameAnalyticsDifficultyProgression = typeof gameAnalyticsDifficultyProgression.$inferSelect;
 export type InsertGameAnalyticsDifficultyProgression = typeof gameAnalyticsDifficultyProgression.$inferInsert;
+
+
+/**
+ * Game Analytics - Historical Performance Snapshots
+ * Stores periodic snapshots of student performance for trend analysis
+ */
+export const gameAnalyticsHistoricalSnapshots = mysqlTable("gameAnalyticsHistoricalSnapshots", {
+  id: int("id").autoincrement().primaryKey(),
+  playerId: int("playerId").notNull(),
+  playerName: varchar("playerName", { length: 100 }).notNull(),
+  teacherId: int("teacherId").notNull(),
+  snapshotDate: timestamp("snapshotDate").notNull(), // Date of snapshot
+  totalGamesPlayed: int("totalGamesPlayed").default(0).notNull(),
+  accuracyRate: int("accuracyRate").default(0).notNull(), // 0-100
+  averageScore: int("averageScore").default(0).notNull(),
+  totalCorrectAnswers: int("totalCorrectAnswers").default(0).notNull(),
+  totalAnswers: int("totalAnswers").default(0).notNull(),
+  streakCount: int("streakCount").default(0).notNull(),
+  averageTimePerGame: int("averageTimePerGame").default(0).notNull(), // In seconds
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type GameAnalyticsHistoricalSnapshot = typeof gameAnalyticsHistoricalSnapshots.$inferSelect;
+export type InsertGameAnalyticsHistoricalSnapshot = typeof gameAnalyticsHistoricalSnapshots.$inferInsert;
+
+/**
+ * Game Analytics - Student Improvement Metrics
+ * Tracks improvement metrics and trends for individual students
+ */
+export const gameAnalyticsStudentImprovement = mysqlTable("gameAnalyticsStudentImprovement", {
+  id: int("id").autoincrement().primaryKey(),
+  playerId: int("playerId").notNull(),
+  playerName: varchar("playerName", { length: 100 }).notNull(),
+  teacherId: int("teacherId").notNull(),
+  period: varchar("period", { length: 20 }).notNull(), // "week", "month", "semester"
+  accuracyChange: int("accuracyChange").default(0), // Percentage change (can be negative)
+  scoreChange: int("scoreChange").default(0), // Absolute score change
+  gamesPlayedChange: int("gamesPlayedChange").default(0), // Change in games played
+  improvementTrend: mysqlEnum("improvementTrend", ["improving", "stable", "declining"]).default("stable").notNull(),
+  improvementPercentage: int("improvementPercentage").default(0).notNull(), // 0-100
+  previousAccuracy: int("previousAccuracy").default(0).notNull(),
+  currentAccuracy: int("currentAccuracy").default(0).notNull(),
+  previousScore: int("previousScore").default(0).notNull(),
+  currentScore: int("currentScore").default(0).notNull(),
+  periodStartDate: timestamp("periodStartDate").notNull(),
+  periodEndDate: timestamp("periodEndDate").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type GameAnalyticsStudentImprovement = typeof gameAnalyticsStudentImprovement.$inferSelect;
+export type InsertGameAnalyticsStudentImprovement = typeof gameAnalyticsStudentImprovement.$inferInsert;
+
+/**
+ * Game Analytics - Class Improvement Metrics
+ * Tracks improvement metrics for entire classes
+ */
+export const gameAnalyticsClassImprovement = mysqlTable("gameAnalyticsClassImprovement", {
+  id: int("id").autoincrement().primaryKey(),
+  classId: int("classId").notNull(),
+  className: varchar("className", { length: 100 }).notNull(),
+  teacherId: int("teacherId").notNull(),
+  period: varchar("period", { length: 20 }).notNull(), // "week", "month", "semester"
+  classAccuracyChange: int("classAccuracyChange").default(0), // Percentage change
+  classScoreChange: int("classScoreChange").default(0), // Absolute change
+  participationChange: int("participationChange").default(0), // Percentage change
+  improvingStudentCount: int("improvingStudentCount").default(0).notNull(),
+  stableStudentCount: int("stableStudentCount").default(0).notNull(),
+  decliningStudentCount: int("decliningStudentCount").default(0).notNull(),
+  previousClassAccuracy: int("previousClassAccuracy").default(0).notNull(),
+  currentClassAccuracy: int("currentClassAccuracy").default(0).notNull(),
+  previousAverageScore: int("previousAverageScore").default(0).notNull(),
+  currentAverageScore: int("currentAverageScore").default(0).notNull(),
+  periodStartDate: timestamp("periodStartDate").notNull(),
+  periodEndDate: timestamp("periodEndDate").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type GameAnalyticsClassImprovement = typeof gameAnalyticsClassImprovement.$inferSelect;
+export type InsertGameAnalyticsClassImprovement = typeof gameAnalyticsClassImprovement.$inferInsert;
+
+/**
+ * Game Analytics - Student Ranking History
+ * Tracks student ranking changes over time
+ */
+export const gameAnalyticsRankingHistory = mysqlTable("gameAnalyticsRankingHistory", {
+  id: int("id").autoincrement().primaryKey(),
+  playerId: int("playerId").notNull(),
+  playerName: varchar("playerName", { length: 100 }).notNull(),
+  classId: int("classId").notNull(),
+  teacherId: int("teacherId").notNull(),
+  recordDate: timestamp("recordDate").notNull(),
+  currentRank: int("currentRank").notNull(),
+  previousRank: int("previousRank"),
+  rankChange: int("rankChange").default(0), // Positive = improved, negative = declined
+  totalScore: int("totalScore").notNull(),
+  accuracyRate: int("accuracyRate").notNull(),
+  gamesPlayed: int("gamesPlayed").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type GameAnalyticsRankingHistory = typeof gameAnalyticsRankingHistory.$inferSelect;
+export type InsertGameAnalyticsRankingHistory = typeof gameAnalyticsRankingHistory.$inferInsert;
+
+/**
+ * Game Analytics - Performance Milestones
+ * Tracks significant achievements and milestones for students
+ */
+export const gameAnalyticsPerformanceMilestones = mysqlTable("gameAnalyticsPerformanceMilestones", {
+  id: int("id").autoincrement().primaryKey(),
+  playerId: int("playerId").notNull(),
+  playerName: varchar("playerName", { length: 100 }).notNull(),
+  teacherId: int("teacherId").notNull(),
+  milestoneType: mysqlEnum("milestoneType", [
+    "first_game",
+    "accuracy_90",
+    "accuracy_95",
+    "accuracy_100",
+    "games_10",
+    "games_25",
+    "games_50",
+    "games_100",
+    "streak_5",
+    "streak_10",
+    "streak_20",
+    "top_performer",
+    "most_improved",
+    "consistent_performer",
+  ]).notNull(),
+  milestoneDescription: varchar("milestoneDescription", { length: 200 }).notNull(),
+  achievedDate: timestamp("achievedDate").defaultNow().notNull(),
+  rewardPoints: int("rewardPoints").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type GameAnalyticsPerformanceMilestone = typeof gameAnalyticsPerformanceMilestones.$inferSelect;
+export type InsertGameAnalyticsPerformanceMilestone = typeof gameAnalyticsPerformanceMilestones.$inferInsert;
