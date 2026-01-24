@@ -16,7 +16,10 @@ import {
   getOverdueGoals,
   getGoalStatistics,
   deleteGoal,
+  saveAISuggestedGoals,
+  getStudentPerformanceDataForSuggestions,
 } from "../db";
+import { generateAIGoalSuggestions, validateGoalSuggestions } from "../_core/aiGoalSuggestions";
 
 export const goalsRouter = router({
   /**
@@ -245,11 +248,6 @@ export const goalsRouter = router({
     )
     .query(async ({ ctx, input }) => {
       try {
-        const { getStudentPerformanceDataForSuggestions } = await import("../db");
-        const { generateAIGoalSuggestions, validateGoalSuggestions } = await import(
-          "../_core/aiGoalSuggestions"
-        );
-
         const performanceData = await getStudentPerformanceDataForSuggestions(
           input.playerId
         );
@@ -319,7 +317,6 @@ export const goalsRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        const { saveAISuggestedGoals } = await import("../db");
 
         const results = await saveAISuggestedGoals(
           input.playerId,

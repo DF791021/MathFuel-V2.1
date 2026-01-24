@@ -228,7 +228,7 @@ export default function AIGoalSuggestions({
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {suggestions.map((suggestion, index) => (
+            {suggestions.map((suggestion: any, index: number) => (
               <div
                 key={index}
                 className={`p-4 rounded-lg border-2 cursor-pointer transition ${

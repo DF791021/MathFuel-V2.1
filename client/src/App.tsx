@@ -11,6 +11,7 @@ import VerifyCertificate from "./pages/VerifyCertificate";
 import TemplateLibrary from "./pages/TemplateLibrary";
 import { NutritionRoulette } from "./pages/NutritionRoulette";
 import GameAnalyticsDashboard from "./pages/GameAnalyticsDashboard";
+import StudentGoalPortal from "./pages/StudentGoalPortal";
 
 function Router() {
   return (
@@ -21,6 +22,7 @@ function Router() {
       <Route path="/templates" component={TemplateLibrary} />
       <Route path="/roulette" component={NutritionRoulette} />
       <Route path="/analytics" component={GameAnalyticsDashboard} />
+      <Route path="/goals" component={StudentGoalPortal} />
       <Route path="/verify/:id" component={VerifyCertificate} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />

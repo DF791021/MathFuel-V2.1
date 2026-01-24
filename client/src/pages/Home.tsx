@@ -5,7 +5,7 @@ import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { 
   Play, Trophy, GraduationCap, Users, Sparkles, 
-  ChevronRight, Star, Leaf, Apple, Carrot
+  ChevronRight, Star, Leaf, Apple, Carrot, Target
 } from "lucide-react";
 import GameBoard from "@/components/GameBoard";
 import { trpc } from "@/lib/trpc";
@@ -74,6 +74,14 @@ export default function Home() {
                 <span className="hidden sm:inline">Teachers</span>
               </Button>
             </Link>
+            {isAuthenticated && user?.role !== 'admin' && (
+              <Link href="/goals">
+                <Button variant="ghost" size="sm" className="gap-2">
+                  <Target className="h-4 w-4 text-blue-500" />
+                  <span className="hidden sm:inline">My Goals</span>
+                </Button>
+              </Link>
+            )}
             {isAuthenticated ? (
               <Button variant="outline" size="sm" className="gap-2">
                 <Users className="h-4 w-4" />
