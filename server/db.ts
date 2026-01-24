@@ -2760,3 +2760,150 @@ export async function getJournalStatistics(playerId: number) {
     };
   }
 }
+
+/**
+ * Get goal adoption metrics for a class
+ */
+export async function getClassGoalAdoptionMetrics(classId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const result = await db
+    .select({
+      totalGoals: count(),
+      completedGoals: countDistinct(
+        sql`CASE WHEN ${studentPerformanceGoals.status} = 'completed' THEN ${studentPerformanceGoals.id} END`
+      ),
+      avgProgress: avg(studentPerformanceGoals.progressPercentage),
+    })
+    .from(studentPerformanceGoals)
+    .where(eq(studentPerformanceGoals.classId, classId));
+
+  return result[0] || {
+    totalGoals: 0,
+    completedGoals: 0,
+    avgProgress: 0,
+  };
+}
+
+/**
+ * Get student goal adoption status
+ */
+export async function getStudentGoalAdoptionStatus(playerId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const result = await db
+    .select({
+      playerId: studentPerformanceGoals.playerId,
+      totalGoals: count(),
+      activeGoals: countDistinct(
+        sql`CASE WHEN ${studentPerformanceGoals.status} = 'active' THEN ${studentPerformanceGoals.id} END`
+      ),
+      completedGoals: countDistinct(
+        sql`CASE WHEN ${studentPerformanceGoals.status} = 'completed' THEN ${studentPerformanceGoals.id} END`
+      ),
+      failedGoals: countDistinct(
+        sql`CASE WHEN ${studentPerformanceGoals.status} = 'failed' THEN ${studentPerformanceGoals.id} END`
+      ),
+      avgProgress: avg(studentPerformanceGoals.progressPercentage),
+    })
+    .from(studentPerformanceGoals)
+    .where(eq(studentPerformanceGoals.playerId, playerId))
+    .groupBy(studentPerformanceGoals.playerId);
+
+  return result[0] || {
+    playerId,
+    totalGoals: 0,
+    activeGoals: 0,
+    completedGoals: 0,
+    failedGoals: 0,
+    avgProgress: 0,
+  };
+}
+
+/**
+ * Get all students' goal adoption status for a class
+ */
+export async function getClassStudentGoalAdoptionStatus(classId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const result = await db
+    .select({
+      playerId: studentPerformanceGoals.playerId,
+      playerName: studentPerformanceGoals.playerName,
+      totalGoals: count(),
+      activeGoals: countDistinct(
+        sql`CASE WHEN ${studentPerformanceGoals.status} = 'active' THEN ${studentPerformanceGoals.id} END`
+      ),
+      completedGoals: countDistinct(
+        sql`CASE WHEN ${studentPerformanceGoals.status} = 'completed' THEN ${studentPerformanceGoals.id} END`
+      ),
+      failedGoals: countDistinct(
+        sql`CASE WHEN ${studentPerformanceGoals.status} = 'failed' THEN ${studentPerformanceGoals.id} END`
+      ),
+      avgProgress: avg(studentPerformanceGoals.progressPercentage),
+    })
+    .from(studentPerformanceGoals)
+    .where(eq(studentPerformanceGoals.classId, classId))
+    .groupBy(studentPerformanceGoals.playerId, studentPerformanceGoals.playerName)
+    .orderBy(desc(count()));
+
+  return result;
+}
+
+/**
+ * Get goals at risk (not progressing toward target)
+ */
+export async function getGoalsAtRisk(classId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const now = new Date();
+
+  const result = await db
+    .select({
+      id: studentPerformanceGoals.id,
+      playerId: studentPerformanceGoals.playerId,
+      playerName: studentPerformanceGoals.playerName,
+      goalName: studentPerformanceGoals.goalName,
+      progressPercentage: studentPerformanceGoals.progressPercentage,
+      dueDate: studentPerformanceGoals.dueDate,
+      status: studentPerformanceGoals.status,
+      priority: studentPerformanceGoals.priority,
+    })
+    .from(studentPerformanceGoals)
+    .where(
+      and(
+        eq(studentPerformanceGoals.classId, classId),
+        eq(studentPerformanceGoals.status, "active"),
+        lt(studentPerformanceGoals.progressPercentage, 50),
+        lte(studentPerformanceGoals.dueDate, now)
+      )
+    )
+    .orderBy(asc(studentPerformanceGoals.dueDate));
+
+  return result;
+}
+
+/**
+ * Get goal type distribution for a class
+ */
+export async function getGoalTypeDistribution(classId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const result = await db
+    .select({
+      goalType: studentPerformanceGoals.goalType,
+      count: count(),
+      avgProgress: avg(studentPerformanceGoals.progressPercentage),
+    })
+    .from(studentPerformanceGoals)
+    .where(eq(studentPerformanceGoals.classId, classId))
+    .groupBy(studentPerformanceGoals.goalType)
+    .orderBy(desc(count()));
+
+  return result;
+}

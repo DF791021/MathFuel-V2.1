@@ -467,3 +467,14 @@
 - [x] Add one-click goal creation from recommendations (integrated in RecommendedGoalsPanel)
 - [x] Write tests for goal recommendation functions (21 tests passing)
 - [x] Integrate recommendations into student portal (Recommended tab in StudentGoalPortal)
+
+
+## Teacher Goal Monitoring Dashboard - COMPLETED
+- [x] Design teacher goal monitoring dashboard layout and features
+- [x] Create database queries for goal adoption and progress metrics
+- [x] Build tRPC procedures for fetching monitoring data (getClassMetrics, getStudentAdoptionStatus, getAtRiskGoals, getGoalTypeDistribution)
+- [x] Create dashboard UI components for goal adoption overview (TeacherGoalMonitoringDashboard)
+- [x] Build student progress tracking and status visualization (bar charts, pie charts, student list with progress bars)
+- [x] Implement filtering, sorting, and export functionality (CSV export, at-risk goals highlighting, sorting by progress)
+- [x] Write tests for goal monitoring functions
+- [x] Integrate dashboard into teacher portal (Goal Monitor tab in TeacherPortal with per-class views)

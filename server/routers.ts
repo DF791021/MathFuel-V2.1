@@ -12,6 +12,7 @@ import { rouletteRouter } from "./routers/roulette";
 import { analyticsRouter } from "./routers/analytics";
 import { goalsRouter } from "./routers/goals";
 import { journalRouter } from "./routers/journal";
+import { goalMonitoringRouter } from "./routers/goalMonitoring";
 
 export const appRouter = router({
   system: systemRouter,
@@ -21,6 +22,7 @@ export const appRouter = router({
   analytics: analyticsRouter,
   goals: goalsRouter,
   journal: journalRouter,
+  goalMonitoring: goalMonitoringRouter,
   
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),

@@ -24,6 +24,7 @@ import Certificate from "@/components/Certificate";
 import BatchCertificates from "@/components/BatchCertificates";
 import ScheduledEmails from "@/components/ScheduledEmails";
 import GoalsManagement from "@/components/GoalsManagement";
+import TeacherGoalMonitoringDashboard from "@/components/TeacherGoalMonitoringDashboard";
 import { getLoginUrl } from "@/const";
 
 const CATEGORIES = [
@@ -213,6 +214,10 @@ export default function TeacherPortal() {
             <TabsTrigger value="scheduled" className="text-sm">
               <Clock className="h-4 w-4 mr-2" />
               Scheduled
+            </TabsTrigger>
+            <TabsTrigger value="goalMonitoring" className="text-sm">
+              <BarChart3 className="h-4 w-4 mr-2" />
+              Goal Monitor
             </TabsTrigger>
             <TabsTrigger value="goals" className="text-sm">
               <Target className="h-4 w-4 mr-2" />
@@ -560,6 +565,30 @@ export default function TeacherPortal() {
           {/* Scheduled Emails Tab */}
           <TabsContent value="scheduled" className="space-y-6">
             <ScheduledEmails />
+          </TabsContent>
+
+          {/* Goal Monitoring Tab */}
+          <TabsContent value="goalMonitoring" className="space-y-6">
+            {myClasses && myClasses.length > 0 ? (
+              <div className="space-y-6">
+                {myClasses.map((classData) => (
+                  <div key={classData.id}>
+                    <TeacherGoalMonitoringDashboard
+                      classId={classData.id}
+                      className={classData.name}
+                    />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <Card className="border-2">
+                <CardContent className="p-8 text-center">
+                  <Target className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                  <p className="text-gray-600 mb-4">No classes yet. Create a class to monitor student goals.</p>
+                  <Button onClick={() => setIsAddClassOpen(true)}>Create a Class</Button>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
 
           {/* Goals Tab */}
