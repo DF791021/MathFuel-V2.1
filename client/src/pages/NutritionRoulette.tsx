@@ -1,403 +1,254 @@
 import { useState, useEffect } from "react";
-import { trpc } from "@/lib/trpc";
+import { useRouter } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { useRouter } from "wouter";
+import { useGameSocket } from "@/hooks/useGameSocket";
+import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 
-type GamePhase = "lobby" | "joining" | "waiting" | "playing" | "results";
-
-interface Challenge {
-  id: number;
-  title: string;
-  content: string;
-  correctAnswer?: string;
-  pointsReward: number;
-  timeLimit?: number;
+interface LeaderboardEntry {
+  playerId: string;
+  name: string;
+  score: number;
+  streak: number;
+  position: number;
 }
 
 export function NutritionRoulette() {
   const { user } = useAuth();
-  const [phase, setPhase] = useState<GamePhase>("lobby");
-  const [sessionCode, setSessionCode] = useState("");
+  const [phase, setPhase] = useState<"lobby" | "joining" | "playing" | "results">("lobby");
+  const [gameCode, setGameCode] = useState("");
   const [playerName, setPlayerName] = useState("");
-  const [joinCode, setJoinCode] = useState("");
-  const [currentChallenge, setCurrentChallenge] = useState<Challenge | null>(null);
-  const [playerAnswer, setPlayerAnswer] = useState("");
-  const [timeRemaining, setTimeRemaining] = useState(0);
-  const [isSpinning, setIsSpinning] = useState(false);
-  const [wheelRotation, setWheelRotation] = useState(0);
-  const [leaderboard, setLeaderboard] = useState<any[]>([]);
-  const [gameStatus, setGameStatus] = useState("waiting");
-  const [currentRound, setCurrentRound] = useState(1);
-  const [totalRounds, setTotalRounds] = useState(5);
+  const [userRole, setUserRole] = useState<"teacher" | "player">("player");
+  const [isJoined, setIsJoined] = useState(false);
 
-  // tRPC mutations and queries
-  const createSessionMutation = trpc.roulette.createSession.useMutation();
-  const joinSessionMutation = trpc.roulette.joinSession.useMutation();
-  const startSessionMutation = trpc.roulette.startSession.useMutation();
-  const getSessionQuery = trpc.roulette.getSession.useQuery(
-    { sessionCode: sessionCode || joinCode },
-    { enabled: !!sessionCode || !!joinCode }
-  );
-  const getLeaderboardQuery = trpc.roulette.getLeaderboard.useQuery(
-    { sessionCode: sessionCode || joinCode },
-    { enabled: !!sessionCode || !!joinCode, refetchInterval: 1000 }
-  );
-  const getRandomChallengeQuery = trpc.roulette.getRandomChallenge.useQuery(
-    { difficulty: "medium" },
-    { enabled: false }
-  );
-  const submitAnswerMutation = trpc.roulette.submitAnswer.useMutation();
-  const endSessionMutation = trpc.roulette.endSession.useMutation();
+  // WebSocket integration
+  const gameSocket = useGameSocket(gameCode, playerName);
 
-  // Update leaderboard
-  useEffect(() => {
-    if (getLeaderboardQuery.data) {
-      setLeaderboard(getLeaderboardQuery.data);
-    }
-  }, [getLeaderboardQuery.data]);
+  // Challenge wheel data
+  const wheelData = [
+    { name: "Trivia", value: 1, color: "#ef4444" },
+    { name: "Match", value: 1, color: "#06b6d4" },
+    { name: "Recipe", value: 1, color: "#3b82f6" },
+    { name: "Wellness", value: 1, color: "#f97316" },
+    { name: "Speed", value: 1, color: "#84cc16" },
+  ];
 
-  // Update game status
-  useEffect(() => {
-    if (getSessionQuery.data) {
-      setGameStatus(getSessionQuery.data.gameStatus);
-      setCurrentRound(getSessionQuery.data.currentRound);
-      setTotalRounds(getSessionQuery.data.totalRounds);
-    }
-  }, [getSessionQuery.data]);
-
-  // Timer for challenges
-  useEffect(() => {
-    if (phase === "playing" && timeRemaining > 0) {
-      const timer = setTimeout(() => setTimeRemaining(timeRemaining - 1), 1000);
-      return () => clearTimeout(timer);
-    }
-    if (timeRemaining === 0 && currentChallenge && phase === "playing") {
-      handleSubmitAnswer();
-    }
-  }, [timeRemaining, phase, currentChallenge]);
-
-  const handleCreateSession = async () => {
-    const result = await createSessionMutation.mutateAsync({
-      totalRounds: 5,
-      difficulty: "medium",
-    });
-    setSessionCode(result.sessionCode);
-    setPhase("waiting");
+  const handleCreateGame = async () => {
+    const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+    setGameCode(code);
+    setIsJoined(true);
+    setPhase("playing");
   };
 
-  const handleJoinSession = async () => {
-    if (!joinCode || !playerName) return;
-    try {
-      await joinSessionMutation.mutateAsync({
-        sessionCode: joinCode,
-        playerName,
-      });
-      setSessionCode(joinCode);
-      setPhase("waiting");
-    } catch (error) {
-      alert("Failed to join session");
-    }
-  };
-
-  const handleStartGame = async () => {
-    if (!sessionCode) return;
-    try {
-      await startSessionMutation.mutateAsync({ sessionCode });
+  const handleJoinGame = () => {
+    if (gameCode && playerName) {
+      setIsJoined(true);
       setPhase("playing");
-      spinRoulette();
-    } catch (error) {
-      alert("Failed to start game");
     }
   };
 
-  const spinRoulette = async () => {
-    setIsSpinning(true);
-    const spins = Math.random() * 360 + 720;
-    setWheelRotation((prev) => prev + spins);
-
-    // Simulate spin animation
-    setTimeout(() => {
-      setIsSpinning(false);
-      // Get random challenge
-      const challenge: Challenge = {
-        id: Math.floor(Math.random() * 100),
-        title: "Nutrition Question",
-        content: "Which food group is most important for bone health?",
-        correctAnswer: "Dairy",
-        pointsReward: 100,
-        timeLimit: 30,
-      };
-      setCurrentChallenge(challenge);
-      setTimeRemaining(challenge.timeLimit || 30);
-      setPlayerAnswer("");
-    }, 2000);
-  };
-
-  const handleSubmitAnswer = async () => {
-    if (!sessionCode || !currentChallenge) return;
-
-    try {
-      const result = await submitAnswerMutation.mutateAsync({
-        sessionCode,
-        challengeId: currentChallenge.id,
-        playerAnswer: playerAnswer || "timeout",
-        timeSpent: (currentChallenge.timeLimit || 30) - timeRemaining,
-      });
-
-      // Show result briefly
-      alert(result.message + ` +${result.pointsEarned} points`);
-
-      // Next round or end game
-      if (currentRound < totalRounds) {
-        setCurrentChallenge(null);
-        setTimeout(() => spinRoulette(), 1000);
-      } else {
-        setPhase("results");
-        await endSessionMutation.mutateAsync({ sessionCode });
-      }
-    } catch (error) {
-      alert("Error submitting answer");
+  const handleSubmitAnswer = () => {
+    if (gameSocket.currentChallenge) {
+      gameSocket.submitAnswer("");
     }
   };
 
-  // Lobby Phase
-  if (phase === "lobby") {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 p-4 flex items-center justify-center">
-        <Card className="w-full max-w-md p-8">
-          <h1 className="text-4xl font-bold text-center mb-2 text-green-700">
-            🎡 Nutrition Roulette
-          </h1>
-          <p className="text-center text-gray-600 mb-8">
-            Spin the wheel, answer questions, and compete with your classmates!
-          </p>
+  useEffect(() => {
+    if (isJoined && gameSocket.isConnected) {
+      console.log("[Game] Connected to WebSocket");
+    }
+  }, [isJoined, gameSocket.isConnected]);
 
-          <div className="space-y-4">
-            <Button
-              onClick={handleCreateSession}
-              className="w-full bg-green-600 hover:bg-green-700 text-white py-6 text-lg"
-              disabled={createSessionMutation.isPending}
-            >
-              {createSessionMutation.isPending ? "Creating..." : "🎮 Create Game"}
-            </Button>
-
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">OR</span>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <Input
-                placeholder="Enter game code"
-                value={joinCode}
-                onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-                className="text-center text-lg tracking-widest"
-              />
-              <Input
-                placeholder="Your name"
-                value={playerName}
-                onChange={(e) => setPlayerName(e.target.value)}
-              />
-              <Button
-                onClick={handleJoinSession}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-6 text-lg"
-                disabled={joinSessionMutation.isPending || !joinCode || !playerName}
-              >
-                {joinSessionMutation.isPending ? "Joining..." : "👥 Join Game"}
-              </Button>
-            </div>
-          </div>
-        </Card>
-      </div>
-    );
-  }
-
-  // Waiting/Playing Phase
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 p-4">
+    <div className="min-h-screen bg-gradient-to-b from-green-50 to-blue-50 p-4">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-green-700">🎡 Nutrition Roulette</h1>
-            <p className="text-gray-600">Game Code: <span className="font-mono font-bold text-lg">{sessionCode}</span></p>
-          </div>
-          <div className="text-right">
-            <p className="text-sm text-gray-600">Round</p>
-            <p className="text-3xl font-bold text-blue-600">{currentRound}/{totalRounds}</p>
-          </div>
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-green-800 mb-2">🎡 Nutrition Roulette</h1>
+          <p className="text-gray-600">Spin the wheel, answer questions, and compete with your classmates!</p>
+          {gameSocket.isConnected && (
+            <p className="text-sm text-green-600 mt-2">✅ Connected to game server</p>
+          )}
         </div>
 
-        {/* Main Game Area */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          {/* Roulette Wheel */}
-          <div className="lg:col-span-2">
-            <Card className="p-8 bg-white shadow-lg">
-              {phase === "waiting" && gameStatus === "waiting" ? (
-                <div className="text-center py-12">
-                  <p className="text-xl text-gray-600 mb-6">Waiting for game to start...</p>
-                  <p className="text-gray-500 mb-8">Players in session: {getSessionQuery.data?.players?.length || 0}</p>
-                  {user?.id === getSessionQuery.data?.teacherId && (
-                    <Button
-                      onClick={handleStartGame}
-                      className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 text-lg"
-                    >
-                      🎮 Start Game
-                    </Button>
-                  )}
-                </div>
-              ) : (
-                <div className="flex flex-col items-center">
-                  {/* Roulette Wheel SVG */}
-                  <div className="relative w-64 h-64 mb-8">
-                    <svg
-                      viewBox="0 0 200 200"
-                      className="w-full h-full"
-                      style={{
-                        transform: `rotate(${wheelRotation}deg)`,
-                        transition: isSpinning ? "none" : "transform 0.3s ease-out",
-                      }}
-                    >
-                      {/* Wheel segments */}
-                      {[0, 1, 2, 3, 4].map((i) => {
-                        const angle = (i * 72) * (Math.PI / 180);
-                        const colors = ["#FF6B6B", "#4ECDC4", "#45B7D1", "#FFA07A", "#98D8C8"];
-                        return (
-                          <g key={i}>
-                            <path
-                              d={`M 100 100 L ${100 + 80 * Math.cos(angle)} ${100 + 80 * Math.sin(angle)} A 80 80 0 0 1 ${100 + 80 * Math.cos(angle + (72 * Math.PI / 180))} ${100 + 80 * Math.sin(angle + (72 * Math.PI / 180))} Z`}
-                              fill={colors[i]}
-                              stroke="white"
-                              strokeWidth="2"
-                            />
-                            <text
-                              x={100 + 50 * Math.cos(angle + (36 * Math.PI / 180))}
-                              y={100 + 50 * Math.sin(angle + (36 * Math.PI / 180))}
-                              textAnchor="middle"
-                              dominantBaseline="middle"
-                              fill="white"
-                              fontSize="12"
-                              fontWeight="bold"
-                              className="pointer-events-none"
-                            >
-                              {["Trivia", "Match", "Recipe", "Wellness", "Speed"][i]}
-                            </text>
-                          </g>
-                        );
-                      })}
-                      {/* Center circle */}
-                      <circle cx="100" cy="100" r="15" fill="white" stroke="#333" strokeWidth="2" />
-                    </svg>
-
-                    {/* Pointer */}
-                    <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-2">
-                      <div className="w-0 h-0 border-l-4 border-r-4 border-t-6 border-l-transparent border-r-transparent border-t-red-600"></div>
-                    </div>
-                  </div>
-
-                  {/* Spin Button */}
-                  {!currentChallenge && (
-                    <Button
-                      onClick={spinRoulette}
-                      disabled={isSpinning}
-                      className="bg-red-600 hover:bg-red-700 text-white px-8 py-4 text-xl font-bold rounded-full"
-                    >
-                      {isSpinning ? "🔄 Spinning..." : "🎯 SPIN!"}
-                    </Button>
-                  )}
-                </div>
-              )}
+        {/* Lobby Phase */}
+        {phase === "lobby" && (
+          <div className="max-w-2xl mx-auto">
+            {/* Role Selection */}
+            <Card className="p-6 mb-6">
+              <h2 className="text-xl font-bold mb-4">Select Your Role</h2>
+              <div className="flex gap-4">
+                <Button
+                  onClick={() => setUserRole("teacher")}
+                  variant={userRole === "teacher" ? "default" : "outline"}
+                  className="flex-1"
+                >
+                  👨‍🏫 Teacher
+                </Button>
+                <Button
+                  onClick={() => setUserRole("player")}
+                  variant={userRole === "player" ? "default" : "outline"}
+                  className="flex-1"
+                >
+                  👨‍🎓 Player
+                </Button>
+              </div>
             </Card>
-          </div>
 
-          {/* Leaderboard */}
-          <div>
-            <Card className="p-6 bg-white shadow-lg">
-              <h2 className="text-2xl font-bold mb-4 text-green-700">🏆 Leaderboard</h2>
-              <div className="space-y-2">
-                {leaderboard.slice(0, 5).map((player, index) => (
-                  <div
-                    key={player.id}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+            {/* Teacher: Create Game */}
+            {userRole === "teacher" && (
+              <Card className="p-6">
+                <h2 className="text-xl font-bold mb-4">Create a Game Session</h2>
+                <p className="text-gray-600 mb-4">Start a new game and share the code with your students.</p>
+                <Button onClick={handleCreateGame} className="w-full bg-green-600 hover:bg-green-700">
+                  Create Game
+                </Button>
+              </Card>
+            )}
+
+            {/* Player: Join Game */}
+            {userRole === "player" && (
+              <Card className="p-6">
+                <h2 className="text-xl font-bold mb-4">Join a Game Session</h2>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Your Name</label>
+                    <Input
+                      placeholder="Enter your name"
+                      value={playerName}
+                      onChange={(e) => setPlayerName(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Game Code</label>
+                    <Input
+                      placeholder="Enter game code"
+                      value={gameCode}
+                      onChange={(e) => setGameCode(e.target.value.toUpperCase())}
+                      maxLength={6}
+                    />
+                  </div>
+                  <Button
+                    onClick={handleJoinGame}
+                    disabled={!gameCode || !playerName}
+                    className="w-full bg-blue-600 hover:bg-blue-700"
                   >
-                    <div className="flex items-center gap-3">
-                      <span className="text-xl font-bold text-gray-400 w-6">
-                        {index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : index + 1}
-                      </span>
-                      <span className="font-semibold text-gray-800">{player.playerName}</span>
-                    </div>
-                    <span className="text-lg font-bold text-blue-600">{player.totalScore}</span>
-                  </div>
-                ))}
-              </div>
-            </Card>
+                    Join Game
+                  </Button>
+                </div>
+              </Card>
+            )}
           </div>
-        </div>
-
-        {/* Challenge Display */}
-        {currentChallenge && phase === "playing" && (
-          <Card className="p-8 bg-white shadow-lg mb-8">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-green-700">{currentChallenge.title}</h2>
-              <div className="text-3xl font-bold text-red-600">
-                ⏱️ {timeRemaining}s
-              </div>
-            </div>
-
-            <p className="text-lg text-gray-700 mb-6">{currentChallenge.content}</p>
-
-            <div className="flex gap-4">
-              <Input
-                placeholder="Your answer..."
-                value={playerAnswer}
-                onChange={(e) => setPlayerAnswer(e.target.value)}
-                onKeyPress={(e) => e.key === "Enter" && handleSubmitAnswer()}
-                className="text-lg py-3"
-                autoFocus
-              />
-              <Button
-                onClick={handleSubmitAnswer}
-                className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 text-lg"
-              >
-                Submit
-              </Button>
-            </div>
-          </Card>
         )}
 
-        {/* Results Phase */}
-        {phase === "results" && (
-          <Card className="p-8 bg-white shadow-lg text-center">
-            <h2 className="text-4xl font-bold mb-6 text-green-700">🎉 Game Over!</h2>
-            <p className="text-xl text-gray-600 mb-8">Final Leaderboard</p>
-            <div className="space-y-3 mb-8">
-              {leaderboard.map((player, index) => (
-                <div key={player.id} className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
-                  <span className="text-lg font-semibold">{index + 1}. {player.playerName}</span>
-                  <span className="text-2xl font-bold text-blue-600">{player.totalScore}</span>
+        {/* Playing Phase */}
+        {phase === "playing" && isJoined && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Main Game Area */}
+            <div className="lg:col-span-2">
+              {/* Game Code */}
+              <Card className="p-4 mb-4 bg-blue-50 border-blue-200">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium text-gray-600">Game Code:</span>
+                  <span className="text-2xl font-bold text-blue-600">{gameCode}</span>
                 </div>
-              ))}
+                <div className="flex justify-between items-center mt-2">
+                  <span className="text-sm font-medium text-gray-600">Round:</span>
+                  <span className="text-lg font-bold">{gameSocket.gameState === "ended" ? "5/5" : "0/5"}</span>
+                </div>
+              </Card>
+
+              {/* Roulette Wheel */}
+              <Card className="p-6 mb-4">
+                <h3 className="text-lg font-bold mb-4 text-center">Challenge Wheel</h3>
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={wheelData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name }) => name}
+                      outerRadius={100}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {wheelData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
+                {userRole === "teacher" && (
+                  <Button onClick={() => gameSocket.spinRoulette()} className="w-full mt-4 bg-green-600">
+                    Spin Wheel
+                  </Button>
+                )}
+              </Card>
+
+              {/* Challenge Display */}
+              {gameSocket.currentChallenge && gameSocket.gameState === "answering" && (
+                <Card className="p-6 mb-4 border-2 border-orange-400">
+                  <div className="text-center mb-4">
+                    <p className="text-sm text-gray-600 mb-2">Challenge Type</p>
+                    <p className="text-2xl font-bold text-orange-600 capitalize">
+                      {gameSocket.currentChallenge.type}
+                    </p>
+                  </div>
+                  <p className="text-lg font-semibold mb-4">{gameSocket.currentChallenge.question}</p>
+                  <div className="flex items-center justify-between mb-4">
+                    <Input placeholder="Your answer..." />
+                    <Button onClick={handleSubmitAnswer} className="ml-2 bg-green-600">
+                      Submit
+                    </Button>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-3xl font-bold text-red-600">{gameSocket.timerSeconds}s</p>
+                  </div>
+                </Card>
+              )}
+
+              {/* Answer Feedback */}
+              {gameSocket.answerFeedback && (
+                <Card
+                  className={`p-4 mb-4 ${
+                    gameSocket.answerFeedback.isCorrect ? "bg-green-100 border-green-400" : "bg-red-100 border-red-400"
+                  }`}
+                >
+                  <p className="text-lg font-bold">
+                    {gameSocket.answerFeedback.isCorrect ? "✅ Correct!" : "❌ Incorrect"}
+                  </p>
+                  <p className="text-sm">+{gameSocket.answerFeedback.points} points</p>
+                </Card>
+              )}
             </div>
-            <Button
-              onClick={() => {
-                setPhase("lobby");
-                setSessionCode("");
-                setJoinCode("");
-                setPlayerName("");
-                window.location.reload();
-              }}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 text-lg"
-            >
-              Play Again
-            </Button>
-          </Card>
+
+            {/* Leaderboard Sidebar */}
+            <div>
+              <Card className="p-6">
+                <h3 className="text-lg font-bold mb-4">🏆 Leaderboard</h3>
+                <div className="space-y-2">
+                  {gameSocket.leaderboard.map((entry: LeaderboardEntry, index: number) => (
+                    <div key={entry.playerId} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg font-bold text-gray-400">#{entry.position}</span>
+                        <div>
+                          <p className="font-semibold text-sm">{entry.name}</p>
+                          <p className="text-xs text-gray-500">Streak: {entry.streak}</p>
+                        </div>
+                      </div>
+                      <p className="font-bold text-lg text-green-600">{entry.score}</p>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-4 pt-4 border-t">
+                  <p className="text-sm text-gray-600">Players: {gameSocket.playerCount}</p>
+                </div>
+              </Card>
+            </div>
+          </div>
         )}
       </div>
     </div>
