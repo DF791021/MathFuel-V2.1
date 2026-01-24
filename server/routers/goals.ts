@@ -233,4 +233,117 @@ export const goalsRouter = router({
     .mutation(async ({ input }) => {
       return await deleteGoal(input.goalId);
     }),
+
+  /**
+   * Get AI-powered goal suggestions for a student
+   */
+  getAISuggestions: protectedProcedure
+    .input(
+      z.object({
+        playerId: z.number(),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      try {
+        const { getStudentPerformanceDataForSuggestions } = await import("../db");
+        const { generateAIGoalSuggestions, validateGoalSuggestions } = await import(
+          "../_core/aiGoalSuggestions"
+        );
+
+        const performanceData = await getStudentPerformanceDataForSuggestions(
+          input.playerId
+        );
+
+        if (!performanceData) {
+          return {
+            success: false,
+            error: "Could not retrieve student performance data",
+            suggestions: [],
+          };
+        }
+
+        const suggestions = await generateAIGoalSuggestions(performanceData);
+        const isValid = await validateGoalSuggestions(suggestions);
+
+        if (!isValid) {
+          return {
+            success: false,
+            error: "Generated suggestions failed validation",
+            suggestions: [],
+          };
+        }
+
+        return {
+          success: true,
+          suggestions,
+          performanceData: {
+            avgAccuracy: performanceData.avgAccuracy,
+            avgScore: performanceData.avgScore,
+            gamesPlayed: performanceData.gamesPlayed,
+            weakTopics: performanceData.weakTopics,
+            strongTopics: performanceData.strongTopics,
+          },
+        };
+      } catch (error) {
+        console.error("[tRPC] Error generating AI suggestions:", error);
+        return {
+          success: false,
+          error:
+            error instanceof Error
+              ? error.message
+              : "Failed to generate suggestions",
+          suggestions: [],
+        };
+      }
+    }),
+
+  /**
+   * Accept AI-suggested goals and create them
+   */
+  acceptAISuggestions: protectedProcedure
+    .input(
+      z.object({
+        playerId: z.number(),
+        playerName: z.string(),
+        classId: z.number(),
+        suggestions: z.array(
+          z.object({
+            goalType: z.string(),
+            goalName: z.string(),
+            targetValue: z.number(),
+            priority: z.string(),
+            rationale: z.string(),
+          })
+        ),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const { saveAISuggestedGoals } = await import("../db");
+
+        const results = await saveAISuggestedGoals(
+          input.playerId,
+          input.playerName,
+          ctx.user.id,
+          input.classId,
+          input.suggestions
+        );
+
+        return {
+          success: true,
+          goalsCreated: results.length,
+          message: `Successfully created ${results.length} goals from AI suggestions`,
+        };
+      } catch (error) {
+        console.error("[tRPC] Error accepting AI suggestions:", error);
+        return {
+          success: false,
+          error:
+            error instanceof Error
+              ? error.message
+              : "Failed to create goals from suggestions",
+          goalsCreated: 0,
+        };
+      }
+    }),
 });

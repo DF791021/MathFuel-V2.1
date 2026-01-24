@@ -2339,3 +2339,151 @@ export async function deleteGoal(goalId: number): Promise<boolean> {
     return false;
   }
 }
+
+
+// ==================== AI Goal Suggestion Functions ====================
+
+export async function getStudentPerformanceDataForSuggestions(playerId: number) {
+  const db = await getDb();
+  if (!db) return null;
+
+  try {
+    // Get recent game performance
+    const recentGames = await db
+      .select({
+        totalScore: rouletteGamePlayers.totalScore,
+        correctAnswers: rouletteGamePlayers.correctAnswers,
+        totalAnswers: rouletteGamePlayers.totalAnswers,
+        joinedAt: rouletteGamePlayers.joinedAt,
+      })
+      .from(rouletteGamePlayers)
+      .where(eq(rouletteGamePlayers.userId, playerId))
+      .orderBy(desc(rouletteGamePlayers.joinedAt))
+      .limit(20);
+
+    // Get topic mastery
+    const topicMastery = await db
+      .select({
+        topic: gameAnalyticsTopicMastery.topic,
+        masteryPercentage: gameAnalyticsTopicMastery.masteryPercentage,
+        totalQuestionsAsked: gameAnalyticsTopicMastery.totalQuestionsAsked,
+        correctAnswers: gameAnalyticsTopicMastery.correctAnswers,
+      })
+      .from(gameAnalyticsTopicMastery)
+      .where(eq(gameAnalyticsTopicMastery.playerId, playerId));
+
+    // Get existing goals
+    const existingGoals = await db
+      .select({
+        goalType: studentPerformanceGoals.goalType,
+        status: studentPerformanceGoals.status,
+        progressPercentage: studentPerformanceGoals.progressPercentage,
+      })
+      .from(studentPerformanceGoals)
+      .where(eq(studentPerformanceGoals.playerId, playerId));
+
+    // Get student info
+    const studentInfo = await db
+      .select({
+        name: users.name,
+        email: users.email,
+      })
+      .from(users)
+      .where(eq(users.id, playerId))
+      .limit(1);
+
+    // Calculate statistics
+    const avgAccuracy =
+      recentGames.length > 0
+        ? Math.round(
+            recentGames.reduce((sum, g) => {
+              const accuracy = g.totalAnswers > 0 ? (g.correctAnswers / g.totalAnswers) * 100 : 0;
+              return sum + accuracy;
+            }, 0) / recentGames.length
+          )
+        : 0;
+
+    const avgScore =
+      recentGames.length > 0
+        ? Math.round(
+            recentGames.reduce((sum, g) => sum + (g.totalScore || 0), 0) /
+              recentGames.length
+          )
+        : 0;
+
+    const weakTopics = topicMastery
+      .filter((t) => t.masteryPercentage < 70)
+      .sort((a, b) => a.masteryPercentage - b.masteryPercentage)
+      .slice(0, 3);
+
+    const strongTopics = topicMastery
+      .filter((t) => t.masteryPercentage >= 80)
+      .map((t) => t.topic);
+
+    const gamesPlayed = recentGames.length;
+    const maxScore = recentGames.length > 0 ? Math.max(...recentGames.map(g => g.totalScore || 0)) : 0;
+
+    return {
+      studentName: studentInfo.length > 0 ? studentInfo[0].name : "Student",
+      recentGames,
+      topicMastery,
+      existingGoals,
+      avgAccuracy,
+      avgScore,
+      maxScore,
+      weakTopics,
+      strongTopics,
+      gamesPlayed,
+    };
+  } catch (error) {
+    console.error("[Database] Error getting student performance data:", error);
+    return null;
+  }
+}
+
+export async function saveAISuggestedGoals(
+  playerId: number,
+  playerName: string,
+  teacherId: number,
+  classId: number,
+  suggestions: Array<{
+    goalType: string;
+    goalName: string;
+    targetValue: number;
+    priority: string;
+    rationale: string;
+  }>
+) {
+  const db = await getDb();
+  if (!db) return [];
+
+  try {
+    const results = [];
+    for (const suggestion of suggestions) {
+      const result = await db.insert(studentPerformanceGoals).values({
+        playerId,
+        playerName,
+        teacherId,
+        classId,
+        goalType: suggestion.goalType as any,
+        goalName: suggestion.goalName,
+        goalDescription: suggestion.rationale,
+        targetValue: suggestion.targetValue,
+        currentValue: 0,
+        startDate: new Date(),
+        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+        status: "active",
+        priority: suggestion.priority as any,
+        progressPercentage: 0,
+        notes: "AI-suggested goal based on performance analysis",
+      });
+
+      results.push(result);
+    }
+
+    return results;
+  } catch (error) {
+    console.error("[Database] Error saving AI suggested goals:", error);
+    return [];
+  }
+}

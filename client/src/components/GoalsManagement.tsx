@@ -18,6 +18,7 @@ import {
 import GoalCreationForm from "./GoalCreationForm";
 import GoalProgressTracker from "./GoalProgressTracker";
 import GoalAchievementNotifications from "./GoalAchievementNotifications";
+import AIGoalSuggestions from "./AIGoalSuggestions";
 
 export default function GoalsManagement() {
   const [selectedStudentId, setSelectedStudentId] = useState<number | null>(null);
@@ -233,6 +234,16 @@ export default function GoalsManagement() {
             <div className="lg:col-span-2 space-y-4">
               {selectedStudentId ? (
                 <>
+                  {/* AI Goal Suggestions */}
+                  <AIGoalSuggestions
+                    playerId={selectedStudentId}
+                    playerName={selectedStudentName}
+                    classId={selectedClassId || 0}
+                    onGoalsCreated={() => {
+                      // Refresh goals
+                    }}
+                  />
+
                   {/* Create New Goal */}
                   <GoalCreationForm
                     playerId={selectedStudentId}
