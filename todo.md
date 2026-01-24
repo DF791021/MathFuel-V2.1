@@ -489,3 +489,14 @@
 - [ ] Create UI for configuring alert preferences (student settings component)
 - [ ] Write tests for deadline alert functions
 - [ ] Integrate alerts into system and send test emails
+
+
+## Alert Preferences Settings Page - COMPLETED
+- [x] Design alert preferences UI and settings layout (tabbed interface with Settings & History tabs)
+- [x] Create tRPC procedures for managing alert preferences (getPreferences, updatePreferences, getAlertHistory, applyPreset)
+- [x] Build alert preferences form component with toggles and sliders (AlertPreferencesForm with time picker)
+- [x] Create notification history and activity log viewer (History tab showing recent alerts)
+- [x] Implement preference validation and error handling (Zod validation, error toasts)
+- [x] Add preference presets (aggressive, moderate, minimal with one-click application)
+- [x] Write tests for alert preferences functionality
+- [x] Integrate settings into student portal (Settings tab in StudentGoalPortal)

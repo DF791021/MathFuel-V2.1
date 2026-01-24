@@ -11,6 +11,7 @@ import { chatHistoryRouter } from "./routers/chatHistory";
 import { rouletteRouter } from "./routers/roulette";
 import { analyticsRouter } from "./routers/analytics";
 import { goalsRouter } from "./routers/goals";
+import { alertPreferencesRouter } from "./routers/alertPreferences";
 import { journalRouter } from "./routers/journal";
 import { goalMonitoringRouter } from "./routers/goalMonitoring";
 
@@ -21,6 +22,7 @@ export const appRouter = router({
   roulette: rouletteRouter,
   analytics: analyticsRouter,
   goals: goalsRouter,
+  alertPreferences: alertPreferencesRouter,
   journal: journalRouter,
   goalMonitoring: goalMonitoringRouter,
   

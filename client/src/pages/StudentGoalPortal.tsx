@@ -20,6 +20,7 @@ import StudentGoalCard from "@/components/StudentGoalCard";
 import StudentProgressChart from "@/components/StudentProgressChart";
 import MilestoneAchievements from "@/components/MilestoneAchievements";
 import EncouragementMessages from "@/components/EncouragementMessages";
+import { AlertPreferencesForm } from "@/components/AlertPreferencesForm";
 import JournalInsightsPanel from "@/components/JournalInsightsPanel";
 import RecommendedGoalsPanel from "@/components/RecommendedGoalsPanel";
 
@@ -117,7 +118,7 @@ export default function StudentGoalPortal() {
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
@@ -312,6 +313,10 @@ export default function StudentGoalPortal() {
             />
           )}
         </TabsContent>
+              <TabsContent value="settings">
+          <AlertPreferencesForm />
+        </TabsContent>
+
       </Tabs>
     </div>
   );
