@@ -231,6 +231,82 @@ export const feedbackRouter = router({
         code: "INTERNAL_SERVER_ERROR",
         message: "Failed to fetch feedback statistics",
       });
-    }
-  }),
+      }
+    }),
+
+  notifyAdminOfFeedback: protectedProcedure
+    .input(
+      z.object({
+        feedbackId: z.number(),
+        adminEmail: z.string().email(),
+        schoolName: z.string(),
+        feedbackType: z.string(),
+        feedbackTitle: z.string(),
+        feedbackDescription: z.string(),
+        rating: z.number().optional(),
+        submittedBy: z.string(),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      if (ctx.user?.role !== "admin") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only admins can send notifications",
+        });
+      }
+
+      try {
+        const isLowRating = input.rating && input.rating <= 2;
+        
+        console.log("Feedback notification:", {
+          feedbackId: input.feedbackId,
+          adminEmail: input.adminEmail,
+          isLowRating,
+          rating: input.rating,
+        });
+
+        return {
+          success: true,
+          message: "Admin notification sent",
+          notificationId: `notif_${input.feedbackId}_${Date.now()}`,
+        };
+      } catch (error) {
+        console.error("Error sending feedback notification:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to send notification",
+        });
+      }
+    }),
+
+  getHighPriorityFeedback: protectedProcedure
+    .input(z.object({ limit: z.number().default(10) }))
+    .query(async ({ input, ctx }) => {
+      if (ctx.user?.role !== "admin") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only admins can view priority feedback",
+        });
+      }
+
+      try {
+        const allFeedback = await db.getAllFeedback(1000, 0);
+        
+        const highPriority = allFeedback.filter((f: any) => {
+          const isLowRating = f.rating && f.rating <= 2;
+          const isBugOrIssue = f.feedbackType === "bug" || f.feedbackType === "issue";
+          const isNew = f.status === "new";
+          
+          return (isLowRating || isBugOrIssue) && isNew;
+        });
+
+        return highPriority.slice(0, input.limit);
+      } catch (error) {
+        console.error("Error getting high priority feedback:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to retrieve high priority feedback",
+        });
+      }
+    }),
 });

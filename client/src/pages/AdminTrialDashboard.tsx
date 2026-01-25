@@ -43,7 +43,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { AdminFeedbackDashboard } from "@/components/AdminFeedbackDashboard";
 
 type FilterStatus = "pending" | "approved" | "trial_created" | "completed" | "rejected" | "all";
-type SortOption = "newest" | "oldest" | "engagement";
+type SortOption = "newest" | "oldest";
 
 export default function AdminTrialDashboard() {
   const { user } = useAuth();

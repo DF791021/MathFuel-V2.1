@@ -9,12 +9,17 @@ import {
   getAllTrialRequests,
   recordTrialMetrics,
   getTrialMetrics,
+  isTrialExpired,
+  getTrialAccountById,
+  updateTrialAccountStatus,
+  extendTrial,
+  markExpiredTrials,
+  getTrialsExpiringWithin,
 } from "../db";
 import { TRPCError } from "@trpc/server";
 import { generateTrialConfirmationEmail, generateTrialConfirmationEmailText } from "../_core/trialEmailTemplate";
 import nodemailer from "nodemailer";
 
-// Helper function to generate school code
 function generateSchoolCode(schoolName: string): string {
   const code = schoolName
     .toUpperCase()
@@ -24,12 +29,10 @@ function generateSchoolCode(schoolName: string): string {
   return `${code}-${random}`;
 }
 
-// Helper function to generate temporary password
 function generateTempPassword(): string {
   return Math.random().toString(36).substring(2, 10).toUpperCase();
 }
 
-// Helper function to send trial confirmation email
 async function sendTrialConfirmationEmail(
   contactEmail: string,
   schoolCode: string,
@@ -80,9 +83,6 @@ async function sendTrialConfirmationEmail(
 }
 
 export const trialRouter = router({
-  /**
-   * Submit a trial request from a school (public endpoint)
-   */
   submitRequest: publicProcedure
     .input(
       z.object({
@@ -157,9 +157,6 @@ export const trialRouter = router({
       }
     }),
 
-  /**
-   * Get trial account by school code (public)
-   */
   getAccountByCode: publicProcedure
     .input(z.object({ schoolCode: z.string() }))
     .query(async ({ input }) => {
@@ -190,9 +187,6 @@ export const trialRouter = router({
       }
     }),
 
-  /**
-   * Get trial request details (admin only)
-   */
   getRequest: protectedProcedure
     .input(z.object({ requestId: z.number() }))
     .query(async ({ input, ctx }) => {
@@ -220,9 +214,6 @@ export const trialRouter = router({
       }
     }),
 
-  /**
-   * Get all trial requests (admin only)
-   */
   getAllRequests: protectedProcedure
     .input(
       z.object({
@@ -247,45 +238,140 @@ export const trialRouter = router({
       }
     }),
 
-  /**
-   * Update trial request status (admin only)
-   */
-  updateRequestStatus: protectedProcedure
-    .input(
-      z.object({
-        requestId: z.number(),
-        status: z.enum(["pending", "approved", "trial_created", "completed", "rejected"]),
-      })
-    )
-    .mutation(async ({ input, ctx }) => {
-      if (ctx.user.role !== "admin") {
-        throw new TRPCError({ code: "FORBIDDEN" });
-      }
-
+  checkExpiration: publicProcedure
+    .input(z.object({ schoolCode: z.string() }))
+    .query(async ({ input }) => {
       try {
-        await updateTrialRequestStatus(input.requestId, input.status);
-        return { success: true };
+        const account = await getTrialAccountBySchoolCode(input.schoolCode);
+        if (!account) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Trial account not found",
+          });
+        }
+
+        const now = new Date();
+        const isExpired = new Date(account.trialEndDate) < now;
+
+        return {
+          isExpired,
+          trialEndDate: account.trialEndDate,
+          daysRemaining: Math.ceil(
+            (new Date(account.trialEndDate).getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+          ),
+          status: account.status,
+        };
       } catch (error) {
-        console.error("Error updating trial request status:", error);
+        console.error("Error checking trial expiration:", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to update trial request status",
+          message: "Failed to check trial expiration",
         });
       }
     }),
 
-  /**
-   * Record trial metrics (admin only)
-   */
-  recordMetrics: protectedProcedure
+  extendTrialDays: protectedProcedure
     .input(
       z.object({
         trialAccountId: z.number(),
-        activeUsers: z.number().optional(),
-        gamesPlayed: z.number().optional(),
-        certificatesGenerated: z.number().optional(),
-        emailsSent: z.number().optional(),
-        pdfExportsGenerated: z.number().optional(),
+        additionalDays: z.number().min(1).max(365),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      if (ctx.user.role !== "admin") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only admins can extend trials",
+        });
+      }
+
+      try {
+        const account = await getTrialAccountById(input.trialAccountId);
+        if (!account) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Trial account not found",
+          });
+        }
+
+        await extendTrial(input.trialAccountId, input.additionalDays);
+
+        const newEndDate = new Date(account.trialEndDate);
+        newEndDate.setDate(newEndDate.getDate() + input.additionalDays);
+
+        return {
+          success: true,
+          message: `Trial extended by ${input.additionalDays} days`,
+          newEndDate: newEndDate.toISOString(),
+        };
+      } catch (error) {
+        console.error("Error extending trial:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to extend trial",
+        });
+      }
+    }),
+
+  markExpiredTrialsNow: protectedProcedure.mutation(async ({ ctx }) => {
+    if (ctx.user.role !== "admin") {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "Only admins can mark expired trials",
+      });
+    }
+
+    try {
+      const count = await markExpiredTrials();
+      return {
+        success: true,
+        message: `Marked ${count} trials as expired`,
+        count,
+      };
+    } catch (error) {
+      console.error("Error marking expired trials:", error);
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to mark expired trials",
+      });
+    }
+  }),
+
+  getExpiringTrials: protectedProcedure
+    .input(z.object({ withinDays: z.number().default(7) }))
+    .query(async ({ input, ctx }) => {
+      if (ctx.user.role !== "admin") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only admins can view expiring trials",
+        });
+      }
+
+      try {
+        const trials = await getTrialsExpiringWithin(input.withinDays);
+        return trials.map((trial: any) => ({
+          id: trial.id,
+          schoolCode: trial.schoolCode,
+          trialEndDate: trial.trialEndDate,
+          daysRemaining: Math.ceil(
+            (new Date(trial.trialEndDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
+          ),
+          status: trial.status,
+        }));
+      } catch (error) {
+        console.error("Error getting expiring trials:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to retrieve expiring trials",
+        });
+      }
+    }),
+
+  bulkExtendTrials: protectedProcedure
+    .input(
+      z.object({
+        requestIds: z.array(z.number()).min(1),
+        additionalDays: z.number().min(1).max(90),
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -294,84 +380,130 @@ export const trialRouter = router({
       }
 
       try {
-        await recordTrialMetrics({
-          trialAccountId: input.trialAccountId,
-          activeUsers: input.activeUsers,
-          gamesPlayed: input.gamesPlayed,
-          certificatesGenerated: input.certificatesGenerated,
-          emailsSent: input.emailsSent,
-          pdfExportsGenerated: input.pdfExportsGenerated,
-        });
+        let successCount = 0;
+        for (const requestId of input.requestIds) {
+          try {
+            await updateTrialRequestStatus(requestId, "trial_created");
+            successCount++;
+          } catch (error) {
+            console.error(`Failed to extend trial ${requestId}:`, error);
+          }
+        }
 
-        return { success: true };
-      } catch (error) {
-        console.error("Error recording trial metrics:", error);
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to record trial metrics",
-        });
-      }
-    }),
-
-  /**
-   * Get trial metrics (admin only)
-   */
-  getMetrics: protectedProcedure
-    .input(z.object({ trialAccountId: z.number() }))
-    .query(async ({ input, ctx }) => {
-      if (ctx.user.role !== "admin") {
-        throw new TRPCError({ code: "FORBIDDEN" });
-      }
-
-      try {
-        const metrics = await getTrialMetrics(input.trialAccountId);
-        return metrics;
-      } catch (error) {
-        console.error("Error getting trial metrics:", error);
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to retrieve trial metrics",
-        });
-      }
-    }),
-
-  /**
-   * Get dashboard summary stats (admin only)
-   */
-  getDashboardStats: protectedProcedure
-    .query(async ({ ctx }) => {
-      if (ctx.user.role !== "admin") {
-        throw new TRPCError({ code: "FORBIDDEN" });
-      }
-
-      try {
-        const allRequests = await getAllTrialRequests(0, 1000);
-        const requests = allRequests || [];
-
-        const stats = {
-          totalRequests: requests.length,
-          pendingRequests: requests.filter((r: any) => r.status === "pending").length,
-          activeTrials: requests.filter((r: any) => r.status === "trial_created").length,
-          completedTrials: requests.filter((r: any) => r.status === "completed").length,
-          rejectedRequests: requests.filter((r: any) => r.status === "rejected").length,
-          conversionRate: requests.length > 0
-            ? ((requests.filter((r: any) => r.status === "completed").length / requests.length) * 100).toFixed(1)
-            : "0",
+        return {
+          success: true,
+          message: `Extended ${successCount} of ${input.requestIds.length} trials`,
+          successCount,
+          totalCount: input.requestIds.length,
         };
-
-        return stats;
       } catch (error) {
-        console.error("Error getting dashboard stats:", error);
+        console.error("Error bulk extending trials:", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to retrieve dashboard stats",
+          message: "Failed to bulk extend trials",
         });
       }
     }),
 
-  /**
-   * Get requests with pagination and filters (admin only)
-   */
+  bulkConvertTrials: protectedProcedure
+    .input(z.object({ requestIds: z.array(z.number()).min(1) }))
+    .mutation(async ({ input, ctx }) => {
+      if (ctx.user.role !== "admin") {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
+
+      try {
+        let successCount = 0;
+        for (const requestId of input.requestIds) {
+          try {
+            await updateTrialRequestStatus(requestId, "completed");
+            successCount++;
+          } catch (error) {
+            console.error(`Failed to convert trial ${requestId}:`, error);
+          }
+        }
+
+        return {
+          success: true,
+          message: `Converted ${successCount} of ${input.requestIds.length} trials`,
+          successCount,
+          totalCount: input.requestIds.length,
+        };
+      } catch (error) {
+        console.error("Error bulk converting trials:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to bulk convert trials",
+        });
+      }
+    }),
+
+  bulkRejectTrials: protectedProcedure
+    .input(z.object({ requestIds: z.array(z.number()).min(1) }))
+    .mutation(async ({ input, ctx }) => {
+      if (ctx.user.role !== "admin") {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
+
+      try {
+        let successCount = 0;
+        for (const requestId of input.requestIds) {
+          try {
+            await updateTrialRequestStatus(requestId, "rejected");
+            successCount++;
+          } catch (error) {
+            console.error(`Failed to reject trial ${requestId}:`, error);
+          }
+        }
+
+        return {
+          success: true,
+          message: `Rejected ${successCount} of ${input.requestIds.length} trials`,
+          successCount,
+          totalCount: input.requestIds.length,
+        };
+      } catch (error) {
+        console.error("Error bulk rejecting trials:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to bulk reject trials",
+        });
+      }
+    }),
+
+  getDashboardStats: protectedProcedure.query(async ({ ctx }) => {
+    if (ctx.user.role !== "admin") {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "Only admins can view dashboard stats",
+      });
+    }
+
+    try {
+      const allRequests = await getAllTrialRequests(1000, 0);
+      
+      const pending = allRequests.filter((r: any) => r.status === "pending").length;
+      const completed = allRequests.filter((r: any) => r.status === "completed").length;
+      const trialCreated = allRequests.filter((r: any) => r.status === "trial_created").length;
+      
+      const stats = {
+        totalRequests: allRequests.length,
+        pendingRequests: pending,
+        activeTrials: trialCreated,
+        completedTrials: completed,
+        conversionRate: allRequests.length > 0 ? Math.round((completed / allRequests.length) * 100) : 0,
+      };
+
+      return stats;
+    } catch (error) {
+      console.error("Error getting dashboard stats:", error);
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to get dashboard stats",
+      });
+    }
+  }),
+
   getRequestsWithFilters: protectedProcedure
     .input(
       z.object({
@@ -379,7 +511,7 @@ export const trialRouter = router({
         limit: z.number().default(20),
         status: z.enum(["pending", "approved", "trial_created", "completed", "rejected"]).optional(),
         searchTerm: z.string().optional(),
-        sortBy: z.enum(["newest", "oldest", "engagement"]).default("newest"),
+        sortBy: z.enum(["newest", "oldest"]).default("newest"),
       })
     )
     .query(async ({ input, ctx }) => {
@@ -388,8 +520,7 @@ export const trialRouter = router({
       }
 
       try {
-        const allRequests = await getAllTrialRequests(input.page, input.limit);
-        let requests = allRequests || [];
+        let requests = await getAllTrialRequests(1000, 0);
 
         if (input.status) {
           requests = requests.filter((r: any) => r.status === input.status);
@@ -423,124 +554,6 @@ export const trialRouter = router({
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to retrieve filtered requests",
-        });
-      }
-    }),
-
-  /**
-   * Bulk extend trials (admin only)
-   */
-  bulkExtendTrials: protectedProcedure
-    .input(
-      z.object({
-        requestIds: z.array(z.number()).min(1),
-        additionalDays: z.number().min(1).max(90),
-      })
-    )
-    .mutation(async ({ input, ctx }) => {
-      if (ctx.user.role !== "admin") {
-        throw new TRPCError({ code: "FORBIDDEN" });
-      }
-
-      try {
-        let successCount = 0;
-        for (const requestId of input.requestIds) {
-          try {
-            await updateTrialRequestStatus(requestId, "trial_created");
-            successCount++;
-          } catch (error) {
-            console.error(`Failed to extend trial ${requestId}:`, error);
-          }
-        }
-
-        return {
-          success: true,
-          message: `Extended ${successCount} of ${input.requestIds.length} trials by ${input.additionalDays} days`,
-          successCount,
-          totalCount: input.requestIds.length,
-        };
-      } catch (error) {
-        console.error("Error bulk extending trials:", error);
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to bulk extend trials",
-        });
-      }
-    }),
-
-  /**
-   * Bulk convert trials (admin only)
-   */
-  bulkConvertTrials: protectedProcedure
-    .input(z.object({ requestIds: z.array(z.number()).min(1) }))
-    .mutation(async ({ input, ctx }) => {
-      if (ctx.user.role !== "admin") {
-        throw new TRPCError({ code: "FORBIDDEN" });
-      }
-
-      try {
-        let successCount = 0;
-        for (const requestId of input.requestIds) {
-          try {
-            await updateTrialRequestStatus(requestId, "completed");
-            successCount++;
-          } catch (error) {
-            console.error(`Failed to convert trial ${requestId}:`, error);
-          }
-        }
-
-        return {
-          success: true,
-          message: `Marked ${successCount} of ${input.requestIds.length} trials as converted`,
-          successCount,
-          totalCount: input.requestIds.length,
-        };
-      } catch (error) {
-        console.error("Error bulk converting trials:", error);
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to bulk convert trials",
-        });
-      }
-    }),
-
-  /**
-   * Bulk reject trials (admin only)
-   */
-  bulkRejectTrials: protectedProcedure
-    .input(
-      z.object({
-        requestIds: z.array(z.number()).min(1),
-        reason: z.string().optional(),
-      })
-    )
-    .mutation(async ({ input, ctx }) => {
-      if (ctx.user.role !== "admin") {
-        throw new TRPCError({ code: "FORBIDDEN" });
-      }
-
-      try {
-        let successCount = 0;
-        for (const requestId of input.requestIds) {
-          try {
-            await updateTrialRequestStatus(requestId, "rejected");
-            successCount++;
-          } catch (error) {
-            console.error(`Failed to reject trial ${requestId}:`, error);
-          }
-        }
-
-        return {
-          success: true,
-          message: `Rejected ${successCount} of ${input.requestIds.length} trials`,
-          successCount,
-          totalCount: input.requestIds.length,
-        };
-      } catch (error) {
-        console.error("Error bulk rejecting trials:", error);
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to bulk reject trials",
         });
       }
     }),

@@ -4083,3 +4083,125 @@ export async function getFeedbackCountByStatus(): Promise<any> {
 
   return result;
 }
+
+
+/**
+ * Check if a trial account is expired
+ */
+export async function isTrialExpired(trialAccountId: number): Promise<boolean> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db
+    .select()
+    .from(trialAccounts)
+    .where(eq(trialAccounts.id, trialAccountId))
+    .execute();
+
+  if (!result[0]) return false;
+
+  const account = result[0];
+  const now = new Date();
+  return new Date(account.trialEndDate) < now;
+}
+
+/**
+ * Get trial account by ID
+ */
+export async function getTrialAccountById(id: number): Promise<any> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db
+    .select()
+    .from(trialAccounts)
+    .where(eq(trialAccounts.id, id))
+    .execute();
+
+  return result[0] || null;
+}
+
+/**
+ * Update trial account status
+ */
+export async function updateTrialAccountStatus(id: number, status: "active" | "expired" | "converted" | "cancelled"): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db
+    .update(trialAccounts)
+    .set({ status })
+    .where(eq(trialAccounts.id, id))
+    .execute();
+}
+
+/**
+ * Extend trial by number of days
+ */
+export async function extendTrial(trialAccountId: number, additionalDays: number): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const account = await getTrialAccountById(trialAccountId);
+  if (!account) throw new Error("Trial account not found");
+
+  const newEndDate = new Date(account.trialEndDate);
+  newEndDate.setDate(newEndDate.getDate() + additionalDays);
+
+  await db
+    .update(trialAccounts)
+    .set({ 
+      trialEndDate: newEndDate,
+      status: "active"
+    })
+    .where(eq(trialAccounts.id, trialAccountId))
+    .execute();
+}
+
+/**
+ * Mark all expired trials as expired (batch operation)
+ */
+export async function markExpiredTrials(): Promise<number> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const now = new Date();
+
+  const result = await db
+    .update(trialAccounts)
+    .set({ status: "expired" })
+    .where(
+      and(
+        lt(trialAccounts.trialEndDate, now),
+        eq(trialAccounts.status, "active")
+      )
+    )
+    .execute();
+
+  return (result as any).rowsAffected || 0;
+}
+
+/**
+ * Get all active trials expiring soon (within N days)
+ */
+export async function getTrialsExpiringWithin(days: number): Promise<any[]> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const now = new Date();
+  const expiryDate = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
+
+  const result = await db
+    .select()
+    .from(trialAccounts)
+    .where(
+      and(
+        gte(trialAccounts.trialEndDate, now),
+        lte(trialAccounts.trialEndDate, expiryDate),
+        eq(trialAccounts.status, "active")
+      )
+    )
+    .execute();
+
+  return result;
+}

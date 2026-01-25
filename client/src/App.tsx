@@ -1,4 +1,4 @@
-import { Toaster } from "@/components/ui/sonner";
+import React from "react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
@@ -12,6 +12,10 @@ import TemplateLibrary from "./pages/TemplateLibrary";
 import { NutritionRoulette } from "./pages/NutritionRoulette";
 import GameAnalyticsDashboard from "./pages/GameAnalyticsDashboard";
 import StudentGoalPortal from "./pages/StudentGoalPortal";
+import { TrialExpirationBanner } from "./components/TrialExpirationBanner";
+import { useTrialExpiration } from "./hooks/useTrialExpiration";
+import { useAuth } from "./_core/hooks/useAuth";
+import { Toaster } from "sonner";
 
 function Router() {
   return (
@@ -31,10 +35,26 @@ function Router() {
 }
 
 function App() {
+  const { user } = useAuth();
+  const schoolCode = typeof window !== 'undefined' ? localStorage.getItem('schoolCode') || '' : '';
+  const { isExpired, daysRemaining, trialEndDate } = useTrialExpiration(schoolCode);
+  const [bannerDismissed, setBannerDismissed] = React.useState(false);
+
   return (
     <ErrorBoundary>
       <ThemeProvider defaultTheme="light">
         <TooltipProvider>
+          {!bannerDismissed && (
+            <TrialExpirationBanner
+              isExpired={isExpired}
+              daysRemaining={daysRemaining}
+              trialEndDate={trialEndDate || undefined}
+              onDismiss={() => setBannerDismissed(true)}
+              onUpgradeClick={() => {
+                window.location.href = '/contact-sales';
+              }}
+            />
+          )}
           <Toaster richColors position="top-center" />
           <Router />
         </TooltipProvider>

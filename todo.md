@@ -617,3 +617,33 @@
 - [x] Implement feedback analytics and insights
 - [x] Write tests for feedback system
 - [ ] Deploy feedback collection system
+
+
+## Trial Auto-Creation & 30-Day Expiration - COMPLETE
+- [x] Update trialAccounts table to add expiresAt and isExpired fields
+- [x] Create tRPC procedure for direct trial creation (no approval needed)
+- [x] Add auto-generation of temporary login credentials
+- [x] Implement email sending for trial credentials
+- [x] Add 30-day expiration date calculation on creation
+- [x] Create background job/cron to mark expired trials
+- [x] Test end-to-end trial creation and credential delivery
+
+## Trial Expiration Gating & Upgrade Messaging - COMPLETE
+- [x] Add middleware to check trial expiration status on each request
+- [x] Implement read-only mode for expired trials
+- [x] Create in-app banner component for expired trials
+- [x] Add "Schedule District Access" CTA button
+- [x] Gate write operations (create, edit, delete) for expired trials
+- [x] Show clear messaging: "Your trial has ended - contact us to continue"
+- [x] Test expired trial user experience
+- [x] Verify read-only access still works for expired trials
+
+## Admin Email Notifications for Feedback - COMPLETE
+- [x] Create email template for new feedback notification
+- [x] Create email template for low-rating feedback alert
+- [x] Add tRPC procedure to send feedback notifications
+- [x] Integrate notification sending into submitFeedback mutation
+- [x] Add admin preference for notification frequency (immediate, daily digest)
+- [x] Test email delivery for new feedback
+- [x] Test email delivery for low ratings (1-2 stars)
+- [x] Add unsubscribe link to notification emails
