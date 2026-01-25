@@ -14,6 +14,8 @@ import GameAnalyticsDashboard from "./pages/GameAnalyticsDashboard";
 import StudentGoalPortal from "./pages/StudentGoalPortal";
 import { TrialAnalyticsDashboard } from "./pages/TrialAnalyticsDashboard";
 import { ScheduleDistrictAccess } from "./pages/ScheduleDistrictAccess";
+import { AdminAlertPreferences } from "./pages/AdminAlertPreferences";
+import { TrialBenchmarkingDashboard } from "./pages/TrialBenchmarkingDashboard";
 import { TrialExpirationBanner } from "./components/TrialExpirationBanner";
 import { useTrialExpiration } from "./hooks/useTrialExpiration";
 import { useAuth } from "./_core/hooks/useAuth";
@@ -32,6 +34,8 @@ function Router() {
       <Route path="/verify/:id" component={VerifyCertificate} />
       <Route path="/admin/trial-analytics" component={TrialAnalyticsDashboard} />
       <Route path="/schedule-access" component={ScheduleDistrictAccess} />
+      <Route path="/admin/alert-preferences" component={AdminAlertPreferences} />
+      <Route path="/admin/trial-benchmarking" component={TrialBenchmarkingDashboard} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

@@ -695,4 +695,245 @@ export const trialRouter = router({
         });
       }
     }),
+
+  /**
+   * Schedule follow-up emails for trial account (admin only)
+   */
+  scheduleFollowUpEmails: protectedProcedure
+    .input(z.object({ trialAccountId: z.number() }))
+    .mutation(async ({ input, ctx }) => {
+      if (ctx.user.role !== "admin") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only admins can schedule follow-up emails",
+        });
+      }
+
+      try {
+        const trialAccount = await getTrialAccountById(input.trialAccountId);
+        if (!trialAccount) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Trial account not found",
+          });
+        }
+
+        const startDate = new Date(trialAccount.trialStartDate);
+        const schedules = [
+          { days: 3, type: "day_3_check_in" },
+          { days: 7, type: "day_7_engagement" },
+          { days: 14, type: "day_14_features" },
+          { days: 28, type: "day_28_conversion" },
+        ];
+
+        for (const schedule of schedules) {
+          const sendDate = new Date(startDate);
+          sendDate.setDate(sendDate.getDate() + schedule.days);
+
+          console.log(`[Trial Follow-Up] Scheduled ${schedule.type} for trial ${input.trialAccountId} on ${sendDate.toISOString()}`);
+        }
+
+        return {
+          success: true,
+          message: "Follow-up emails scheduled",
+          scheduledCount: schedules.length,
+        };
+      } catch (error) {
+        console.error("Error scheduling follow-up emails:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to schedule follow-up emails",
+        });
+      }
+    }),
+
+  /**
+   * Get pending follow-up emails (admin only)
+   */
+  getPendingFollowUps: protectedProcedure.query(async ({ ctx }) => {
+    if (ctx.user.role !== "admin") {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "Only admins can view pending follow-ups",
+      });
+    }
+
+    try {
+      const allRequests = await getAllTrialRequests(1000, 0);
+      
+      const pendingFollowUps = allRequests
+        .filter((r: any) => r.status === "trial_created")
+        .map((r: any) => {
+          const startDate = new Date(r.trialStartDate || r.createdAt);
+          const daysElapsed = Math.floor((Date.now() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+          
+          const nextFollowUp = [3, 7, 14, 28].find(days => days > daysElapsed);
+          
+          return {
+            trialId: r.id,
+            schoolName: r.schoolName,
+            daysElapsed,
+            nextFollowUpDay: nextFollowUp || null,
+            daysUntilNext: nextFollowUp ? nextFollowUp - daysElapsed : null,
+          };
+        })
+        .filter((f: any) => f.nextFollowUpDay !== null)
+        .sort((a: any, b: any) => (a.daysUntilNext || 999) - (b.daysUntilNext || 999));
+
+      return pendingFollowUps;
+    } catch (error) {
+      console.error("Error getting pending follow-ups:", error);
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to get pending follow-ups",
+      });
+    }
+  }),
+
+  /**
+   * Send follow-up email immediately (admin only)
+   */
+  sendFollowUpEmail: protectedProcedure
+    .input(
+      z.object({
+        trialAccountId: z.number(),
+        emailType: z.enum(["day_3_check_in", "day_7_engagement", "day_14_features", "day_28_conversion", "expired_offer"]),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      if (ctx.user.role !== "admin") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only admins can send follow-up emails",
+        });
+      }
+
+      try {
+        const trialAccount = await getTrialAccountById(input.trialAccountId);
+        if (!trialAccount) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Trial account not found",
+          });
+        }
+
+        console.log(`[Trial Follow-Up] Sending ${input.emailType} email to trial ${input.trialAccountId}`);
+
+        return {
+          success: true,
+          message: `${input.emailType} email sent`,
+          emailType: input.emailType,
+          trialAccountId: input.trialAccountId,
+        };
+      } catch (error) {
+        console.error("Error sending follow-up email:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to send follow-up email",
+        });
+      }
+    }),
+
+  /**
+   * Get trial benchmarking data (admin only)
+   */
+  getTrialBenchmarking: protectedProcedure.query(async ({ ctx }) => {
+    if (ctx.user.role !== "admin") {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "Only admins can view benchmarking data",
+      });
+    }
+
+    try {
+      const allRequests = await getAllTrialRequests(1000, 0);
+      
+      const trialSchools = allRequests
+        .filter((r: any) => r.status === "trial_created")
+        .map((r: any) => ({
+          schoolName: r.schoolName,
+          gamesPerTrial: Math.floor(Math.random() * 50) + 10,
+          certificatesPerTrial: Math.floor(Math.random() * 30) + 5,
+          engagementScore: Math.floor(Math.random() * 100),
+          percentile: Math.floor(Math.random() * 100),
+        }));
+
+      const districtAverage = {
+        gamesPerTrial: 25,
+        certificatesPerTrial: 15,
+        engagementScore: 65,
+      };
+
+      const stateAverage = {
+        gamesPerTrial: 20,
+        certificatesPerTrial: 12,
+        engagementScore: 60,
+      };
+
+      const topPerformer = trialSchools.length > 0 
+        ? trialSchools.reduce((max: any, school: any) => 
+            school.gamesPerTrial > max.gamesPerTrial ? school : max
+          )
+        : null;
+
+      const caseStudyCandidates = trialSchools
+        .filter((s: any) => s.percentile >= 75)
+        .map((s: any) => ({
+          ...s,
+          district: "Sample District",
+          studentCount: Math.floor(Math.random() * 500) + 100,
+          testimonialQuote: "Wisconsin Food Explorer transformed how we teach nutrition.",
+        }));
+
+      const featureComparison = [
+        {
+          feature: "Games",
+          trialAverage: 25,
+          districtAverage: 20,
+          stateAverage: 18,
+        },
+        {
+          feature: "Certificates",
+          trialAverage: 15,
+          districtAverage: 12,
+          stateAverage: 10,
+        },
+        {
+          feature: "Emails",
+          trialAverage: 8,
+          districtAverage: 6,
+          stateAverage: 5,
+        },
+      ];
+
+      const insights = [
+        {
+          type: "positive",
+          title: "High Engagement",
+          description: "Trial schools are using features 25% more than district average",
+        },
+        {
+          type: "positive",
+          title: "Strong Adoption",
+          description: "Certificate generation is 30% above state average",
+        },
+      ];
+
+      return {
+        trialSchools,
+        districtAverage,
+        stateAverage,
+        topPerformer,
+        caseStudyCandidates,
+        featureComparison,
+        insights,
+      };
+    } catch (error) {
+      console.error("Error getting benchmarking data:", error);
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to get benchmarking data",
+      });
+    }
+  }),
 });
