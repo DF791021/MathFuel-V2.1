@@ -592,3 +592,28 @@
 - [ ] Implement admin authentication and authorization checks
 - [ ] Write tests for admin dashboard procedures
 - [ ] Verify dashboard performance with large datasets
+
+
+## Bulk Actions for Trial Management - IN PROGRESS
+- [ ] Add bulk action procedures to trial router (bulkExtendTrials, bulkConvertTrials, bulkRejectTrials)
+- [ ] Add checkboxes to trial request table for multi-select
+- [ ] Implement select all / deselect all functionality
+- [ ] Create bulk action toolbar that appears when items are selected
+- [ ] Add bulk extend dialog with days selection
+- [ ] Add bulk convert dialog with confirmation
+- [ ] Add bulk reject dialog with reason field
+- [ ] Implement optimistic UI updates for bulk actions
+- [ ] Add success notifications showing number of trials updated
+- [ ] Write tests for bulk action procedures
+- [ ] Verify bulk actions work with filters and search
+
+
+## User Feedback Collection System - IN PROGRESS
+- [ ] Design feedback database schema with categories and ratings
+- [ ] Create feedback tRPC procedures for submission and retrieval
+- [ ] Build feedback collection form component
+- [ ] Integrate feedback form into trial user dashboard
+- [ ] Create admin feedback review dashboard
+- [ ] Implement feedback analytics and insights
+- [ ] Write tests for feedback system
+- [ ] Deploy feedback collection system

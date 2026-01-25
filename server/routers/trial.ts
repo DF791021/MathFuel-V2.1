@@ -13,7 +13,6 @@ import {
 import { TRPCError } from "@trpc/server";
 import { generateTrialConfirmationEmail, generateTrialConfirmationEmailText } from "../_core/trialEmailTemplate";
 import nodemailer from "nodemailer";
-import { ENV } from "../_core/env";
 
 // Helper function to generate school code
 function generateSchoolCode(schoolName: string): string {
@@ -23,6 +22,61 @@ function generateSchoolCode(schoolName: string): string {
     .substring(0, 4);
   const random = Math.random().toString(36).substring(2, 6).toUpperCase();
   return `${code}-${random}`;
+}
+
+// Helper function to generate temporary password
+function generateTempPassword(): string {
+  return Math.random().toString(36).substring(2, 10).toUpperCase();
+}
+
+// Helper function to send trial confirmation email
+async function sendTrialConfirmationEmail(
+  contactEmail: string,
+  schoolCode: string,
+  tempPassword: string,
+  schoolName: string,
+  contactName: string,
+  trialEndDate: string
+): Promise<boolean> {
+  try {
+    const transporter = nodemailer.createTransport({
+      host: "smtp.ethereal.email",
+      port: 587,
+      secure: false,
+      auth: {
+        user: "test@ethereal.email",
+        pass: "test",
+      },
+    });
+    
+    const emailData = {
+      schoolName,
+      contactName,
+      schoolCode,
+      adminEmail: contactEmail,
+      tempPassword,
+      trialEndDate,
+      loginUrl: "https://localhost:3000/login",
+      supportEmail: "support@wisconsin-nutrition-explorer.com",
+    };
+    
+    const htmlContent = generateTrialConfirmationEmail(emailData);
+    const textContent = generateTrialConfirmationEmailText(emailData);
+    
+    const result = await transporter.sendMail({
+      from: '"Wisconsin Nutrition Explorer" <noreply@wisconsin-nutrition-explorer.com>',
+      to: contactEmail,
+      subject: "Welcome to Wisconsin Nutrition Explorer - Your Trial is Ready! 🎉",
+      text: textContent,
+      html: htmlContent,
+    });
+    
+    console.log("Trial confirmation email sent:", result.messageId);
+    return true;
+  } catch (error) {
+    console.error("Error sending trial confirmation email:", error);
+    return false;
+  }
 }
 
 export const trialRouter = router({
@@ -46,7 +100,10 @@ export const trialRouter = router({
     )
     .mutation(async ({ input }) => {
       try {
-        // Create trial request
+        const schoolCode = generateSchoolCode(input.schoolName);
+        const tempPassword = generateTempPassword();
+        const trialEndDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
         const requestResult = await createTrialRequest({
           schoolName: input.schoolName,
           district: input.district,
@@ -60,75 +117,48 @@ export const trialRouter = router({
           message: input.message,
         });
 
-        if (!requestResult || !requestResult.insertId) {
+        if (!requestResult) {
           throw new Error("Failed to create trial request");
         }
 
-        const requestId = requestResult.insertId;
-
-        // Generate school code
-        const schoolCode = generateSchoolCode(input.schoolName);
-
-        // Create trial account
         const accountResult = await createTrialAccount({
-          trialRequestId: requestId,
+          trialRequestId: requestResult[0],
           schoolCode,
           adminEmail: input.contactEmail,
           trialDays: 30,
         });
 
-        if (!accountResult || !accountResult.insertId) {
+        if (!accountResult) {
           throw new Error("Failed to create trial account");
         }
 
-        // Update request status
-        await updateTrialRequestStatus(requestId, "trial_created");
-
-        // Generate temporary password
-        const tempPassword = generateTempPassword();
-        
-        // Calculate trial end date (30 days from now)
-        const trialEndDate = new Date();
-        trialEndDate.setDate(trialEndDate.getDate() + 30);
-        const formattedEndDate = trialEndDate.toLocaleDateString("en-US", {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        });
-
-        // Send confirmation email
         const emailSent = await sendTrialConfirmationEmail(
           input.contactEmail,
           schoolCode,
           tempPassword,
           input.schoolName,
           input.contactName,
-          formattedEndDate
+          trialEndDate.toLocaleDateString()
         );
 
         return {
           success: true,
-          requestId,
-          accountId: accountResult.insertId,
+          message: "Trial request submitted successfully",
           schoolCode,
-          tempPassword,
-          trialEndDate: formattedEndDate,
+          trialEndDate: trialEndDate.toISOString(),
           emailSent,
-          message: emailSent
-            ? "Trial request submitted successfully. Check your email for login credentials."
-            : "Trial created but email delivery failed. Please contact support.",
         };
       } catch (error) {
         console.error("Error submitting trial request:", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to submit trial request. Please try again.",
+          message: "Failed to submit trial request",
         });
       }
     }),
 
   /**
-   * Get trial account details by school code
+   * Get trial account by school code (public)
    */
   getAccountByCode: publicProcedure
     .input(z.object({ schoolCode: z.string() }))
@@ -146,8 +176,6 @@ export const trialRouter = router({
         return {
           schoolCode: account.schoolCode,
           trialEndDate: account.trialEndDate,
-          trialDays: account.trialDays,
-          status: account.status,
           classesCreated: account.classesCreated,
           studentsAdded: account.studentsAdded,
           gamesPlayed: account.gamesPlayed,
@@ -198,8 +226,8 @@ export const trialRouter = router({
   getAllRequests: protectedProcedure
     .input(
       z.object({
-        limit: z.number().default(50),
-        offset: z.number().default(0),
+        page: z.number().default(0),
+        limit: z.number().default(20),
       })
     )
     .query(async ({ input, ctx }) => {
@@ -208,10 +236,10 @@ export const trialRouter = router({
       }
 
       try {
-        const requests = await getAllTrialRequests(input.limit, input.offset);
-        return requests;
+        const requests = await getAllTrialRequests(input.page, input.limit);
+        return requests || [];
       } catch (error) {
-        console.error("Error getting trial requests:", error);
+        console.error("Error getting all trial requests:", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to retrieve trial requests",
@@ -247,7 +275,7 @@ export const trialRouter = router({
     }),
 
   /**
-   * Record trial engagement metrics (admin only)
+   * Record trial metrics (admin only)
    */
   recordMetrics: protectedProcedure
     .input(
@@ -342,12 +370,70 @@ export const trialRouter = router({
     }),
 
   /**
-   * Extend trial period (admin only)
+   * Get requests with pagination and filters (admin only)
    */
-  extendTrial: protectedProcedure
+  getRequestsWithFilters: protectedProcedure
     .input(
       z.object({
-        requestId: z.number(),
+        page: z.number().default(0),
+        limit: z.number().default(20),
+        status: z.enum(["pending", "approved", "trial_created", "completed", "rejected"]).optional(),
+        searchTerm: z.string().optional(),
+        sortBy: z.enum(["newest", "oldest", "engagement"]).default("newest"),
+      })
+    )
+    .query(async ({ input, ctx }) => {
+      if (ctx.user.role !== "admin") {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
+
+      try {
+        const allRequests = await getAllTrialRequests(input.page, input.limit);
+        let requests = allRequests || [];
+
+        if (input.status) {
+          requests = requests.filter((r: any) => r.status === input.status);
+        }
+
+        if (input.searchTerm) {
+          const term = input.searchTerm.toLowerCase();
+          requests = requests.filter(
+            (r: any) =>
+              r.schoolName.toLowerCase().includes(term) ||
+              r.district?.toLowerCase().includes(term) ||
+              r.contactName.toLowerCase().includes(term) ||
+              r.contactEmail.toLowerCase().includes(term)
+          );
+        }
+
+        if (input.sortBy === "newest") {
+          requests.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        } else if (input.sortBy === "oldest") {
+          requests.sort((a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+        }
+
+        return {
+          requests,
+          total: requests.length,
+          page: input.page,
+          limit: input.limit,
+        };
+      } catch (error) {
+        console.error("Error getting requests with filters:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to retrieve filtered requests",
+        });
+      }
+    }),
+
+  /**
+   * Bulk extend trials (admin only)
+   */
+  bulkExtendTrials: protectedProcedure
+    .input(
+      z.object({
+        requestIds: z.array(z.number()).min(1),
         additionalDays: z.number().min(1).max(90),
       })
     )
@@ -357,113 +443,105 @@ export const trialRouter = router({
       }
 
       try {
-        await updateTrialRequestStatus(input.requestId, "trial_created");
-        return { success: true, message: `Trial extended by ${input.additionalDays} days` };
+        let successCount = 0;
+        for (const requestId of input.requestIds) {
+          try {
+            await updateTrialRequestStatus(requestId, "trial_created");
+            successCount++;
+          } catch (error) {
+            console.error(`Failed to extend trial ${requestId}:`, error);
+          }
+        }
+
+        return {
+          success: true,
+          message: `Extended ${successCount} of ${input.requestIds.length} trials by ${input.additionalDays} days`,
+          successCount,
+          totalCount: input.requestIds.length,
+        };
       } catch (error) {
-        console.error("Error extending trial:", error);
+        console.error("Error bulk extending trials:", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to extend trial",
+          message: "Failed to bulk extend trials",
         });
       }
     }),
 
   /**
-   * Mark trial as completed/converted (admin only)
+   * Bulk convert trials (admin only)
    */
-  markTrialCompleted: protectedProcedure
-    .input(z.object({ requestId: z.number() }))
+  bulkConvertTrials: protectedProcedure
+    .input(z.object({ requestIds: z.array(z.number()).min(1) }))
     .mutation(async ({ input, ctx }) => {
       if (ctx.user.role !== "admin") {
         throw new TRPCError({ code: "FORBIDDEN" });
       }
 
       try {
-        await updateTrialRequestStatus(input.requestId, "completed");
-        return { success: true, message: "Trial marked as completed" };
+        let successCount = 0;
+        for (const requestId of input.requestIds) {
+          try {
+            await updateTrialRequestStatus(requestId, "completed");
+            successCount++;
+          } catch (error) {
+            console.error(`Failed to convert trial ${requestId}:`, error);
+          }
+        }
+
+        return {
+          success: true,
+          message: `Marked ${successCount} of ${input.requestIds.length} trials as converted`,
+          successCount,
+          totalCount: input.requestIds.length,
+        };
       } catch (error) {
-        console.error("Error marking trial as completed:", error);
+        console.error("Error bulk converting trials:", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to mark trial as completed",
+          message: "Failed to bulk convert trials",
         });
       }
     }),
 
   /**
-   * Reject trial request (admin only)
+   * Bulk reject trials (admin only)
    */
-  rejectTrial: protectedProcedure
-    .input(z.object({ requestId: z.number(), reason: z.string().optional() }))
+  bulkRejectTrials: protectedProcedure
+    .input(
+      z.object({
+        requestIds: z.array(z.number()).min(1),
+        reason: z.string().optional(),
+      })
+    )
     .mutation(async ({ input, ctx }) => {
       if (ctx.user.role !== "admin") {
         throw new TRPCError({ code: "FORBIDDEN" });
       }
 
       try {
-        await updateTrialRequestStatus(input.requestId, "rejected");
-        return { success: true, message: "Trial request rejected" };
+        let successCount = 0;
+        for (const requestId of input.requestIds) {
+          try {
+            await updateTrialRequestStatus(requestId, "rejected");
+            successCount++;
+          } catch (error) {
+            console.error(`Failed to reject trial ${requestId}:`, error);
+          }
+        }
+
+        return {
+          success: true,
+          message: `Rejected ${successCount} of ${input.requestIds.length} trials`,
+          successCount,
+          totalCount: input.requestIds.length,
+        };
       } catch (error) {
-        console.error("Error rejecting trial:", error);
+        console.error("Error bulk rejecting trials:", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to reject trial",
+          message: "Failed to bulk reject trials",
         });
       }
     }),
 });
-
-// Helper function to generate temporary password
-function generateTempPassword(): string {
-  return Math.random().toString(36).substring(2, 10).toUpperCase();
-}
-
-// Helper function to send trial confirmation email
-async function sendTrialConfirmationEmail(
-  contactEmail: string,
-  schoolCode: string,
-  tempPassword: string,
-  schoolName: string,
-  contactName: string,
-  trialEndDate: string
-): Promise<boolean> {
-  try {
-    const transporter = nodemailer.createTransport({
-      host: "smtp.ethereal.email",
-      port: 587,
-      secure: false,
-      auth: {
-        user: "test@ethereal.email",
-        pass: "test",
-      },
-    });
-    
-    const emailData = {
-      schoolName,
-      contactName,
-      schoolCode,
-      adminEmail: contactEmail,
-      tempPassword,
-      trialEndDate,
-      loginUrl: "https://localhost:3000/login",
-      supportEmail: "support@wisconsin-nutrition-explorer.com",
-    };
-    
-    const htmlContent = generateTrialConfirmationEmail(emailData);
-    const textContent = generateTrialConfirmationEmailText(emailData);
-    
-    const result = await transporter.sendMail({
-      from: '"Wisconsin Nutrition Explorer" <noreply@wisconsin-nutrition-explorer.com>',
-      to: contactEmail,
-      subject: "Welcome to Wisconsin Nutrition Explorer - Your Trial is Ready! 🎉",
-      text: textContent,
-      html: htmlContent,
-    });
-    
-    console.log("Trial confirmation email sent:", result.messageId);
-    return true;
-  } catch (error) {
-    console.error("Error sending trial confirmation email:", error);
-    return false;
-  }
-}

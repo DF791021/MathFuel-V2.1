@@ -1042,3 +1042,57 @@ export const trialFollowUps = mysqlTable("trialFollowUps", {
 
 export type TrialFollowUp = typeof trialFollowUps.$inferSelect;
 export type InsertTrialFollowUp = typeof trialFollowUps.$inferInsert;
+
+/**
+ * User Feedback Collection Tables
+ */
+
+
+/**
+ * User Feedback Collection Tables
+ */
+export const userFeedback = mysqlTable("user_feedback", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("user_id"),
+  trialAccountId: int("trial_account_id"),
+  feedbackType: mysqlEnum("feedback_type", ["bug", "feature_request", "usability", "performance", "other"]).notNull(),
+  category: mysqlEnum("category", ["game", "certificates", "analytics", "ui", "mobile", "other"]).notNull(),
+  rating: int("rating"), // 1-5 scale
+  title: varchar("title", { length: 100 }).notNull(),
+  description: text("description").notNull(),
+  attachmentUrl: text("attachment_url"), // URL to screenshot or file
+  status: mysqlEnum("status", ["new", "reviewed", "in_progress", "resolved", "wont_fix"]).default("new").notNull(),
+  adminNotes: text("admin_notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+});
+
+export type UserFeedback = typeof userFeedback.$inferSelect;
+export type InsertUserFeedback = typeof userFeedback.$inferInsert;
+
+export const feedbackResponses = mysqlTable("feedback_responses", {
+  id: int("id").autoincrement().primaryKey(),
+  feedbackId: int("feedback_id").notNull(),
+  adminId: int("admin_id"),
+  responseText: text("response_text").notNull(),
+  isPublic: boolean("is_public").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type FeedbackResponse = typeof feedbackResponses.$inferSelect;
+export type InsertFeedbackResponse = typeof feedbackResponses.$inferInsert;
+
+export const feedbackAnalytics = mysqlTable("feedback_analytics", {
+  id: int("id").autoincrement().primaryKey(),
+  date: date("date").notNull(),
+  totalFeedback: int("total_feedback").default(0).notNull(),
+  bugReports: int("bug_reports").default(0).notNull(),
+  featureRequests: int("feature_requests").default(0).notNull(),
+  usabilityIssues: int("usability_issues").default(0).notNull(),
+  averageRating: int("average_rating"), // Stored as integer * 100 for precision
+  topCategories: json("top_categories"), // JSON array of category counts
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type FeedbackAnalytics = typeof feedbackAnalytics.$inferSelect;
+export type InsertFeedbackAnalytics = typeof feedbackAnalytics.$inferInsert;
