@@ -20,6 +20,9 @@ import { TrialExpirationBanner } from "./components/TrialExpirationBanner";
 import { useTrialExpiration } from "./hooks/useTrialExpiration";
 import { useAuth } from "./_core/hooks/useAuth";
 import { Toaster } from "sonner";
+import Pricing from "./pages/Pricing";
+import PaymentSuccess from "./pages/PaymentSuccess";
+import PaymentFailure from "./pages/PaymentFailure";
 
 function Router() {
   return (
@@ -36,6 +39,9 @@ function Router() {
       <Route path="/schedule-access" component={ScheduleDistrictAccess} />
       <Route path="/admin/alert-preferences" component={AdminAlertPreferences} />
       <Route path="/admin/trial-benchmarking" component={TrialBenchmarkingDashboard} />
+      <Route path="/pricing" component={Pricing} />
+      <Route path="/payment/success" component={PaymentSuccess} />
+      <Route path="/payment/failure" component={PaymentFailure} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

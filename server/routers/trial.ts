@@ -750,8 +750,9 @@ export const trialRouter = router({
   /**
    * Get pending follow-up emails (admin only)
    */
-  getPendingFollowUps: protectedProcedure.query(async ({ ctx }) => {
-    if (ctx.user.role !== "admin") {
+  getPendingFollowUps: protectedProcedure
+    .query(async ({ ctx }) => {
+      if (ctx.user.role !== "admin") {
       throw new TRPCError({
         code: "FORBIDDEN",
         message: "Only admins can view pending follow-ups",
