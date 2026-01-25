@@ -2,6 +2,7 @@ import { router, publicProcedure, protectedProcedure } from "../_core/trpc";
 import { z } from "zod";
 import * as db from "../db";
 import { TRPCError } from "@trpc/server";
+import { sendFeedbackNotification, sendHighPriorityFeedbackAlert } from "../_core/feedbackNotification";
 
 export const feedbackRouter = router({
   /**
@@ -30,6 +31,24 @@ export const feedbackRouter = router({
           title: input.title,
           description: input.description,
           attachmentUrl: input.attachmentUrl,
+        });
+
+        // Send admin notification asynchronously (don't block user response)
+        const dashboardUrl = `${process.env.VITE_APP_URL || 'https://manus.space'}/admin/feedback`;
+        const schoolName = ctx.user?.email?.split('@')[1] || 'Unknown School';
+        
+        sendFeedbackNotification({
+          schoolName,
+          feedbackType: input.feedbackType,
+          feedbackTitle: input.title,
+          feedbackDescription: input.description,
+          rating: input.rating,
+          submittedBy: ctx.user?.name || 'Anonymous',
+          submittedAt: new Date().toLocaleString(),
+          isLowRating: !!(input.rating && input.rating <= 2),
+          dashboardUrl,
+        }).catch((error) => {
+          console.error("Failed to send feedback notification:", error);
         });
 
         return {
@@ -231,8 +250,8 @@ export const feedbackRouter = router({
         code: "INTERNAL_SERVER_ERROR",
         message: "Failed to fetch feedback statistics",
       });
-      }
-    }),
+    }
+  }),
 
   notifyAdminOfFeedback: protectedProcedure
     .input(

@@ -12,6 +12,8 @@ import TemplateLibrary from "./pages/TemplateLibrary";
 import { NutritionRoulette } from "./pages/NutritionRoulette";
 import GameAnalyticsDashboard from "./pages/GameAnalyticsDashboard";
 import StudentGoalPortal from "./pages/StudentGoalPortal";
+import { TrialAnalyticsDashboard } from "./pages/TrialAnalyticsDashboard";
+import { ScheduleDistrictAccess } from "./pages/ScheduleDistrictAccess";
 import { TrialExpirationBanner } from "./components/TrialExpirationBanner";
 import { useTrialExpiration } from "./hooks/useTrialExpiration";
 import { useAuth } from "./_core/hooks/useAuth";
@@ -28,6 +30,8 @@ function Router() {
       <Route path="/analytics" component={GameAnalyticsDashboard} />
       <Route path="/goals" component={StudentGoalPortal} />
       <Route path="/verify/:id" component={VerifyCertificate} />
+      <Route path="/admin/trial-analytics" component={TrialAnalyticsDashboard} />
+      <Route path="/schedule-access" component={ScheduleDistrictAccess} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

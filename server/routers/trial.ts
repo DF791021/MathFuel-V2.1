@@ -19,6 +19,8 @@ import {
 import { TRPCError } from "@trpc/server";
 import { generateTrialConfirmationEmail, generateTrialConfirmationEmailText } from "../_core/trialEmailTemplate";
 import nodemailer from "nodemailer";
+import { getDb } from "../db";
+import { trialMetrics } from "../../drizzle/schema";
 
 function generateSchoolCode(schoolName: string): string {
   const code = schoolName
@@ -554,6 +556,142 @@ export const trialRouter = router({
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to retrieve filtered requests",
+        });
+      }
+    }),
+
+  /**
+   * Get trial conversion analytics (admin only)
+   */
+  getConversionAnalytics: protectedProcedure.query(async ({ ctx }) => {
+    if (ctx.user.role !== "admin") {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "Only admins can view analytics",
+      });
+    }
+
+    try {
+      const allRequests = await getAllTrialRequests(1000, 0);
+      
+      const totalRequests = allRequests.length;
+      const trialCreated = allRequests.filter((r: any) => r.status === "trial_created").length;
+      const completed = allRequests.filter((r: any) => r.status === "completed").length;
+      const expired = allRequests.filter((r: any) => r.status === "expired").length;
+      
+      const conversionRate = totalRequests > 0 ? Math.round((completed / totalRequests) * 100) : 0;
+      
+      // Calculate average trial duration
+      const trialsWithDuration = allRequests
+        .filter((r: any) => r.trialEndDate && r.trialStartDate)
+        .map((r: any) => ({
+          duration: Math.floor((new Date(r.trialEndDate).getTime() - new Date(r.trialStartDate).getTime()) / (1000 * 60 * 60 * 24)),
+        }));
+      
+      const avgTrialDuration = trialsWithDuration.length > 0
+        ? Math.round(trialsWithDuration.reduce((sum: number, t: any) => sum + t.duration, 0) / trialsWithDuration.length)
+        : 0;
+
+      return {
+        totalRequests,
+        trialCreated,
+        completed,
+        expired,
+        conversionRate,
+        avgTrialDuration,
+        conversionFunnel: {
+          requests: totalRequests,
+          trialsCreated: trialCreated,
+          converted: completed,
+          conversionPercentage: conversionRate,
+        },
+      };
+    } catch (error) {
+      console.error("Error getting conversion analytics:", error);
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to get conversion analytics",
+      });
+    }
+  }),
+
+  /**
+   * Get feature adoption metrics (admin only)
+   */
+  getFeatureAdoption: protectedProcedure.query(async ({ ctx }) => {
+    if (ctx.user.role !== "admin") {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "Only admins can view feature adoption",
+      });
+    }
+
+    try {
+      // Get all trial metrics
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      const metrics = await db
+        .select()
+        .from(trialMetrics)
+        .execute();
+
+      // Aggregate feature usage
+      const featureStats = {
+        totalGamesPlayed: metrics.reduce((sum: number, m: any) => sum + (m.gamesPlayed || 0), 0),
+        totalCertificatesGenerated: metrics.reduce((sum: number, m: any) => sum + (m.certificatesGenerated || 0), 0),
+        totalEmailsSent: metrics.reduce((sum: number, m: any) => sum + (m.emailsSent || 0), 0),
+        totalPdfExports: metrics.reduce((sum: number, m: any) => sum + (m.pdfExportsGenerated || 0), 0),
+        avgGamesPerTrial: metrics.length > 0 ? Math.round(metrics.reduce((sum: number, m: any) => sum + (m.gamesPlayed || 0), 0) / metrics.length) : 0,
+        avgCertificatesPerTrial: metrics.length > 0 ? Math.round(metrics.reduce((sum: number, m: any) => sum + (m.certificatesGenerated || 0), 0) / metrics.length) : 0,
+      };
+
+      return featureStats;
+    } catch (error) {
+      console.error("Error getting feature adoption:", error);
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to get feature adoption metrics",
+      });
+    }
+  }),
+
+  /**
+   * Get trial timeline analytics (admin only)
+   */
+  getTrialTimeline: protectedProcedure
+    .input(z.object({ days: z.number().default(30) }))
+    .query(async ({ input, ctx }) => {
+      if (ctx.user.role !== "admin") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only admins can view timeline",
+        });
+      }
+
+      try {
+        const allRequests = await getAllTrialRequests(1000, 0);
+        
+        // Group by creation date
+        const timeline: { [key: string]: number } = {};
+        
+        allRequests.forEach((r: any) => {
+          const date = new Date(r.createdAt).toISOString().split('T')[0];
+          timeline[date] = (timeline[date] || 0) + 1;
+        });
+
+        // Convert to array and sort
+        const timelineData = Object.entries(timeline)
+          .map(([date, count]) => ({ date, count }))
+          .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+          .slice(-input.days);
+
+        return timelineData;
+      } catch (error) {
+        console.error("Error getting trial timeline:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to get trial timeline",
         });
       }
     }),

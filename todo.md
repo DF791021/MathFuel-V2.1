@@ -647,3 +647,36 @@
 - [x] Test email delivery for new feedback
 - [x] Test email delivery for low ratings (1-2 stars)
 - [x] Add unsubscribe link to notification emails
+
+
+## Email Integration for Feedback Notifications - COMPLETE
+- [x] Set up Manus notification API integration
+- [x] Create email sending helper function
+- [x] Integrate notifications into submitFeedback mutation
+- [x] Send alerts for new feedback submissions
+- [x] Send alerts for low-rating feedback (1-2 stars)
+- [x] Test email delivery for new feedback
+- [x] Test email delivery for low ratings
+- [x] Add admin email preference settings
+
+## Trial Conversion Analytics Dashboard - COMPLETE
+- [x] Create analytics database schema (trialAnalytics table)
+- [x] Track trial-to-paid conversion rates
+- [x] Track average trial duration
+- [x] Track feature adoption metrics
+- [x] Build analytics dashboard page component
+- [x] Add charts for conversion trends
+- [x] Add feature adoption visualization
+- [x] Add conversion funnel analysis
+- [x] Write tests for analytics procedures
+
+## Trial Upgrade Landing Page - COMPLETE
+- [x] Create ScheduleDistrictAccess landing page component
+- [x] Add contact form with school/district info
+- [x] Add pricing tiers display
+- [x] Add case studies section
+- [x] Add testimonials from pilot schools
+- [x] Create contact form submission handler
+- [x] Add email notification for sales team
+- [x] Integrate with trial expiration banner CTA
+- [x] Write tests for upgrade flow
