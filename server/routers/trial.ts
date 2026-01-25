@@ -11,6 +11,9 @@ import {
   getTrialMetrics,
 } from "../db";
 import { TRPCError } from "@trpc/server";
+import { generateTrialConfirmationEmail, generateTrialConfirmationEmailText } from "../_core/trialEmailTemplate";
+import nodemailer from "nodemailer";
+import { ENV } from "../_core/env";
 
 // Helper function to generate school code
 function generateSchoolCode(schoolName: string): string {
@@ -81,12 +84,39 @@ export const trialRouter = router({
         // Update request status
         await updateTrialRequestStatus(requestId, "trial_created");
 
+        // Generate temporary password
+        const tempPassword = generateTempPassword();
+        
+        // Calculate trial end date (30 days from now)
+        const trialEndDate = new Date();
+        trialEndDate.setDate(trialEndDate.getDate() + 30);
+        const formattedEndDate = trialEndDate.toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
+
+        // Send confirmation email
+        const emailSent = await sendTrialConfirmationEmail(
+          input.contactEmail,
+          schoolCode,
+          tempPassword,
+          input.schoolName,
+          input.contactName,
+          formattedEndDate
+        );
+
         return {
           success: true,
           requestId,
           accountId: accountResult.insertId,
           schoolCode,
-          message: "Trial request submitted successfully. Check your email for login credentials.",
+          tempPassword,
+          trialEndDate: formattedEndDate,
+          emailSent,
+          message: emailSent
+            ? "Trial request submitted successfully. Check your email for login credentials."
+            : "Trial created but email delivery failed. Please contact support.",
         };
       } catch (error) {
         console.error("Error submitting trial request:", error);
@@ -277,3 +307,58 @@ export const trialRouter = router({
       }
     }),
 });
+
+// Helper function to generate temporary password
+function generateTempPassword(): string {
+  return Math.random().toString(36).substring(2, 10).toUpperCase();
+}
+
+// Helper function to send trial confirmation email
+async function sendTrialConfirmationEmail(
+  contactEmail: string,
+  schoolCode: string,
+  tempPassword: string,
+  schoolName: string,
+  contactName: string,
+  trialEndDate: string
+): Promise<boolean> {
+  try {
+    const transporter = nodemailer.createTransport({
+      host: "smtp.ethereal.email",
+      port: 587,
+      secure: false,
+      auth: {
+        user: "test@ethereal.email",
+        pass: "test",
+      },
+    });
+    
+    const emailData = {
+      schoolName,
+      contactName,
+      schoolCode,
+      adminEmail: contactEmail,
+      tempPassword,
+      trialEndDate,
+      loginUrl: "https://localhost:3000/login",
+      supportEmail: "support@wisconsin-nutrition-explorer.com",
+    };
+    
+    const htmlContent = generateTrialConfirmationEmail(emailData);
+    const textContent = generateTrialConfirmationEmailText(emailData);
+    
+    const result = await transporter.sendMail({
+      from: '"Wisconsin Nutrition Explorer" <noreply@wisconsin-nutrition-explorer.com>',
+      to: contactEmail,
+      subject: "Welcome to Wisconsin Nutrition Explorer - Your Trial is Ready! 🎉",
+      text: textContent,
+      html: htmlContent,
+    });
+    
+    console.log("Trial confirmation email sent:", result.messageId);
+    return true;
+  } catch (error) {
+    console.error("Error sending trial confirmation email:", error);
+    return false;
+  }
+}
