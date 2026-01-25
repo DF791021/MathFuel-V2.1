@@ -1,6 +1,6 @@
 import { eq, desc, and, lt, gte, isNull, lte, asc, sql, count, countDistinct, avg, sum, max } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, gameScores, InsertGameScore, customQuestions, InsertCustomQuestion, classes, InsertClass, classMembers, InsertClassMember, emailTemplates, InsertEmailTemplate, scheduledEmails, InsertScheduledEmail, issuedCertificates, InsertIssuedCertificate, zipEmailHistory, InsertZipEmailHistory, templateShares, InsertTemplateShare, sharedTemplateLibrary, InsertSharedTemplateLibrary, templateImports, InsertTemplateImport, chatConversations, InsertChatConversation, chatMessages, InsertChatMessage, gameAnalyticsStudentSummary, InsertGameAnalyticsStudentSummary, gameAnalyticsQuestionPerformance, InsertGameAnalyticsQuestionPerformance, gameAnalyticsClassPerformance, InsertGameAnalyticsClassPerformance, gameAnalyticsDailyEngagement, InsertGameAnalyticsDailyEngagement, gameAnalyticsTopicMastery, InsertGameAnalyticsTopicMastery, gameAnalyticsDifficultyProgression, InsertGameAnalyticsDifficultyProgression, gameAnalyticsHistoricalSnapshots, InsertGameAnalyticsHistoricalSnapshot, gameAnalyticsStudentImprovement, InsertGameAnalyticsStudentImprovement, gameAnalyticsClassImprovement, InsertGameAnalyticsClassImprovement, gameAnalyticsRankingHistory, InsertGameAnalyticsRankingHistory, gameAnalyticsPerformanceMilestones, InsertGameAnalyticsPerformanceMilestone, rouletteGameSessions, rouletteGamePlayers, rouletteRoundResults, studentPerformanceGoals, InsertStudentPerformanceGoal, goalProgressHistory, InsertGoalProgressHistory, goalAchievements, InsertGoalAchievement, goalFeedback, InsertGoalFeedback, journalEntries, InsertJournalEntry, reflectionPrompts, InsertReflectionPrompt, journalInsights, InsertJournalInsight, journalReflectionsSummary, InsertJournalReflectionsSummary, goalDeadlineAlerts, InsertGoalDeadlineAlert, alertPreferences, InsertAlertPreferences, alertHistory, InsertAlertHistory, successStories, InsertSuccessStory, successStoryReactions, InsertSuccessStoryReaction, successStoryComments, InsertSuccessStoryComment } from "../drizzle/schema";
+import { InsertUser, users, gameScores, InsertGameScore, customQuestions, InsertCustomQuestion, classes, InsertClass, classMembers, InsertClassMember, emailTemplates, InsertEmailTemplate, scheduledEmails, InsertScheduledEmail, issuedCertificates, InsertIssuedCertificate, zipEmailHistory, InsertZipEmailHistory, templateShares, InsertTemplateShare, sharedTemplateLibrary, InsertSharedTemplateLibrary, templateImports, InsertTemplateImport, chatConversations, InsertChatConversation, chatMessages, InsertChatMessage, gameAnalyticsStudentSummary, InsertGameAnalyticsStudentSummary, gameAnalyticsQuestionPerformance, InsertGameAnalyticsQuestionPerformance, gameAnalyticsClassPerformance, InsertGameAnalyticsClassPerformance, gameAnalyticsDailyEngagement, InsertGameAnalyticsDailyEngagement, gameAnalyticsTopicMastery, InsertGameAnalyticsTopicMastery, gameAnalyticsDifficultyProgression, InsertGameAnalyticsDifficultyProgression, gameAnalyticsHistoricalSnapshots, InsertGameAnalyticsHistoricalSnapshot, gameAnalyticsStudentImprovement, InsertGameAnalyticsStudentImprovement, gameAnalyticsClassImprovement, InsertGameAnalyticsClassImprovement, gameAnalyticsRankingHistory, InsertGameAnalyticsRankingHistory, gameAnalyticsPerformanceMilestones, InsertGameAnalyticsPerformanceMilestone, rouletteGameSessions, rouletteGamePlayers, rouletteRoundResults, studentPerformanceGoals, InsertStudentPerformanceGoal, goalProgressHistory, InsertGoalProgressHistory, goalAchievements, InsertGoalAchievement, goalFeedback, InsertGoalFeedback, journalEntries, InsertJournalEntry, reflectionPrompts, InsertReflectionPrompt, journalInsights, InsertJournalInsight, journalReflectionsSummary, InsertJournalReflectionsSummary, goalDeadlineAlerts, InsertGoalDeadlineAlert, alertPreferences, InsertAlertPreferences, alertHistory, InsertAlertHistory, successStories, InsertSuccessStory, successStoryReactions, InsertSuccessStoryReaction, successStoryComments, InsertSuccessStoryComment, trialRequests, trialAccounts, trialMetrics, trialFollowUps, exportHistory } from "../drizzle/schema";
 
 import { nanoid } from 'nanoid';
 import { ENV } from './_core/env';
@@ -3490,8 +3490,6 @@ export async function deleteSuccessStoryComment(commentId: number) {
 
 // ============ EXPORT HISTORY FUNCTIONS ============
 
-import { exportHistory, InsertExportHistory } from "../drizzle/schema";
-
 /**
  * Save export history record
  */
@@ -3620,4 +3618,191 @@ export async function getExportStats(teacherId: number) {
     byType,
     lastExport: records.length > 0 ? records[0].createdAt : null,
   };
+}
+
+
+// ============================================================================
+// TRIAL MANAGEMENT FUNCTIONS
+// ============================================================================
+
+/**
+ * Create a trial request from a school
+ */
+export async function createTrialRequest(data: {
+  schoolName: string;
+  district?: string;
+  state: string;
+  contactName: string;
+  contactEmail: string;
+  contactPhone?: string;
+  role: string;
+  studentCount?: number;
+  teacherCount?: number;
+  message?: string;
+}): Promise<any> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db
+    .insert(trialRequests)
+    .values({
+      schoolName: data.schoolName,
+      district: data.district,
+      state: data.state,
+      contactName: data.contactName,
+      contactEmail: data.contactEmail,
+      contactPhone: data.contactPhone,
+      role: data.role as any,
+      studentCount: data.studentCount,
+      teacherCount: data.teacherCount,
+      message: data.message,
+      status: "pending",
+    })
+    .execute();
+
+  return result;
+}
+
+/**
+ * Create a trial account for a request
+ */
+export async function createTrialAccount(data: {
+  trialRequestId: number;
+  schoolCode: string;
+  adminEmail: string;
+  trialDays?: number;
+}): Promise<any> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const trialEndDate = new Date();
+  trialEndDate.setDate(trialEndDate.getDate() + (data.trialDays || 30));
+
+  const result = await db
+    .insert(trialAccounts)
+    .values({
+      trialRequestId: data.trialRequestId,
+      schoolCode: data.schoolCode,
+      adminEmail: data.adminEmail,
+      adminPassword: "temp_" + Math.random().toString(36).substring(2, 15),
+      trialEndDate: trialEndDate,
+      trialDays: data.trialDays || 30,
+      status: "active",
+    })
+    .execute();
+
+  return result;
+}
+
+/**
+ * Get trial request by ID
+ */
+export async function getTrialRequestById(id: number): Promise<any> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db
+    .select()
+    .from(trialRequests)
+    .where(eq(trialRequests.id, id))
+    .execute();
+
+  return result[0] || null;
+}
+
+/**
+ * Get trial account by school code
+ */
+export async function getTrialAccountBySchoolCode(schoolCode: string): Promise<any> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db
+    .select()
+    .from(trialAccounts)
+    .where(eq(trialAccounts.schoolCode, schoolCode))
+    .execute();
+
+  return result[0] || null;
+}
+
+/**
+ * Update trial request status
+ */
+export async function updateTrialRequestStatus(id: number, status: string): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db
+    .update(trialRequests)
+    .set({ status: status as any })
+    .where(eq(trialRequests.id, id))
+    .execute();
+}
+
+/**
+ * Get all trial requests (admin)
+ */
+export async function getAllTrialRequests(limit = 50, offset = 0): Promise<any[]> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db
+    .select()
+    .from(trialRequests)
+    .orderBy(desc(trialRequests.createdAt))
+    .limit(limit)
+    .offset(offset)
+    .execute();
+
+  return result;
+}
+
+/**
+ * Record trial engagement metrics
+ */
+export async function recordTrialMetrics(data: {
+  trialAccountId: number;
+  activeUsers?: number;
+  gamesPlayed?: number;
+  certificatesGenerated?: number;
+  emailsSent?: number;
+  pdfExportsGenerated?: number;
+}): Promise<any> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const today = new Date();
+
+  const result = await db
+    .insert(trialMetrics)
+    .values({
+      trialAccountId: data.trialAccountId,
+      date: today,
+      activeUsers: data.activeUsers || 0,
+      gamesPlayed: data.gamesPlayed || 0,
+      certificatesGenerated: data.certificatesGenerated || 0,
+      emailsSent: data.emailsSent || 0,
+      pdfExportsGenerated: data.pdfExportsGenerated || 0,
+    })
+    .execute();
+
+  return result;
+}
+
+/**
+ * Get trial metrics for an account
+ */
+export async function getTrialMetrics(trialAccountId: number): Promise<any[]> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db
+    .select()
+    .from(trialMetrics)
+    .where(eq(trialMetrics.trialAccountId, trialAccountId))
+    .orderBy(desc(trialMetrics.date))
+    .execute();
+
+  return result;
 }
