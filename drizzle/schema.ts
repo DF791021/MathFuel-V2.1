@@ -957,3 +957,118 @@ export const exportHistory = mysqlTable("exportHistory", {
 
 export type ExportHistory = typeof exportHistory.$inferSelect;
 export type InsertExportHistory = typeof exportHistory.$inferInsert;
+
+
+/**
+ * Collaborative Success Stories Bundles
+ * Allows multiple teachers to contribute stories to shared bundles
+ */
+export const collaborativeBundles = mysqlTable("collaborativeBundles", {
+  id: int("id").autoincrement().primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  createdBy: int("createdBy").notNull(), // Teacher who created the bundle
+  schoolName: varchar("schoolName", { length: 255 }),
+  bundleType: mysqlEnum("bundleType", ["grade_level", "school_wide", "custom"]).default("custom").notNull(),
+  status: mysqlEnum("status", ["draft", "active", "archived"]).default("draft").notNull(),
+  maxContributors: int("maxContributors").default(10),
+  requiresApproval: boolean("requiresApproval").default(true).notNull(),
+  primaryColor: varchar("primaryColor", { length: 7 }),
+  secondaryColor: varchar("secondaryColor", { length: 7 }),
+  organizationMethod: mysqlEnum("organizationMethod", ["by-class", "by-goal", "chronological"]).default("by-class").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type CollaborativeBundle = typeof collaborativeBundles.$inferSelect;
+export type InsertCollaborativeBundle = typeof collaborativeBundles.$inferInsert;
+
+/**
+ * Bundle Contributors
+ * Track teachers contributing to collaborative bundles
+ */
+export const bundleContributors = mysqlTable("bundleContributors", {
+  id: int("id").autoincrement().primaryKey(),
+  bundleId: int("bundleId").notNull(),
+  teacherId: int("teacherId").notNull(),
+  role: mysqlEnum("role", ["creator", "contributor", "viewer"]).notNull(),
+  status: mysqlEnum("status", ["invited", "accepted", "declined", "removed"]).default("invited").notNull(),
+  invitedAt: timestamp("invitedAt").defaultNow().notNull(),
+  acceptedAt: timestamp("acceptedAt"),
+  joinedAt: timestamp("joinedAt"),
+});
+export type BundleContributor = typeof bundleContributors.$inferSelect;
+export type InsertBundleContributor = typeof bundleContributors.$inferInsert;
+
+/**
+ * Bundle Stories
+ * Track which stories are included in collaborative bundles
+ */
+export const bundleStories = mysqlTable("bundleStories", {
+  id: int("id").autoincrement().primaryKey(),
+  bundleId: int("bundleId").notNull(),
+  storyId: int("storyId").notNull(),
+  addedBy: int("addedBy").notNull(), // Teacher who added the story
+  status: mysqlEnum("status", ["pending", "approved", "rejected", "removed"]).default("pending").notNull(),
+  approvedBy: int("approvedBy"),
+  rejectionReason: text("rejectionReason"),
+  addedAt: timestamp("addedAt").defaultNow().notNull(),
+  approvedAt: timestamp("approvedAt"),
+});
+export type BundleStory = typeof bundleStories.$inferSelect;
+export type InsertBundleStory = typeof bundleStories.$inferInsert;
+
+/**
+ * Bundle Approvals
+ * Track approval history and workflow for bundle stories
+ */
+export const bundleApprovals = mysqlTable("bundleApprovals", {
+  id: int("id").autoincrement().primaryKey(),
+  bundleStoryId: int("bundleStoryId").notNull(),
+  reviewedBy: int("reviewedBy").notNull(),
+  status: mysqlEnum("status", ["approved", "rejected", "pending"]).notNull(),
+  comments: text("comments"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type BundleApproval = typeof bundleApprovals.$inferSelect;
+export type InsertBundleApproval = typeof bundleApprovals.$inferInsert;
+
+/**
+ * Bundle Versions
+ * Track version history of collaborative bundles
+ */
+export const bundleVersions = mysqlTable("bundleVersions", {
+  id: int("id").autoincrement().primaryKey(),
+  bundleId: int("bundleId").notNull(),
+  versionNumber: int("versionNumber").notNull(),
+  createdBy: int("createdBy").notNull(),
+  changeDescription: text("changeDescription"),
+  storyCount: int("storyCount").notNull(),
+  metadata: json("metadata"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type BundleVersion = typeof bundleVersions.$inferSelect;
+export type InsertBundleVersion = typeof bundleVersions.$inferInsert;
+
+/**
+ * Bundle Notifications
+ * Track notifications for collaborative bundle activities
+ */
+export const bundleNotifications = mysqlTable("bundleNotifications", {
+  id: int("id").autoincrement().primaryKey(),
+  bundleId: int("bundleId").notNull(),
+  recipientId: int("recipientId").notNull(),
+  notificationType: mysqlEnum("notificationType", [
+    "invitation",
+    "story_added",
+    "story_approved",
+    "story_rejected",
+    "bundle_updated",
+    "bundle_published",
+  ]).notNull(),
+  message: text("message"),
+  isRead: boolean("isRead").default(false).notNull(),
+  relatedStoryId: int("relatedStoryId"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type BundleNotification = typeof bundleNotifications.$inferSelect;
+export type InsertBundleNotification = typeof bundleNotifications.$inferInsert;

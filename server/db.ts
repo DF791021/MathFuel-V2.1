@@ -1,6 +1,7 @@
-import { eq, desc, and, lt, gte, isNull, lte, asc, sql, count, countDistinct, avg, sum, max } from "drizzle-orm";
+
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, gameScores, InsertGameScore, customQuestions, InsertCustomQuestion, classes, InsertClass, classMembers, InsertClassMember, emailTemplates, InsertEmailTemplate, scheduledEmails, InsertScheduledEmail, issuedCertificates, InsertIssuedCertificate, zipEmailHistory, InsertZipEmailHistory, templateShares, InsertTemplateShare, sharedTemplateLibrary, InsertSharedTemplateLibrary, templateImports, InsertTemplateImport, chatConversations, InsertChatConversation, chatMessages, InsertChatMessage, gameAnalyticsStudentSummary, InsertGameAnalyticsStudentSummary, gameAnalyticsQuestionPerformance, InsertGameAnalyticsQuestionPerformance, gameAnalyticsClassPerformance, InsertGameAnalyticsClassPerformance, gameAnalyticsDailyEngagement, InsertGameAnalyticsDailyEngagement, gameAnalyticsTopicMastery, InsertGameAnalyticsTopicMastery, gameAnalyticsDifficultyProgression, InsertGameAnalyticsDifficultyProgression, gameAnalyticsHistoricalSnapshots, InsertGameAnalyticsHistoricalSnapshot, gameAnalyticsStudentImprovement, InsertGameAnalyticsStudentImprovement, gameAnalyticsClassImprovement, InsertGameAnalyticsClassImprovement, gameAnalyticsRankingHistory, InsertGameAnalyticsRankingHistory, gameAnalyticsPerformanceMilestones, InsertGameAnalyticsPerformanceMilestone, rouletteGameSessions, rouletteGamePlayers, rouletteRoundResults, studentPerformanceGoals, InsertStudentPerformanceGoal, goalProgressHistory, InsertGoalProgressHistory, goalAchievements, InsertGoalAchievement, goalFeedback, InsertGoalFeedback, journalEntries, InsertJournalEntry, reflectionPrompts, InsertReflectionPrompt, journalInsights, InsertJournalInsight, journalReflectionsSummary, InsertJournalReflectionsSummary, goalDeadlineAlerts, InsertGoalDeadlineAlert, alertPreferences, InsertAlertPreferences, alertHistory, InsertAlertHistory, successStories, InsertSuccessStory, successStoryReactions, InsertSuccessStoryReaction, successStoryComments, InsertSuccessStoryComment } from "../drizzle/schema";
+import { eq, desc, and, lt, gte, isNull, lte, asc, sql, count, countDistinct, avg, sum, max, inArray } from "drizzle-orm";
+import { InsertUser, users, gameScores, InsertGameScore, customQuestions, InsertCustomQuestion, classes, InsertClass, classMembers, InsertClassMember, emailTemplates, InsertEmailTemplate, scheduledEmails, InsertScheduledEmail, issuedCertificates, InsertIssuedCertificate, zipEmailHistory, InsertZipEmailHistory, templateShares, InsertTemplateShare, sharedTemplateLibrary, InsertSharedTemplateLibrary, templateImports, InsertTemplateImport, chatConversations, InsertChatConversation, chatMessages, InsertChatMessage, gameAnalyticsStudentSummary, InsertGameAnalyticsStudentSummary, gameAnalyticsQuestionPerformance, InsertGameAnalyticsQuestionPerformance, gameAnalyticsClassPerformance, InsertGameAnalyticsClassPerformance, gameAnalyticsDailyEngagement, InsertGameAnalyticsDailyEngagement, gameAnalyticsTopicMastery, InsertGameAnalyticsTopicMastery, gameAnalyticsDifficultyProgression, InsertGameAnalyticsDifficultyProgression, gameAnalyticsHistoricalSnapshots, InsertGameAnalyticsHistoricalSnapshot, gameAnalyticsStudentImprovement, InsertGameAnalyticsStudentImprovement, gameAnalyticsClassImprovement, InsertGameAnalyticsClassImprovement, gameAnalyticsRankingHistory, InsertGameAnalyticsRankingHistory, gameAnalyticsPerformanceMilestones, InsertGameAnalyticsPerformanceMilestone, rouletteGameSessions, rouletteGamePlayers, rouletteRoundResults, studentPerformanceGoals, InsertStudentPerformanceGoal, goalProgressHistory, InsertGoalProgressHistory, goalAchievements, InsertGoalAchievement, goalFeedback, InsertGoalFeedback, journalEntries, InsertJournalEntry, reflectionPrompts, InsertReflectionPrompt, journalInsights, InsertJournalInsight, journalReflectionsSummary, InsertJournalReflectionsSummary, goalDeadlineAlerts, InsertGoalDeadlineAlert, alertPreferences, InsertAlertPreferences, alertHistory, InsertAlertHistory, successStories, InsertSuccessStory, successStoryReactions, InsertSuccessStoryReaction, successStoryComments, InsertSuccessStoryComment, collaborativeBundles, InsertCollaborativeBundle, bundleContributors, InsertBundleContributor, bundleStories, InsertBundleStory, bundleApprovals, InsertBundleApproval, bundleVersions, InsertBundleVersion, bundleNotifications, InsertBundleNotification, CollaborativeBundle, BundleContributor, BundleStory, BundleApproval, BundleVersion, BundleNotification } from "../drizzle/schema";
 
 import { nanoid } from 'nanoid';
 import { ENV } from './_core/env';
@@ -3620,4 +3621,294 @@ export async function getExportStats(teacherId: number) {
     byType,
     lastExport: records.length > 0 ? records[0].createdAt : null,
   };
+}
+
+
+// ============================================================================
+// Collaborative Bundle Functions
+// ============================================================================
+
+export async function createCollaborativeBundle(
+  data: InsertCollaborativeBundle
+): Promise<CollaborativeBundle> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(collaborativeBundles).values(data);
+  const bundleId = result[0];
+  const bundle = await db.query.collaborativeBundles.findFirst({
+    where: eq(collaborativeBundles.id, bundleId),
+  });
+  if (!bundle) throw new Error("Failed to create bundle");
+  return bundle;
+}
+
+export async function getCollaborativeBundleById(
+  bundleId: number
+): Promise<CollaborativeBundle | null> {
+  const db = await getDb();
+  if (!db) return null;
+  return db.query.collaborativeBundles.findFirst({
+    where: eq(collaborativeBundles.id, bundleId),
+  });
+}
+
+export async function getTeacherBundles(
+  teacherId: number
+): Promise<CollaborativeBundle[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return db.query.collaborativeBundles.findMany({
+    where: eq(collaborativeBundles.createdBy, teacherId),
+  });
+}
+
+export async function getContributorBundles(
+  teacherId: number
+): Promise<CollaborativeBundle[]> {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const contributors = await db.query.bundleContributors.findMany({
+    where: and(
+      eq(bundleContributors.teacherId, teacherId),
+      eq(bundleContributors.status, "accepted")
+    ),
+  });
+  const bundleIds = contributors.map((c) => c.bundleId);
+  if (bundleIds.length === 0) return [];
+  return db.query.collaborativeBundles.findMany({
+    where: inArray(collaborativeBundles.id, bundleIds),
+  });
+}
+
+export async function updateCollaborativeBundle(
+  bundleId: number,
+  data: Partial<InsertCollaborativeBundle>
+): Promise<CollaborativeBundle | null> {
+  const db = await getDb();
+  if (!db) return null;
+  
+  await db.update(collaborativeBundles).set(data).where(eq(collaborativeBundles.id, bundleId));
+  return getCollaborativeBundleById(bundleId);
+}
+
+export async function deleteCollaborativeBundle(bundleId: number): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db.delete(collaborativeBundles).where(eq(collaborativeBundles.id, bundleId));
+}
+
+// Bundle Contributor Functions
+export async function addBundleContributor(
+  data: InsertBundleContributor
+): Promise<BundleContributor> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(bundleContributors).values(data);
+  const contributorId = result[0];
+  const contributor = await db.query.bundleContributors.findFirst({
+    where: eq(bundleContributors.id, contributorId),
+  });
+  if (!contributor) throw new Error("Failed to add contributor");
+  return contributor;
+}
+
+export async function getBundleContributors(
+  bundleId: number
+): Promise<BundleContributor[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return db.query.bundleContributors.findMany({
+    where: eq(bundleContributors.bundleId, bundleId),
+  });
+}
+
+export async function getTeacherBundleRole(
+  bundleId: number,
+  teacherId: number
+): Promise<BundleContributor | null> {
+  const db = await getDb();
+  if (!db) return null;
+  return db.query.bundleContributors.findFirst({
+    where: and(
+      eq(bundleContributors.bundleId, bundleId),
+      eq(bundleContributors.teacherId, teacherId)
+    ),
+  });
+}
+
+export async function updateBundleContributor(
+  contributorId: number,
+  data: Partial<InsertBundleContributor>
+): Promise<BundleContributor | null> {
+  const db = await getDb();
+  if (!db) return null;
+  
+  await db.update(bundleContributors).set(data).where(eq(bundleContributors.id, contributorId));
+  return db.query.bundleContributors.findFirst({
+    where: eq(bundleContributors.id, contributorId),
+  });
+}
+
+// Bundle Story Functions
+export async function addStoryToBundle(
+  data: InsertBundleStory
+): Promise<BundleStory> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(bundleStories).values(data);
+  const bundleStoryId = result[0];
+  const bundleStory = await db.query.bundleStories.findFirst({
+    where: eq(bundleStories.id, bundleStoryId),
+  });
+  if (!bundleStory) throw new Error("Failed to add story to bundle");
+  return bundleStory;
+}
+
+export async function getBundleStories(
+  bundleId: number,
+  status?: string
+): Promise<BundleStory[]> {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const where = status
+    ? and(eq(bundleStories.bundleId, bundleId), eq(bundleStories.status, status as any))
+    : eq(bundleStories.bundleId, bundleId);
+  return db.query.bundleStories.findMany({ where });
+}
+
+export async function updateBundleStory(
+  bundleStoryId: number,
+  data: Partial<InsertBundleStory>
+): Promise<BundleStory | null> {
+  const db = await getDb();
+  if (!db) return null;
+  
+  await db.update(bundleStories).set(data).where(eq(bundleStories.id, bundleStoryId));
+  return db.query.bundleStories.findFirst({
+    where: eq(bundleStories.id, bundleStoryId),
+  });
+}
+
+export async function removeBundleStory(bundleStoryId: number): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db.delete(bundleStories).where(eq(bundleStories.id, bundleStoryId));
+}
+
+// Bundle Approval Functions
+export async function createBundleApproval(
+  data: InsertBundleApproval
+): Promise<BundleApproval> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(bundleApprovals).values(data);
+  const approvalId = result[0];
+  const approval = await db.query.bundleApprovals.findFirst({
+    where: eq(bundleApprovals.id, approvalId),
+  });
+  if (!approval) throw new Error("Failed to create approval");
+  return approval;
+}
+
+export async function getBundleStoryApprovals(
+  bundleStoryId: number
+): Promise<BundleApproval[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return db.query.bundleApprovals.findMany({
+    where: eq(bundleApprovals.bundleStoryId, bundleStoryId),
+  });
+}
+
+// Bundle Version Functions
+export async function createBundleVersion(
+  data: InsertBundleVersion
+): Promise<BundleVersion> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(bundleVersions).values(data);
+  const versionId = result[0];
+  const version = await db.query.bundleVersions.findFirst({
+    where: eq(bundleVersions.id, versionId),
+  });
+  if (!version) throw new Error("Failed to create version");
+  return version;
+}
+
+export async function getBundleVersions(
+  bundleId: number
+): Promise<BundleVersion[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return db.query.bundleVersions.findMany({
+    where: eq(bundleVersions.bundleId, bundleId),
+    orderBy: desc(bundleVersions.versionNumber),
+  });
+}
+
+export async function getLatestBundleVersion(
+  bundleId: number
+): Promise<BundleVersion | null> {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const versions = await getBundleVersions(bundleId);
+  return versions.length > 0 ? versions[0] : null;
+}
+
+// Bundle Notification Functions
+export async function createBundleNotification(
+  data: InsertBundleNotification
+): Promise<BundleNotification> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(bundleNotifications).values(data);
+  const notificationId = result[0];
+  const notification = await db.query.bundleNotifications.findFirst({
+    where: eq(bundleNotifications.id, notificationId),
+  });
+  if (!notification) throw new Error("Failed to create notification");
+  return notification;
+}
+
+export async function getTeacherNotifications(
+  teacherId: number,
+  unreadOnly: boolean = false
+): Promise<BundleNotification[]> {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const where = unreadOnly
+    ? and(
+        eq(bundleNotifications.recipientId, teacherId),
+        eq(bundleNotifications.isRead, false)
+      )
+    : eq(bundleNotifications.recipientId, teacherId);
+  return db.query.bundleNotifications.findMany({
+    where,
+    orderBy: desc(bundleNotifications.createdAt),
+  });
+}
+
+export async function markNotificationAsRead(
+  notificationId: number
+): Promise<BundleNotification | null> {
+  const db = await getDb();
+  if (!db) return null;
+  
+  await db
+    .update(bundleNotifications)
+    .set({ isRead: true })
+    .where(eq(bundleNotifications.id, notificationId));
+  return db.query.bundleNotifications.findFirst({
+    where: eq(bundleNotifications.id, notificationId),
+  });
 }
