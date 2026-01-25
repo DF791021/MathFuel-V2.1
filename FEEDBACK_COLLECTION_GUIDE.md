@@ -1,4 +1,4 @@
-# Wisconsin Food Explorer - Feedback Collection Guide
+# Wisconsin Nutrition Explorer - Feedback Collection Guide
 
 **Gathering User Insights During Trial Period**
 
@@ -44,7 +44,7 @@ Feedback collection is critical during the trial period. User insights help us u
 **Survey Questions:**
 
 **Section 1: Overall Experience**
-- How satisfied are you with Wisconsin Food Explorer? (1–5 scale)
+- How satisfied are you with Wisconsin Nutrition Explorer? (1–5 scale)
 - How likely are you to recommend this platform to other teachers? (0–10 scale)
 
 **Section 2: Feature Feedback**
@@ -94,7 +94,7 @@ Feedback collection is critical during the trial period. User insights help us u
 - This will help us improve the platform
 
 **Overall Experience (3 minutes)**
-- Tell me about your experience with Wisconsin Food Explorer
+- Tell me about your experience with Wisconsin Nutrition Explorer
 - What went well?
 - What was challenging?
 
@@ -139,7 +139,7 @@ Feedback collection is critical during the trial period. User insights help us u
 - Overview of discussion format
 
 **Initial Impressions (10 minutes)**
-- What was your first impression of Wisconsin Food Explorer?
+- What was your first impression of Wisconsin Nutrition Explorer?
 - Was setup and getting started easy?
 - Any surprises (good or bad)?
 
@@ -173,7 +173,7 @@ Feedback collection is critical during the trial period. User insights help us u
 
 ### Quick Satisfaction Survey (30 seconds)
 
-**Question 1:** How satisfied are you with Wisconsin Food Explorer?
+**Question 1:** How satisfied are you with Wisconsin Nutrition Explorer?
 - [ ] Very satisfied
 - [ ] Satisfied
 - [ ] Neutral
@@ -202,7 +202,7 @@ Rate each feature on usefulness and ease of use:
 
 ### Net Promoter Score (NPS) Survey
 
-**Question:** How likely are you to recommend Wisconsin Food Explorer to a colleague?
+**Question:** How likely are you to recommend Wisconsin Nutrition Explorer to a colleague?
 
 **Scale:** 0–10 (0 = Not at all likely, 10 = Extremely likely)
 
@@ -286,13 +286,13 @@ Use this matrix to prioritize feedback:
 
 ---
 
-**Subject:** Thank You for Your Feedback on Wisconsin Food Explorer
+**Subject:** Thank You for Your Feedback on Wisconsin Nutrition Explorer
 
 Dear [Name],
 
-Thank you for taking the time to share your feedback on Wisconsin Food Explorer. Your insights are invaluable in helping us improve the platform and better serve schools like yours.
+Thank you for taking the time to share your feedback on Wisconsin Nutrition Explorer. Your insights are invaluable in helping us improve the platform and better serve schools like yours.
 
-We've noted your suggestions about [specific feedback]. This is exactly the kind of input we need to ensure Wisconsin Food Explorer meets the needs of educators and students.
+We've noted your suggestions about [specific feedback]. This is exactly the kind of input we need to ensure Wisconsin Nutrition Explorer meets the needs of educators and students.
 
 Your feedback will be reviewed by our product team and considered for future improvements.
 
@@ -308,7 +308,7 @@ Best regards,
 
 ---
 
-**Subject:** Re: Your Wisconsin Food Explorer Feedback
+**Subject:** Re: Your Wisconsin Nutrition Explorer Feedback
 
 Dear [Name],
 
@@ -336,11 +336,11 @@ Best regards,
 
 ---
 
-**Subject:** Wisconsin Food Explorer Improvements Based on Your Feedback
+**Subject:** Wisconsin Nutrition Explorer Improvements Based on Your Feedback
 
 Dear [Name],
 
-We wanted to share some exciting news! Based on feedback from trial users like you, we've made several improvements to Wisconsin Food Explorer:
+We wanted to share some exciting news! Based on feedback from trial users like you, we've made several improvements to Wisconsin Nutrition Explorer:
 
 **New Features:**
 - [Feature 1]: [Brief description]

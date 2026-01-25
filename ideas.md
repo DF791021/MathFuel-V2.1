@@ -1,4 +1,4 @@
-# Wisconsin Food Explorer: Design Brainstorming
+# Wisconsin Nutrition Explorer: Design Brainstorming
 
 ## <response>
 <text>

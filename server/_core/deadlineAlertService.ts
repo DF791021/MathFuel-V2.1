@@ -78,7 +78,7 @@ export function generateDeadlineAlertEmailHtml(data: DeadlineAlertData): string 
             </p>
           </div>
           <div class="footer">
-            <p>Wisconsin Food Explorer - Learning Through Nutrition Adventures</p>
+            <p>Wisconsin Nutrition Explorer - Learning Through Nutrition Adventures</p>
           </div>
         </div>
       </body>
@@ -117,7 +117,7 @@ You're doing great! Keep pushing toward your goal. Every step counts!
 If you've already completed this goal or want to adjust your deadline, you can update it in your student portal.
 
 ---
-Wisconsin Food Explorer - Learning Through Nutrition Adventures
+Wisconsin Nutrition Explorer - Learning Through Nutrition Adventures
   `;
 }
 

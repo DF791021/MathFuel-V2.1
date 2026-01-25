@@ -57,7 +57,7 @@ export default function Home() {
               <Leaf className="h-6 w-6 text-white" />
             </div>
             <span className="text-xl font-['Chango'] text-primary hidden sm:block">
-              Wisconsin Food Explorer
+              Wisconsin Nutrition Explorer
             </span>
           </div>
           
@@ -111,7 +111,7 @@ export default function Home() {
             <Sparkles className="h-6 w-6 text-yellow-500" />
           </div>
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-['Chango'] text-[#8b5a2b] drop-shadow-sm mb-4">
-            Wisconsin Food Explorer
+            Wisconsin Nutrition Explorer
           </h1>
           <p className="text-lg md:text-xl text-[#5c4033] max-w-2xl mx-auto mb-8">
             Learn about nutrition while exploring the great state of Wisconsin! 
@@ -245,7 +245,7 @@ export default function Home() {
                   <h3 className="text-lg font-['Chango'] text-primary">About</h3>
                 </div>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Wisconsin Food Explorer is aligned with the Wisconsin Standards for Nutrition Education, 
+                  Wisconsin Nutrition Explorer is aligned with the Wisconsin Standards for Nutrition Education, 
                   covering all six conceptual strands:
                 </p>
                 <div className="flex flex-wrap gap-1 mb-4">

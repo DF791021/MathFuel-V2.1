@@ -1,4 +1,4 @@
-# Wisconsin Food Explorer - TODO
+# Wisconsin Nutrition Explorer - TODO
 
 ## Core Game Features
 - [x] Game board with Wisconsin map background
@@ -542,3 +542,12 @@
 - [x] Add teacher notes and commentary fields to PDF
 - [x] Write tests for PDF generation functionality
 - [x] Integrate PDF export into Teacher Portal Success Stories tab
+
+
+## Branding & Relaunch - COMPLETED
+- [x] Rebrand from "Wisconsin Food Explorer" to "Wisconsin Nutrition Explorer"
+- [x] Update all documentation files with new name
+- [x] Update app configuration and environment variables
+- [x] Update UI branding and titles
+- [x] Update email templates with new name
+- [x] Restart dev server and verify branding changes

@@ -98,7 +98,7 @@ export default function VerifyCertificate() {
                 {certificate?.schoolName && (
                   <span className="text-sm opacity-90">{certificate.schoolName}</span>
                 )}
-                <span className="font-display text-xl font-bold">Wisconsin Food Explorer</span>
+                <span className="font-display text-xl font-bold">Wisconsin Nutrition Explorer</span>
               </div>
             </a>
           </Link>
@@ -157,7 +157,7 @@ export default function VerifyCertificate() {
                     <ShieldCheck className="w-20 h-20 mb-3" />
                   </motion.div>
                   <h2 className="text-2xl font-bold">Certificate Verified</h2>
-                  <p className="text-sm opacity-90 mt-1">This is an authentic Wisconsin Food Explorer certificate</p>
+                  <p className="text-sm opacity-90 mt-1">This is an authentic Wisconsin Nutrition Explorer certificate</p>
                 </div>
               ) : verificationStatus === "revoked" ? (
                 <div className="flex flex-col items-center text-white">
@@ -291,7 +291,7 @@ export default function VerifyCertificate() {
             style={{ borderColor: `${primaryColor}40` }}
           >
             <p className="text-sm" style={{ color: primaryColor }}>
-              <strong>Wisconsin Food Explorer</strong> certificates include QR codes and digital signatures 
+              <strong>Wisconsin Nutrition Explorer</strong> certificates include QR codes and digital signatures 
               to prevent forgery and ensure authenticity.
             </p>
           </div>

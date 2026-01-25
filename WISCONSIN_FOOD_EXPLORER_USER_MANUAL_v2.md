@@ -1,4 +1,4 @@
-# Wisconsin Food Explorer - Comprehensive User Manual
+# Wisconsin Nutrition Explorer - Comprehensive User Manual
 
 **Version:** 2.0 (Free Distribution Edition)  
 **Last Updated:** January 2026  
@@ -22,11 +22,11 @@
 
 ## Introduction
 
-**Wisconsin Food Explorer** is a comprehensive educational platform designed to teach students about nutrition, Wisconsin agriculture, and healthy eating habits through engaging gameplay, interactive challenges, and practical classroom tools. The platform serves schools, districts, and individual educators who want to make nutrition education engaging, measurable, and fun.
+**Wisconsin Nutrition Explorer** is a comprehensive educational platform designed to teach students about nutrition, Wisconsin agriculture, and healthy eating habits through engaging gameplay, interactive challenges, and practical classroom tools. The platform serves schools, districts, and individual educators who want to make nutrition education engaging, measurable, and fun.
 
-### What Makes Wisconsin Food Explorer Different
+### What Makes Wisconsin Nutrition Explorer Different
 
-Unlike traditional nutrition curricula, Wisconsin Food Explorer combines game-based learning with professional classroom management tools. Students engage with nutrition concepts through an interactive board game featuring Wisconsin's agricultural heritage, while teachers gain access to real-time analytics, certificate generation, and student recognition features. The platform is designed specifically for K–12 educators and has been tested with real classrooms.
+Unlike traditional nutrition curricula, Wisconsin Nutrition Explorer combines game-based learning with professional classroom management tools. Students engage with nutrition concepts through an interactive board game featuring Wisconsin's agricultural heritage, while teachers gain access to real-time analytics, certificate generation, and student recognition features. The platform is designed specifically for K–12 educators and has been tested with real classrooms.
 
 ### Key Features Overview
 
@@ -42,11 +42,11 @@ This manual is designed for three primary audiences: **Teachers** who facilitate
 
 ### Requesting a Free Trial
 
-Wisconsin Food Explorer is available free to schools and education departments for testing and evaluation. There is no charge during the trial period.
+Wisconsin Nutrition Explorer is available free to schools and education departments for testing and evaluation. There is no charge during the trial period.
 
 **To request a trial:**
 
-1. Visit the Wisconsin Food Explorer website
+1. Visit the Wisconsin Nutrition Explorer website
 2. Click **Request a Trial** (or contact your district administrator)
 3. Provide your school name, district, and primary contact information
 4. Specify the number of teachers and students who will participate
@@ -57,7 +57,7 @@ Wisconsin Food Explorer is available free to schools and education departments f
 Once your trial account is created, you will receive login credentials via email. Your first login should be completed by a school administrator or designated IT contact.
 
 **Step 1: Log In**
-- Navigate to the Wisconsin Food Explorer website
+- Navigate to the Wisconsin Nutrition Explorer website
 - Click **Log In** and enter your credentials
 - You will be directed to the dashboard
 
@@ -430,7 +430,7 @@ When writing a success story, include:
 
 **Student Name:** Maria  
 **Goal:** Reduce sugary drinks and increase water consumption  
-**Testimonial:** "I used to drink soda every day, but after learning about the health effects in Wisconsin Food Explorer, I decided to switch to water. Now I drink water most of the time and feel much better. My energy levels are higher, and I sleep better at night."  
+**Testimonial:** "I used to drink soda every day, but after learning about the health effects in Wisconsin Nutrition Explorer, I decided to switch to water. Now I drink water most of the time and feel much better. My energy levels are higher, and I sleep better at night."  
 **Tips:**
 1. Keep a water bottle with you throughout the day
 2. Flavor your water with lemon or berries if plain water seems boring
@@ -451,13 +451,13 @@ The AI Assistant uses advanced language models to understand your requests and p
 **Lesson Planning:** "Create a 45-minute lesson plan about Wisconsin dairy farming for 4th graders"  
 **Activity Ideas:** "Suggest 5 interactive activities to teach students about balanced nutrition"  
 **Question Generation:** "Generate 10 multiple-choice questions about healthy snacking for elementary students"  
-**Curriculum Alignment:** "How does Wisconsin Food Explorer align with state nutrition education standards?"  
+**Curriculum Alignment:** "How does Wisconsin Nutrition Explorer align with state nutrition education standards?"  
 **Troubleshooting:** "What should I do if students are not engaged with the game?"
 
 ### Tips for Getting Better Responses
 
 - **Be Specific:** Instead of "Help me with nutrition," try "Create a 30-minute activity about reading nutrition labels for 5th graders"
-- **Provide Context:** "I have 25 students, mixed ability levels, and limited time. What's the best way to use Wisconsin Food Explorer?"
+- **Provide Context:** "I have 25 students, mixed ability levels, and limited time. What's the best way to use Wisconsin Nutrition Explorer?"
 - **Ask Follow-Up Questions:** If the first response isn't quite right, ask clarifying questions or request a different approach
 - **Save Useful Responses:** Use the **Save** button to bookmark responses you want to reference later
 
@@ -469,7 +469,7 @@ The AI Assistant uses advanced language models to understand your requests and p
 
 **Q: Students cannot log in or join a class**
 
-A: Verify that the join code is correct and has been entered exactly as displayed. Check that your network allows access to the Wisconsin Food Explorer website. If the issue persists, contact your IT administrator to confirm that the platform is accessible from your school's network.
+A: Verify that the join code is correct and has been entered exactly as displayed. Check that your network allows access to the Wisconsin Nutrition Explorer website. If the issue persists, contact your IT administrator to confirm that the platform is accessible from your school's network.
 
 **Q: The game board is not displaying correctly**
 
@@ -493,9 +493,9 @@ A: Ensure your internet connection is stable. Try refreshing the page. If the is
 
 ### Frequently Asked Questions
 
-**Q: Is there a cost to use Wisconsin Food Explorer?**
+**Q: Is there a cost to use Wisconsin Nutrition Explorer?**
 
-A: No. Wisconsin Food Explorer is available free to schools and education departments for testing and evaluation. There is no charge during the trial period.
+A: No. Wisconsin Nutrition Explorer is available free to schools and education departments for testing and evaluation. There is no charge during the trial period.
 
 **Q: How many students can join a class?**
 
@@ -529,13 +529,13 @@ A: Deleted items cannot be recovered. Before deleting a template or conversation
 
 A: If you encounter a technical problem, click the **Help** button (usually located in the bottom right corner of the screen) or contact your system administrator. Provide as much detail as possible about what you were doing when the issue occurred.
 
-**Q: Can I use Wisconsin Food Explorer on mobile devices?**
+**Q: Can I use Wisconsin Nutrition Explorer on mobile devices?**
 
-A: Yes. Wisconsin Food Explorer is fully responsive and works on tablets and smartphones. The game board and all features are optimized for touch screens.
+A: Yes. Wisconsin Nutrition Explorer is fully responsive and works on tablets and smartphones. The game board and all features are optimized for touch screens.
 
 **Q: What is the minimum internet speed required?**
 
-A: Wisconsin Food Explorer works on standard school internet connections (5 Mbps or higher recommended). If your school has slower internet, the platform may experience occasional delays, but it should still function.
+A: Wisconsin Nutrition Explorer works on standard school internet connections (5 Mbps or higher recommended). If your school has slower internet, the platform may experience occasional delays, but it should still function.
 
 ---
 
@@ -543,7 +543,7 @@ A: Wisconsin Food Explorer works on standard school internet connections (5 Mbps
 
 ### Planning Your Implementation
 
-Before rolling out Wisconsin Food Explorer to your school, take time to plan your implementation strategy.
+Before rolling out Wisconsin Nutrition Explorer to your school, take time to plan your implementation strategy.
 
 #### Step 1: Assess Your Needs
 
@@ -610,7 +610,7 @@ To evaluate the effectiveness of your implementation, track these metrics:
 
 ### Providing Feedback
 
-We want to hear about your experience with Wisconsin Food Explorer. Your feedback helps us improve the platform and better serve schools like yours.
+We want to hear about your experience with Wisconsin Nutrition Explorer. Your feedback helps us improve the platform and better serve schools like yours.
 
 **To provide feedback:**
 
@@ -651,11 +651,11 @@ See VIDEO_TUTORIALS_GUIDE.md for a complete list of video tutorials, including:
 
 ## Conclusion
 
-Wisconsin Food Explorer is designed to make nutrition education engaging, measurable, and fun. By combining game-based learning with professional classroom management tools, the platform helps teachers create an environment where students develop healthy eating habits and nutrition awareness that lasts a lifetime.
+Wisconsin Nutrition Explorer is designed to make nutrition education engaging, measurable, and fun. By combining game-based learning with professional classroom management tools, the platform helps teachers create an environment where students develop healthy eating habits and nutrition awareness that lasts a lifetime.
 
 We are committed to supporting your success. If you have questions, encounter issues, or want to share your success stories, please reach out. Your feedback helps us continuously improve the platform and better serve educators and students.
 
-Thank you for choosing Wisconsin Food Explorer. We look forward to seeing the positive impact it has on your students and school.
+Thank you for choosing Wisconsin Nutrition Explorer. We look forward to seeing the positive impact it has on your students and school.
 
 ---
 
@@ -677,7 +677,7 @@ Thank you for choosing Wisconsin Food Explorer. We look forward to seeing the po
 
 ### Browser Compatibility
 
-Wisconsin Food Explorer works best on:
+Wisconsin Nutrition Explorer works best on:
 
 - Google Chrome (version 90 or later)
 - Mozilla Firefox (version 88 or later)

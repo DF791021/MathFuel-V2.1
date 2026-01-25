@@ -106,7 +106,7 @@ export async function sendEmailWithZipAttachment(
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <div style="background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
-        <h1 style="margin: 0; font-size: 28px;">🎓 Wisconsin Food Explorer</h1>
+        <h1 style="margin: 0; font-size: 28px;">🎓 Wisconsin Nutrition Explorer</h1>
         <p style="margin: 10px 0 0 0; font-size: 16px;">Certificate Batch Download</p>
       </div>
       
@@ -148,14 +148,14 @@ export async function sendEmailWithZipAttachment(
         
         <p style="font-size: 14px; color: #888; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd;">
           Best regards,<br>
-          <strong>Wisconsin Food Explorer Team</strong>
+          <strong>Wisconsin Nutrition Explorer Team</strong>
         </p>
       </div>
     </div>
   `;
 
   // Use custom subject if provided, otherwise use default
-  const emailSubject = customSubject ? substituteVariables(customSubject) : `🎓 Your ${studentNames.length} Wisconsin Food Explorer Certificates - ${schoolName}`;
+  const emailSubject = customSubject ? substituteVariables(customSubject) : `🎓 Your ${studentNames.length} Wisconsin Nutrition Explorer Certificates - ${schoolName}`;
 
   return sendEmail({
     to: recipientEmail,

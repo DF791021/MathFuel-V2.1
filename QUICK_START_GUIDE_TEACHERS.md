@@ -1,4 +1,4 @@
-# Wisconsin Food Explorer - Quick Start Guide for Teachers
+# Wisconsin Nutrition Explorer - Quick Start Guide for Teachers
 
 **Get Your Class Playing in 5 Minutes**
 
@@ -6,7 +6,7 @@
 
 ## 1. Log In and Create Your Class
 
-1. Go to Wisconsin Food Explorer website
+1. Go to Wisconsin Nutrition Explorer website
 2. Click **Log In** and enter your credentials
 3. Click **Teachers** in the top navigation
 4. Click **Classes** tab → **Create New Class**

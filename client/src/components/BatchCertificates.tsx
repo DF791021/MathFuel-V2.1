@@ -50,7 +50,7 @@ export default function BatchCertificates() {
   const [isEmailZipDialogOpen, setIsEmailZipDialogOpen] = useState(false);
   const [isSendingZipEmail, setIsSendingZipEmail] = useState(false);
   const [emailZipSubject, setEmailZipSubject] = useState("Your Certificate ZIP File - {school_name}");
-  const [emailZipBody, setEmailZipBody] = useState("Dear {teacher_name},\n\nPlease find attached the ZIP file containing {student_count} certificates for your class.\n\nBest regards,\nWisconsin Food Explorer");
+  const [emailZipBody, setEmailZipBody] = useState("Dear {teacher_name},\n\nPlease find attached the ZIP file containing {student_count} certificates for your class.\n\nBest regards,\nWisconsin Nutrition Explorer");
   const [showEmailPreview, setShowEmailPreview] = useState(false);
   const [showTemplateManager, setShowTemplateManager] = useState(false);
   const [selectedTemplateId, setSelectedTemplateId] = useState<number | null>(null);
@@ -257,7 +257,7 @@ export default function BatchCertificates() {
   const getDefaultMessage = () => {
     switch (achievementType) {
       case "completion":
-        return "has successfully completed the Wisconsin Food Explorer nutrition adventure and demonstrated excellent knowledge of healthy eating habits.";
+        return "has successfully completed the Wisconsin Nutrition Explorer nutrition adventure and demonstrated excellent knowledge of healthy eating habits.";
       case "nutrition_expert":
         return "has shown exceptional understanding of nutrition concepts including the five food groups, vitamins, and the importance of balanced meals.";
       case "wisconsin_explorer":
@@ -267,7 +267,7 @@ export default function BatchCertificates() {
       case "food_safety_star":
         return "has mastered important food safety practices including proper hand washing, safe food storage, and kitchen hygiene.";
       default:
-        return "has completed the Wisconsin Food Explorer program.";
+        return "has completed the Wisconsin Nutrition Explorer program.";
     }
   };
 
@@ -297,7 +297,7 @@ export default function BatchCertificates() {
           ${schoolLogo ? `<img src="${schoolLogo}" alt="School Logo" class="school-logo" />` : ""}
           <div class="logo">${selectedAchievement?.icon || "🏆"}</div>
           <h1 class="title">${getAchievementTitle()}</h1>
-          <p class="subtitle">Wisconsin Food Explorer</p>
+          <p class="subtitle">Wisconsin Nutrition Explorer</p>
         </div>
         
         <div class="content">
@@ -549,7 +549,7 @@ export default function BatchCertificates() {
               ${schoolLogo ? `<img src="${schoolLogo}" alt="School Logo" style="position: absolute; top: 0; left: 40px; width: 80px; height: 80px; object-fit: contain;" />` : ""}
               <div style="font-size: 48px; margin-bottom: 10px;">${selectedAchievement?.icon || "🏆"}</div>
               <h1 style="font-family: 'Playfair Display', serif; font-size: 36px; color: #5D4E37; font-weight: 700; text-transform: uppercase; letter-spacing: 4px; margin: 0 0 5px 0;">${getAchievementTitle()}</h1>
-              <p style="font-size: 18px; color: #2E7D32; font-weight: 600; margin: 0;">Wisconsin Food Explorer</p>
+              <p style="font-size: 18px; color: #2E7D32; font-weight: 600; margin: 0;">Wisconsin Nutrition Explorer</p>
             </div>
             
             <div style="text-align: center; padding: 30px 60px;">
@@ -662,7 +662,7 @@ export default function BatchCertificates() {
               ${schoolLogo ? `<img src="${schoolLogo}" alt="School Logo" style="position: absolute; top: 0; left: 40px; width: 80px; height: 80px; object-fit: contain;" />` : ""}
               <div style="font-size: 48px; margin-bottom: 10px;">${selectedAchievement?.icon || "🏆"}</div>
               <h1 style="font-family: 'Playfair Display', serif; font-size: 36px; color: #5D4E37; font-weight: 700; text-transform: uppercase; letter-spacing: 4px; margin: 0 0 5px 0;">${getAchievementTitle()}</h1>
-              <p style="font-size: 18px; color: #2E7D32; font-weight: 600; margin: 0;">Wisconsin Food Explorer</p>
+              <p style="font-size: 18px; color: #2E7D32; font-weight: 600; margin: 0;">Wisconsin Nutrition Explorer</p>
             </div>
             
             <div style="text-align: center; padding: 30px 60px;">
@@ -1025,7 +1025,7 @@ export default function BatchCertificates() {
                   <h1 className="font-display text-2xl md:text-3xl text-amber-900 font-bold uppercase tracking-wider">
                     {getAchievementTitle()}
                   </h1>
-                  <p className="text-amber-700 font-semibold text-sm">Wisconsin Food Explorer</p>
+                  <p className="text-amber-700 font-semibold text-sm">Wisconsin Nutrition Explorer</p>
                 </div>
 
                 <div className="text-center flex-1 flex flex-col justify-center py-4">

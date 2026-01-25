@@ -189,7 +189,7 @@ export const appRouter = router({
 
 We are thrilled to share some wonderful news!
 
-${input.studentName} has successfully completed the Wisconsin Food Explorer nutrition adventure and earned a ${achievementTitle}!
+${input.studentName} has successfully completed the Wisconsin Nutrition Explorer nutrition adventure and earned a ${achievementTitle}!
 
 This achievement demonstrates excellent knowledge of healthy eating habits and Wisconsin's rich agricultural heritage.
 
@@ -199,7 +199,7 @@ Best regards,
 ${input.teacherName}
 ${input.schoolName}`;
         
-        const title = `🎓 Certificate for ${input.studentName} - Wisconsin Food Explorer`;
+        const title = `🎓 Certificate for ${input.studentName} - Wisconsin Nutrition Explorer`;
         const content = `
 A certificate has been generated for ${input.studentName}!
 

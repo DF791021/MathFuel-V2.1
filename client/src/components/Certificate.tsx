@@ -116,7 +116,7 @@ export default function Certificate({ onClose, defaultStudentName = "", defaultS
 
 We are thrilled to share some wonderful news!
 
-${studentName || "{student_name}"} has successfully completed the Wisconsin Food Explorer nutrition adventure and earned a ${getAchievementTitle()}!
+${studentName || "{student_name}"} has successfully completed the Wisconsin Nutrition Explorer nutrition adventure and earned a ${getAchievementTitle()}!
 
 This achievement demonstrates excellent knowledge of healthy eating habits and Wisconsin's rich agricultural heritage.
 
@@ -261,7 +261,7 @@ ${schoolName || "{school_name}"}`;
   const getDefaultMessage = () => {
     switch (achievementType) {
       case "completion":
-        return "has successfully completed the Wisconsin Food Explorer nutrition adventure and demonstrated excellent knowledge of healthy eating habits.";
+        return "has successfully completed the Wisconsin Nutrition Explorer nutrition adventure and demonstrated excellent knowledge of healthy eating habits.";
       case "nutrition_expert":
         return "has shown exceptional understanding of nutrition concepts including the five food groups, vitamins, and the importance of balanced meals.";
       case "wisconsin_explorer":
@@ -271,7 +271,7 @@ ${schoolName || "{school_name}"}`;
       case "food_safety_star":
         return "has mastered important food safety practices including proper hand washing, safe food storage, and kitchen hygiene.";
       default:
-        return "has completed the Wisconsin Food Explorer program.";
+        return "has completed the Wisconsin Nutrition Explorer program.";
     }
   };
 
@@ -572,7 +572,7 @@ ${schoolName || "{school_name}"}`;
               ${schoolLogo ? `<img src="${schoolLogo}" alt="School Logo" class="school-logo" />` : ""}
               <div class="logo">${selectedAchievement?.icon || "🏆"}</div>
               <h1 class="title">${getAchievementTitle()}</h1>
-              <p class="subtitle">Wisconsin Food Explorer</p>
+              <p class="subtitle">Wisconsin Nutrition Explorer</p>
             </div>
             
             <div class="content">
@@ -655,7 +655,7 @@ ${schoolName || "{school_name}"}`;
             <h1 className="font-display text-2xl md:text-3xl text-amber-900 font-bold uppercase tracking-wider">
               {getAchievementTitle()}
             </h1>
-            <p className="text-amber-700 font-semibold text-sm">Wisconsin Food Explorer</p>
+            <p className="text-amber-700 font-semibold text-sm">Wisconsin Nutrition Explorer</p>
           </div>
 
           {/* Main Content */}
@@ -1078,7 +1078,7 @@ ${schoolName || "{school_name}"}`;
                   <div className="bg-gray-50 px-4 py-3 border-b space-y-2 text-sm">
                     <div className="flex">
                       <span className="text-gray-500 w-16">From:</span>
-                      <span className="text-gray-800">Wisconsin Food Explorer &lt;noreply@wisconsinfoodexplorer.edu&gt;</span>
+                      <span className="text-gray-800">Wisconsin Nutrition Explorer &lt;noreply@wisconsinfoodexplorer.edu&gt;</span>
                     </div>
                     <div className="flex">
                       <span className="text-gray-500 w-16">To:</span>
@@ -1137,8 +1137,8 @@ ${schoolName || "{school_name}"}`;
                     
                     {/* Email Footer */}
                     <div className="border-t pt-3 mt-4 text-xs text-gray-400">
-                      <p>This email was sent from Wisconsin Food Explorer - A Nutrition Adventure for Elementary Students</p>
-                      <p className="mt-1">© {new Date().getFullYear()} Wisconsin Food Explorer. All rights reserved.</p>
+                      <p>This email was sent from Wisconsin Nutrition Explorer - A Nutrition Adventure for Elementary Students</p>
+                      <p className="mt-1">© {new Date().getFullYear()} Wisconsin Nutrition Explorer. All rights reserved.</p>
                     </div>
                   </div>
                 </div>

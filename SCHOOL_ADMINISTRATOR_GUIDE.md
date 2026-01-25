@@ -1,4 +1,4 @@
-# Wisconsin Food Explorer - School Administrator Implementation Guide
+# Wisconsin Nutrition Explorer - School Administrator Implementation Guide
 
 **For IT Directors, Principals, and District Coordinators**
 
@@ -6,7 +6,7 @@
 
 ## Executive Summary
 
-Wisconsin Food Explorer is a free, web-based platform that brings nutrition education to life through interactive gameplay, real-time analytics, and professional classroom management tools. This guide provides everything school administrators need to implement the platform across their school or district.
+Wisconsin Nutrition Explorer is a free, web-based platform that brings nutrition education to life through interactive gameplay, real-time analytics, and professional classroom management tools. This guide provides everything school administrators need to implement the platform across their school or district.
 
 **Key Facts:**
 - ✅ Completely free during trial period (no charge)
@@ -56,12 +56,12 @@ Wisconsin Food Explorer is a free, web-based platform that brings nutrition educ
 | Internet Speed | 5 Mbps minimum (25 Mbps recommended) |
 | Bandwidth | Sufficient for simultaneous access by all users |
 | Network Type | Works on both wired and wireless |
-| Firewall | Must allow access to Wisconsin Food Explorer domain |
+| Firewall | Must allow access to Wisconsin Nutrition Explorer domain |
 | VPN | Works through most school VPNs |
 
 ### Device Requirements
 
-Wisconsin Food Explorer works on:
+Wisconsin Nutrition Explorer works on:
 
 - **Computers:** Windows, Mac, Linux (any modern operating system)
 - **Tablets:** iPad, Android tablets (any recent model)
@@ -77,7 +77,7 @@ Wisconsin Food Explorer works on:
 
 ### IT Checklist
 
-- [ ] Verify network can access Wisconsin Food Explorer domain
+- [ ] Verify network can access Wisconsin Nutrition Explorer domain
 - [ ] Test platform on school's network and devices
 - [ ] Confirm adequate bandwidth for simultaneous users
 - [ ] Set up user accounts for all administrators
@@ -91,7 +91,7 @@ Wisconsin Food Explorer works on:
 
 ### Requesting a Trial Account
 
-1. Visit Wisconsin Food Explorer website
+1. Visit Wisconsin Nutrition Explorer website
 2. Click **Request a Trial** or contact your district representative
 3. Provide school name, district, and primary contact information
 4. Specify number of teachers and students
@@ -221,7 +221,7 @@ Wisconsin Food Explorer works on:
 
 **Solution:**
 1. Verify network connection is working
-2. Check that Wisconsin Food Explorer domain is not blocked by firewall
+2. Check that Wisconsin Nutrition Explorer domain is not blocked by firewall
 3. Try accessing from a different network (e.g., mobile hotspot) to isolate the issue
 4. Contact IT support if issue persists
 
@@ -341,7 +341,7 @@ For complete privacy and security information, see the Privacy Policy at [link t
 
 ## Next Steps
 
-1. **Request Trial Account** — Contact Wisconsin Food Explorer to set up your school's trial
+1. **Request Trial Account** — Contact Wisconsin Nutrition Explorer to set up your school's trial
 2. **Assemble Implementation Team** — Identify administrator, IT contact, and champion teachers
 3. **Review Technical Requirements** — Verify your network and devices meet specifications
 4. **Schedule Training** — Plan training sessions for your teachers

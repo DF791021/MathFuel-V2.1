@@ -1,6 +1,6 @@
-# Wisconsin Food Explorer Video Tutorials Guide
+# Wisconsin Nutrition Explorer Video Tutorials Guide
 
-This guide provides an overview of all available video tutorials for Wisconsin Food Explorer. Each tutorial is designed to be short, focused, and easy to follow, perfect for quick reference or staff training.
+This guide provides an overview of all available video tutorials for Wisconsin Nutrition Explorer. Each tutorial is designed to be short, focused, and easy to follow, perfect for quick reference or staff training.
 
 ---
 
@@ -179,7 +179,7 @@ These tutorials are ideal for staff meetings or professional development session
 
 ## Additional Resources
 
-For more detailed information about certificate and email features, refer to the **Wisconsin Food Explorer User Manual** (WISCONSIN_FOOD_EXPLORER_USER_MANUAL.md). The manual provides step-by-step written guides, real-world scenarios, and troubleshooting tips for all features.
+For more detailed information about certificate and email features, refer to the **Wisconsin Nutrition Explorer User Manual** (WISCONSIN_FOOD_EXPLORER_USER_MANUAL.md). The manual provides step-by-step written guides, real-world scenarios, and troubleshooting tips for all features.
 
 For questions or technical support, contact your system administrator.
 

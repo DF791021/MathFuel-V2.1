@@ -1,4 +1,4 @@
-# Wisconsin Food Explorer: Comprehensive User Manual
+# Wisconsin Nutrition Explorer: Comprehensive User Manual
 
 **Version:** 1.0  
 **Last Updated:** January 2026  
@@ -19,7 +19,7 @@
 
 ## Introduction
 
-Wisconsin Food Explorer is an interactive educational platform designed to teach students about nutrition, Wisconsin agriculture, and healthy eating habits through engaging gameplay and practical classroom tools. This manual provides step-by-step guidance for teachers, nutrition staff, and administrators to effectively use all platform features.
+Wisconsin Nutrition Explorer is an interactive educational platform designed to teach students about nutrition, Wisconsin agriculture, and healthy eating habits through engaging gameplay and practical classroom tools. This manual provides step-by-step guidance for teachers, nutrition staff, and administrators to effectively use all platform features.
 
 The platform serves three primary user groups, each with distinct responsibilities and tools:
 
@@ -29,9 +29,9 @@ The platform serves three primary user groups, each with distinct responsibiliti
 
 ## Getting Started
 
-### Accessing Wisconsin Food Explorer
+### Accessing Wisconsin Nutrition Explorer
 
-Open your web browser and navigate to the Wisconsin Food Explorer website. You will see the home page displaying the game board with Wisconsin's map background. Three main navigation options appear in the top right corner: **Leaderboard**, **Teachers**, and your account name.
+Open your web browser and navigate to the Wisconsin Nutrition Explorer website. You will see the home page displaying the game board with Wisconsin's map background. Three main navigation options appear in the top right corner: **Leaderboard**, **Teachers**, and your account name.
 
 ### Creating Your Account
 
@@ -105,7 +105,7 @@ The **Certificates** tab provides tools for recognizing student achievements. To
 - **Date:** The current date is pre-filled; change it if needed
 - **Message:** Add a personalized message (optional)
 
-After completing the form, click **Preview** to see how the certificate will look. The preview displays the Wisconsin Food Explorer logo, the student's name, the achievement, and your school logo if you have uploaded one. Click **Print** to print the certificate or **Download as PDF** to save it to your computer.
+After completing the form, click **Preview** to see how the certificate will look. The preview displays the Wisconsin Nutrition Explorer logo, the student's name, the achievement, and your school logo if you have uploaded one. Click **Print** to print the certificate or **Download as PDF** to save it to your computer.
 
 #### Generating Bulk Certificates for Your Class
 
@@ -178,7 +178,7 @@ To delete all messages in the current conversation and start fresh, click the **
 
 ### Overview of Nutrition Staff Features
 
-Nutrition staff use Wisconsin Food Explorer to manage bulk certificate distribution, customize email communications with teachers and students, maintain reusable email templates, and track certificate distribution history. These tools streamline the process of recognizing student achievements across multiple classrooms and schools.
+Nutrition staff use Wisconsin Nutrition Explorer to manage bulk certificate distribution, customize email communications with teachers and students, maintain reusable email templates, and track certificate distribution history. These tools streamline the process of recognizing student achievements across multiple classrooms and schools.
 
 ### Accessing Bulk Certificate Management
 
@@ -252,7 +252,7 @@ The system maintains a record of all emails you send. This history helps you tra
 
 ### Overview of Administrator Features
 
-Administrators have access to comprehensive management tools for the entire Wisconsin Food Explorer platform. These tools include user management, question bank administration, class oversight, analytics and reporting, and system configuration.
+Administrators have access to comprehensive management tools for the entire Wisconsin Nutrition Explorer platform. These tools include user management, question bank administration, class oversight, analytics and reporting, and system configuration.
 
 ### Accessing the Administrator Dashboard
 
@@ -388,9 +388,9 @@ If the AI Assistant is still not responding after checking your connection, try 
 
 ### Frequently Asked Questions
 
-**Q: Can I use Wisconsin Food Explorer on mobile devices?**
+**Q: Can I use Wisconsin Nutrition Explorer on mobile devices?**
 
-A: Yes. Wisconsin Food Explorer is designed to work on smartphones, tablets, and computers. The interface automatically adjusts to fit your device's screen size. For the best experience, use a device with a screen at least 5 inches wide.
+A: Yes. Wisconsin Nutrition Explorer is designed to work on smartphones, tablets, and computers. The interface automatically adjusts to fit your device's screen size. For the best experience, use a device with a screen at least 5 inches wide.
 
 **Q: How many students can be in a class?**
 
@@ -432,9 +432,9 @@ A: If you encounter a technical problem, click the **Help** button (usually loca
 
 ## Additional Resources
 
-For additional support, contact your school's system administrator or the Wisconsin Food Explorer support team. Regular updates and new features are released throughout the school year. Check the platform's announcements section for information about new capabilities and improvements.
+For additional support, contact your school's system administrator or the Wisconsin Nutrition Explorer support team. Regular updates and new features are released throughout the school year. Check the platform's announcements section for information about new capabilities and improvements.
 
-This manual is a living document and will be updated as new features are added to Wisconsin Food Explorer. Thank you for using Wisconsin Food Explorer to enhance nutrition education in your classroom or school.
+This manual is a living document and will be updated as new features are added to Wisconsin Nutrition Explorer. Thank you for using Wisconsin Nutrition Explorer to enhance nutrition education in your classroom or school.
 
 ---
 

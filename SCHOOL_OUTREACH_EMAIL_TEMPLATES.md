@@ -1,4 +1,4 @@
-# Wisconsin Food Explorer - School Outreach Email Templates
+# Wisconsin Nutrition Explorer - School Outreach Email Templates
 
 **Ready-to-Send Emails for District and School Outreach**
 
@@ -12,11 +12,11 @@
 
 Dear [Principal Name],
 
-I hope this message finds you well. I'm reaching out to introduce **Wisconsin Food Explorer**, a free, innovative platform designed to bring nutrition education to life in your school.
+I hope this message finds you well. I'm reaching out to introduce **Wisconsin Nutrition Explorer**, a free, innovative platform designed to bring nutrition education to life in your school.
 
-Wisconsin Food Explorer combines engaging gameplay with professional classroom management tools. Students learn about nutrition and Wisconsin agriculture through an interactive board game, while teachers gain access to real-time analytics, certificate generation, and student recognition features.
+Wisconsin Nutrition Explorer combines engaging gameplay with professional classroom management tools. Students learn about nutrition and Wisconsin agriculture through an interactive board game, while teachers gain access to real-time analytics, certificate generation, and student recognition features.
 
-**Why Wisconsin Food Explorer?**
+**Why Wisconsin Nutrition Explorer?**
 
 - ✅ **Completely Free** — No cost during trial period
 - ✅ **Engaging** — Students love the game-based learning approach
@@ -36,7 +36,7 @@ We're seeking schools to participate in our free trial program. In exchange for 
 
 **Next Steps**
 
-If you're interested in bringing Wisconsin Food Explorer to your school, I'd love to schedule a brief call to discuss how it could support your nutrition education goals. We can have your school up and running within 24 hours.
+If you're interested in bringing Wisconsin Nutrition Explorer to your school, I'd love to schedule a brief call to discuss how it could support your nutrition education goals. We can have your school up and running within 24 hours.
 
 Would you be available for a 15-minute call this week?
 
@@ -56,9 +56,9 @@ Best regards,
 
 Dear [Coordinator Name],
 
-I hope you're having a great school year. I'm reaching out because I think you'll find **Wisconsin Food Explorer** valuable for your district's nutrition education initiatives.
+I hope you're having a great school year. I'm reaching out because I think you'll find **Wisconsin Nutrition Explorer** valuable for your district's nutrition education initiatives.
 
-Wisconsin Food Explorer is a web-based platform that makes nutrition education engaging and measurable. It combines game-based learning with professional tools that teachers love and students enjoy.
+Wisconsin Nutrition Explorer is a web-based platform that makes nutrition education engaging and measurable. It combines game-based learning with professional tools that teachers love and students enjoy.
 
 **Key Features:**
 
@@ -91,7 +91,7 @@ Early adopter schools have reported:
 
 **Next Steps**
 
-I'd love to schedule a brief call to discuss your district's nutrition education goals and how Wisconsin Food Explorer could support them. We can have your district up and running within 24 hours.
+I'd love to schedule a brief call to discuss your district's nutrition education goals and how Wisconsin Nutrition Explorer could support them. We can have your district up and running within 24 hours.
 
 Are you available for a 20-minute call next week?
 
@@ -105,13 +105,13 @@ Best regards,
 
 ## Template 3: Follow-Up Email (After Initial Contact)
 
-**Subject:** Wisconsin Food Explorer Trial — Let's Get Started
+**Subject:** Wisconsin Nutrition Explorer Trial — Let's Get Started
 
 ---
 
 Dear [Name],
 
-Thank you for your interest in Wisconsin Food Explorer. I'm excited about the possibility of bringing this platform to your school.
+Thank you for your interest in Wisconsin Nutrition Explorer. I'm excited about the possibility of bringing this platform to your school.
 
 To get your trial account set up, I just need a few quick details:
 
@@ -145,7 +145,7 @@ We provide comprehensive training materials including:
 
 Feel free to reply to this email or schedule a call at [Calendar Link].
 
-Looking forward to bringing Wisconsin Food Explorer to your school!
+Looking forward to bringing Wisconsin Nutrition Explorer to your school!
 
 Best regards,
 
@@ -157,13 +157,13 @@ Best regards,
 
 ## Template 4: Success Story Sharing (After Trial)
 
-**Subject:** Success Story: How [School Name] is Using Wisconsin Food Explorer
+**Subject:** Success Story: How [School Name] is Using Wisconsin Nutrition Explorer
 
 ---
 
 Dear [Recipient],
 
-I wanted to share an exciting update from [School Name], which has been using Wisconsin Food Explorer for the past [time period].
+I wanted to share an exciting update from [School Name], which has been using Wisconsin Nutrition Explorer for the past [time period].
 
 **The Results:**
 
@@ -183,11 +183,11 @@ I wanted to share an exciting update from [School Name], which has been using Wi
 
 **Key Takeaway:**
 
-Wisconsin Food Explorer successfully combines engaging gameplay with measurable learning outcomes. Teachers appreciate the professional tools, and students love the game-based learning approach.
+Wisconsin Nutrition Explorer successfully combines engaging gameplay with measurable learning outcomes. Teachers appreciate the professional tools, and students love the game-based learning approach.
 
 **Interested in Your School?**
 
-If you'd like to bring Wisconsin Food Explorer to your school, we're offering a completely free trial. No cost, no obligation, just a chance to see how it can support your nutrition education goals.
+If you'd like to bring Wisconsin Nutrition Explorer to your school, we're offering a completely free trial. No cost, no obligation, just a chance to see how it can support your nutrition education goals.
 
 Would you like to learn more?
 
@@ -201,13 +201,13 @@ Best regards,
 
 ## Template 5: Invitation to Training Webinar
 
-**Subject:** Free Training Webinar: Getting Started with Wisconsin Food Explorer
+**Subject:** Free Training Webinar: Getting Started with Wisconsin Nutrition Explorer
 
 ---
 
 Dear [Name],
 
-You're invited to a **free training webinar** on how to implement Wisconsin Food Explorer in your school.
+You're invited to a **free training webinar** on how to implement Wisconsin Nutrition Explorer in your school.
 
 **Webinar Details:**
 
@@ -257,15 +257,15 @@ Best regards,
 
 ## Template 6: Feedback Request (After Trial Period)
 
-**Subject:** We'd Love Your Feedback on Wisconsin Food Explorer
+**Subject:** We'd Love Your Feedback on Wisconsin Nutrition Explorer
 
 ---
 
 Dear [Name],
 
-Thank you for participating in the Wisconsin Food Explorer trial program. We hope your teachers and students have enjoyed using the platform.
+Thank you for participating in the Wisconsin Nutrition Explorer trial program. We hope your teachers and students have enjoyed using the platform.
 
-We're committed to continuously improving Wisconsin Food Explorer based on feedback from educators like you. Your input is invaluable in helping us create the best possible platform for schools.
+We're committed to continuously improving Wisconsin Nutrition Explorer based on feedback from educators like you. Your input is invaluable in helping us create the best possible platform for schools.
 
 **Quick Feedback Survey** (5 minutes)
 
@@ -304,13 +304,13 @@ Best regards,
 
 ## Template 7: Expansion Offer (For Successful Pilots)
 
-**Subject:** Expand Wisconsin Food Explorer to Your Entire School
+**Subject:** Expand Wisconsin Nutrition Explorer to Your Entire School
 
 ---
 
 Dear [Name],
 
-Your trial of Wisconsin Food Explorer has been a great success! Based on the positive feedback and strong engagement from your teachers and students, we'd like to invite you to expand the program to your entire school.
+Your trial of Wisconsin Nutrition Explorer has been a great success! Based on the positive feedback and strong engagement from your teachers and students, we'd like to invite you to expand the program to your entire school.
 
 **Your Trial Results:**
 
@@ -322,7 +322,7 @@ Your trial of Wisconsin Food Explorer has been a great success! Based on the pos
 
 **What's Next?**
 
-We're offering to expand Wisconsin Food Explorer to all interested teachers and classes at your school, completely free of charge. This includes:
+We're offering to expand Wisconsin Nutrition Explorer to all interested teachers and classes at your school, completely free of charge. This includes:
 
 - Expanded teacher and student accounts
 - Comprehensive training for all staff
@@ -350,7 +350,7 @@ In exchange for this free expansion, we ask that you:
 
 I'd love to schedule a call to discuss the expansion and answer any questions you might have. Are you available next week?
 
-Looking forward to growing Wisconsin Food Explorer at your school!
+Looking forward to growing Wisconsin Nutrition Explorer at your school!
 
 Best regards,
 
@@ -367,13 +367,13 @@ Best regards,
 - **Use specific benefits:** "Free Nutrition Education Platform for Your School"
 - **Create urgency:** "Limited Trial Spots Available"
 - **Ask a question:** "Is Your School Ready for Engaging Nutrition Education?"
-- **Personalize:** "Wisconsin Food Explorer for [School Name]"
+- **Personalize:** "Wisconsin Nutrition Explorer for [School Name]"
 
 ### Email Structure
 
 1. **Opening:** Personalized greeting and brief introduction
 2. **Problem:** Identify a challenge (engagement, nutrition education, student motivation)
-3. **Solution:** Explain how Wisconsin Food Explorer solves the problem
+3. **Solution:** Explain how Wisconsin Nutrition Explorer solves the problem
 4. **Benefits:** List key features and advantages
 5. **Social Proof:** Share success stories or testimonials
 6. **Call to Action:** Clear next step (schedule call, request trial, register for webinar)
