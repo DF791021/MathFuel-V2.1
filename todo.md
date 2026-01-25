@@ -551,3 +551,16 @@
 - [x] Update UI branding and titles
 - [x] Update email templates with new name
 - [x] Restart dev server and verify branding changes
+
+
+## Trial Request Landing Page - IN PROGRESS
+- [ ] Design trial request database schema (trialRequests, trialAccounts, trialMetrics)
+- [ ] Create backend tRPC procedures for trial request submission
+- [ ] Build professional landing page with value proposition and CTA
+- [ ] Implement trial account auto-generation system
+- [ ] Create trial confirmation email with login credentials
+- [ ] Build admin dashboard for trial management and tracking
+- [ ] Implement trial expiration and follow-up email system
+- [ ] Add analytics tracking for trial signups and engagement
+- [ ] Test end-to-end trial request flow
+- [ ] Deploy trial landing page to production

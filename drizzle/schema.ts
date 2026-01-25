@@ -957,3 +957,88 @@ export const exportHistory = mysqlTable("exportHistory", {
 
 export type ExportHistory = typeof exportHistory.$inferSelect;
 export type InsertExportHistory = typeof exportHistory.$inferInsert;
+
+
+/**
+ * Trial requests from schools requesting free access
+ */
+export const trialRequests = mysqlTable("trialRequests", {
+  id: int("id").autoincrement().primaryKey(),
+  schoolName: varchar("schoolName", { length: 255 }).notNull(),
+  district: varchar("district", { length: 255 }),
+  state: varchar("state", { length: 2 }).notNull(),
+  contactName: varchar("contactName", { length: 255 }).notNull(),
+  contactEmail: varchar("contactEmail", { length: 320 }).notNull(),
+  contactPhone: varchar("contactPhone", { length: 20 }),
+  role: mysqlEnum("role", ["principal", "teacher", "nutrition_coordinator", "it_director", "superintendent", "other"]).notNull(),
+  studentCount: int("studentCount"),
+  teacherCount: int("teacherCount"),
+  message: text("message"),
+  status: mysqlEnum("status", ["pending", "approved", "trial_created", "completed", "rejected"]).default("pending").notNull(),
+  trialAccountId: int("trialAccountId"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type TrialRequest = typeof trialRequests.$inferSelect;
+export type InsertTrialRequest = typeof trialRequests.$inferInsert;
+
+/**
+ * Trial accounts created for schools
+ */
+export const trialAccounts = mysqlTable("trialAccounts", {
+  id: int("id").autoincrement().primaryKey(),
+  trialRequestId: int("trialRequestId").notNull(),
+  schoolCode: varchar("schoolCode", { length: 20 }).notNull().unique(),
+  adminUserId: int("adminUserId"),
+  adminEmail: varchar("adminEmail", { length: 320 }).notNull(),
+  adminPassword: varchar("adminPassword", { length: 255 }).notNull(),
+  trialStartDate: timestamp("trialStartDate").defaultNow().notNull(),
+  trialEndDate: timestamp("trialEndDate").notNull(),
+  trialDays: int("trialDays").default(30).notNull(),
+  status: mysqlEnum("status", ["active", "expired", "converted", "cancelled"]).default("active").notNull(),
+  classesCreated: int("classesCreated").default(0).notNull(),
+  studentsAdded: int("studentsAdded").default(0).notNull(),
+  gamesPlayed: int("gamesPlayed").default(0).notNull(),
+  certificatesGenerated: int("certificatesGenerated").default(0).notNull(),
+  lastActivityAt: timestamp("lastActivityAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type TrialAccount = typeof trialAccounts.$inferSelect;
+export type InsertTrialAccount = typeof trialAccounts.$inferInsert;
+
+/**
+ * Trial metrics and engagement tracking
+ */
+export const trialMetrics = mysqlTable("trialMetrics", {
+  id: int("id").autoincrement().primaryKey(),
+  trialAccountId: int("trialAccountId").notNull(),
+  date: date("date").notNull(),
+  activeUsers: int("activeUsers").default(0).notNull(),
+  gamesPlayed: int("gamesPlayed").default(0).notNull(),
+  certificatesGenerated: int("certificatesGenerated").default(0).notNull(),
+  emailsSent: int("emailsSent").default(0).notNull(),
+  pdfExportsGenerated: int("pdfExportsGenerated").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type TrialMetric = typeof trialMetrics.$inferSelect;
+export type InsertTrialMetric = typeof trialMetrics.$inferInsert;
+
+/**
+ * Trial follow-up emails sent to schools
+ */
+export const trialFollowUps = mysqlTable("trialFollowUps", {
+  id: int("id").autoincrement().primaryKey(),
+  trialAccountId: int("trialAccountId").notNull(),
+  emailType: mysqlEnum("emailType", ["welcome", "day_3_check_in", "day_7_engagement", "day_14_features", "day_28_conversion", "expired_offer"]).notNull(),
+  sentAt: timestamp("sentAt").defaultNow().notNull(),
+  opened: boolean("opened").default(false).notNull(),
+  clicked: boolean("clicked").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type TrialFollowUp = typeof trialFollowUps.$inferSelect;
+export type InsertTrialFollowUp = typeof trialFollowUps.$inferInsert;
