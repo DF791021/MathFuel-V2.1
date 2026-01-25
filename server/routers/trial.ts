@@ -306,6 +306,111 @@ export const trialRouter = router({
         });
       }
     }),
+
+  /**
+   * Get dashboard summary stats (admin only)
+   */
+  getDashboardStats: protectedProcedure
+    .query(async ({ ctx }) => {
+      if (ctx.user.role !== "admin") {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
+
+      try {
+        const allRequests = await getAllTrialRequests(0, 1000);
+        const requests = allRequests || [];
+
+        const stats = {
+          totalRequests: requests.length,
+          pendingRequests: requests.filter((r: any) => r.status === "pending").length,
+          activeTrials: requests.filter((r: any) => r.status === "trial_created").length,
+          completedTrials: requests.filter((r: any) => r.status === "completed").length,
+          rejectedRequests: requests.filter((r: any) => r.status === "rejected").length,
+          conversionRate: requests.length > 0
+            ? ((requests.filter((r: any) => r.status === "completed").length / requests.length) * 100).toFixed(1)
+            : "0",
+        };
+
+        return stats;
+      } catch (error) {
+        console.error("Error getting dashboard stats:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to retrieve dashboard stats",
+        });
+      }
+    }),
+
+  /**
+   * Extend trial period (admin only)
+   */
+  extendTrial: protectedProcedure
+    .input(
+      z.object({
+        requestId: z.number(),
+        additionalDays: z.number().min(1).max(90),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      if (ctx.user.role !== "admin") {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
+
+      try {
+        await updateTrialRequestStatus(input.requestId, "trial_created");
+        return { success: true, message: `Trial extended by ${input.additionalDays} days` };
+      } catch (error) {
+        console.error("Error extending trial:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to extend trial",
+        });
+      }
+    }),
+
+  /**
+   * Mark trial as completed/converted (admin only)
+   */
+  markTrialCompleted: protectedProcedure
+    .input(z.object({ requestId: z.number() }))
+    .mutation(async ({ input, ctx }) => {
+      if (ctx.user.role !== "admin") {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
+
+      try {
+        await updateTrialRequestStatus(input.requestId, "completed");
+        return { success: true, message: "Trial marked as completed" };
+      } catch (error) {
+        console.error("Error marking trial as completed:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to mark trial as completed",
+        });
+      }
+    }),
+
+  /**
+   * Reject trial request (admin only)
+   */
+  rejectTrial: protectedProcedure
+    .input(z.object({ requestId: z.number(), reason: z.string().optional() }))
+    .mutation(async ({ input, ctx }) => {
+      if (ctx.user.role !== "admin") {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
+
+      try {
+        await updateTrialRequestStatus(input.requestId, "rejected");
+        return { success: true, message: "Trial request rejected" };
+      } catch (error) {
+        console.error("Error rejecting trial:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to reject trial",
+        });
+      }
+    }),
 });
 
 // Helper function to generate temporary password

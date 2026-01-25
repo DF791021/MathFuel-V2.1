@@ -575,3 +575,20 @@
 - [ ] Create follow-up email templates (day 3, day 7, day 14, day 28)
 - [ ] Write tests for email confirmation flow
 - [ ] Verify email delivery and formatting across clients
+
+
+## Admin Trial Dashboard - IN PROGRESS
+- [ ] Extend trial router with admin-only procedures for dashboard data
+- [ ] Create analytics procedures for engagement metrics and trends
+- [ ] Build admin dashboard page with trial request list and filters
+- [ ] Implement trial status management (pending, approved, trial_created, completed, rejected)
+- [ ] Add engagement metrics display (classes created, students added, games played, certificates)
+- [ ] Create trial details modal with school information and history
+- [ ] Implement search and filtering by school name, district, status, date range
+- [ ] Add sorting options (newest, most engaged, expiring soon, conversion potential)
+- [ ] Create engagement trend charts (daily active users, games played, feature usage)
+- [ ] Build trial notes and communication log for each school
+- [ ] Add bulk actions (extend trial, send reminder, mark converted, reject)
+- [ ] Implement admin authentication and authorization checks
+- [ ] Write tests for admin dashboard procedures
+- [ ] Verify dashboard performance with large datasets
