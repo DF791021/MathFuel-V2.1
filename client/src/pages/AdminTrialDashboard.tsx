@@ -40,6 +40,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
+import { AdminFeedbackDashboard } from "@/components/AdminFeedbackDashboard";
 
 type FilterStatus = "pending" | "approved" | "trial_created" | "completed" | "rejected" | "all";
 type SortOption = "newest" | "oldest" | "engagement";
@@ -378,6 +379,15 @@ export default function AdminTrialDashboard() {
             )}
           </CardContent>
         </Card>
+
+        {/* Feedback Management Section */}
+        <div className="mt-8 pt-8 border-t">
+          <div className="space-y-2 mb-6">
+            <h2 className="text-2xl font-bold">Feedback Management</h2>
+            <p className="text-muted-foreground">Review and respond to trial user feedback</p>
+          </div>
+          <AdminFeedbackDashboard />
+        </div>
       </div>
 
       <Dialog open={bulkActionDialog === "extend"} onOpenChange={() => setBulkActionDialog(null)}>

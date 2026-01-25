@@ -1,6 +1,6 @@
 import { eq, desc, and, lt, gte, isNull, lte, asc, sql, count, countDistinct, avg, sum, max } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, gameScores, InsertGameScore, customQuestions, InsertCustomQuestion, classes, InsertClass, classMembers, InsertClassMember, emailTemplates, InsertEmailTemplate, scheduledEmails, InsertScheduledEmail, issuedCertificates, InsertIssuedCertificate, zipEmailHistory, InsertZipEmailHistory, templateShares, InsertTemplateShare, sharedTemplateLibrary, InsertSharedTemplateLibrary, templateImports, InsertTemplateImport, chatConversations, InsertChatConversation, chatMessages, InsertChatMessage, gameAnalyticsStudentSummary, InsertGameAnalyticsStudentSummary, gameAnalyticsQuestionPerformance, InsertGameAnalyticsQuestionPerformance, gameAnalyticsClassPerformance, InsertGameAnalyticsClassPerformance, gameAnalyticsDailyEngagement, InsertGameAnalyticsDailyEngagement, gameAnalyticsTopicMastery, InsertGameAnalyticsTopicMastery, gameAnalyticsDifficultyProgression, InsertGameAnalyticsDifficultyProgression, gameAnalyticsHistoricalSnapshots, InsertGameAnalyticsHistoricalSnapshot, gameAnalyticsStudentImprovement, InsertGameAnalyticsStudentImprovement, gameAnalyticsClassImprovement, InsertGameAnalyticsClassImprovement, gameAnalyticsRankingHistory, InsertGameAnalyticsRankingHistory, gameAnalyticsPerformanceMilestones, InsertGameAnalyticsPerformanceMilestone, rouletteGameSessions, rouletteGamePlayers, rouletteRoundResults, studentPerformanceGoals, InsertStudentPerformanceGoal, goalProgressHistory, InsertGoalProgressHistory, goalAchievements, InsertGoalAchievement, goalFeedback, InsertGoalFeedback, journalEntries, InsertJournalEntry, reflectionPrompts, InsertReflectionPrompt, journalInsights, InsertJournalInsight, journalReflectionsSummary, InsertJournalReflectionsSummary, goalDeadlineAlerts, InsertGoalDeadlineAlert, alertPreferences, InsertAlertPreferences, alertHistory, InsertAlertHistory, successStories, InsertSuccessStory, successStoryReactions, InsertSuccessStoryReaction, successStoryComments, InsertSuccessStoryComment, trialRequests, trialAccounts, trialMetrics, trialFollowUps, exportHistory } from "../drizzle/schema";
+import { InsertUser, users, gameScores, InsertGameScore, customQuestions, InsertCustomQuestion, classes, InsertClass, classMembers, InsertClassMember, emailTemplates, InsertEmailTemplate, scheduledEmails, InsertScheduledEmail, issuedCertificates, InsertIssuedCertificate, zipEmailHistory, InsertZipEmailHistory, templateShares, InsertTemplateShare, sharedTemplateLibrary, InsertSharedTemplateLibrary, templateImports, InsertTemplateImport, chatConversations, InsertChatConversation, chatMessages, InsertChatMessage, gameAnalyticsStudentSummary, InsertGameAnalyticsStudentSummary, gameAnalyticsQuestionPerformance, InsertGameAnalyticsQuestionPerformance, gameAnalyticsClassPerformance, InsertGameAnalyticsClassPerformance, gameAnalyticsDailyEngagement, InsertGameAnalyticsDailyEngagement, gameAnalyticsTopicMastery, InsertGameAnalyticsTopicMastery, gameAnalyticsDifficultyProgression, InsertGameAnalyticsDifficultyProgression, gameAnalyticsHistoricalSnapshots, InsertGameAnalyticsHistoricalSnapshot, gameAnalyticsStudentImprovement, InsertGameAnalyticsStudentImprovement, gameAnalyticsClassImprovement, InsertGameAnalyticsClassImprovement, gameAnalyticsRankingHistory, InsertGameAnalyticsRankingHistory, gameAnalyticsPerformanceMilestones, InsertGameAnalyticsPerformanceMilestone, rouletteGameSessions, rouletteGamePlayers, rouletteRoundResults, studentPerformanceGoals, InsertStudentPerformanceGoal, goalProgressHistory, InsertGoalProgressHistory, goalAchievements, InsertGoalAchievement, goalFeedback, InsertGoalFeedback, journalEntries, InsertJournalEntry, reflectionPrompts, InsertReflectionPrompt, journalInsights, InsertJournalInsight, journalReflectionsSummary, InsertJournalReflectionsSummary, goalDeadlineAlerts, InsertGoalDeadlineAlert, alertPreferences, InsertAlertPreferences, alertHistory, InsertAlertHistory, successStories, InsertSuccessStory, successStoryReactions, InsertSuccessStoryReaction, successStoryComments, InsertSuccessStoryComment, trialRequests, trialAccounts, trialMetrics, trialFollowUps, exportHistory, userFeedback, feedbackResponses, feedbackAnalytics } from "../drizzle/schema";
 
 import { nanoid } from 'nanoid';
 import { ENV } from './_core/env';
@@ -3802,6 +3802,283 @@ export async function getTrialMetrics(trialAccountId: number): Promise<any[]> {
     .from(trialMetrics)
     .where(eq(trialMetrics.trialAccountId, trialAccountId))
     .orderBy(desc(trialMetrics.date))
+    .execute();
+
+  return result;
+}
+
+
+// ============ USER FEEDBACK FUNCTIONS ============
+
+/**
+ * Submit user feedback
+ */
+export async function submitUserFeedback(data: {
+  userId?: number;
+  trialAccountId?: number;
+  feedbackType: "bug" | "feature_request" | "usability" | "performance" | "other";
+  category: "game" | "certificates" | "analytics" | "ui" | "mobile" | "other";
+  rating?: number;
+  title: string;
+  description: string;
+  attachmentUrl?: string;
+}): Promise<any> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db
+    .insert(userFeedback)
+    .values({
+      userId: data.userId || null,
+      trialAccountId: data.trialAccountId || null,
+      feedbackType: data.feedbackType,
+      category: data.category,
+      rating: data.rating || null,
+      title: data.title,
+      description: data.description,
+      attachmentUrl: data.attachmentUrl || null,
+      status: "new",
+    })
+    .execute();
+
+  return result;
+}
+
+/**
+ * Get all feedback (admin)
+ */
+export async function getAllFeedback(limit = 50, offset = 0): Promise<any[]> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db
+    .select()
+    .from(userFeedback)
+    .orderBy(desc(userFeedback.createdAt))
+    .limit(limit)
+    .offset(offset)
+    .execute();
+
+  return result;
+}
+
+/**
+ * Get feedback by ID
+ */
+export async function getFeedbackById(id: number): Promise<any> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db
+    .select()
+    .from(userFeedback)
+    .where(eq(userFeedback.id, id))
+    .execute();
+
+  return result[0] || null;
+}
+
+/**
+ * Get feedback with responses
+ */
+export async function getFeedbackWithResponses(feedbackId: number): Promise<any> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const feedback = await db
+    .select()
+    .from(userFeedback)
+    .where(eq(userFeedback.id, feedbackId))
+    .execute();
+
+  if (!feedback.length) return null;
+
+  const responses = await db
+    .select()
+    .from(feedbackResponses)
+    .where(eq(feedbackResponses.feedbackId, feedbackId))
+    .orderBy(asc(feedbackResponses.createdAt))
+    .execute();
+
+  return {
+    ...feedback[0],
+    responses,
+  };
+}
+
+/**
+ * Add response to feedback
+ */
+export async function addFeedbackResponse(data: {
+  feedbackId: number;
+  adminId?: number;
+  responseText: string;
+  isPublic: boolean;
+}): Promise<any> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db
+    .insert(feedbackResponses)
+    .values({
+      feedbackId: data.feedbackId,
+      adminId: data.adminId || null,
+      responseText: data.responseText,
+      isPublic: data.isPublic,
+    })
+    .execute();
+
+  return result;
+}
+
+/**
+ * Update feedback status
+ */
+export async function updateFeedbackStatus(id: number, status: "new" | "reviewed" | "in_progress" | "resolved" | "wont_fix"): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db
+    .update(userFeedback)
+    .set({ status })
+    .where(eq(userFeedback.id, id))
+    .execute();
+}
+
+/**
+ * Update feedback admin notes
+ */
+export async function updateFeedbackAdminNotes(id: number, adminNotes: string): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db
+    .update(userFeedback)
+    .set({ adminNotes })
+    .where(eq(userFeedback.id, id))
+    .execute();
+}
+
+/**
+ * Get feedback analytics for a date
+ */
+export async function getFeedbackAnalyticsForDate(date: Date): Promise<any> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db
+    .select()
+    .from(feedbackAnalytics)
+    .where(eq(feedbackAnalytics.date, date))
+    .execute();
+
+  return result[0] || null;
+}
+
+/**
+ * Record feedback analytics
+ */
+export async function recordFeedbackAnalytics(data: {
+  date: Date;
+  totalFeedback: number;
+  bugReports: number;
+  featureRequests: number;
+  usabilityIssues: number;
+  averageRating?: number;
+  topCategories?: any;
+}): Promise<any> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db
+    .insert(feedbackAnalytics)
+    .values({
+      date: data.date,
+      totalFeedback: data.totalFeedback,
+      bugReports: data.bugReports,
+      featureRequests: data.featureRequests,
+      usabilityIssues: data.usabilityIssues,
+      averageRating: data.averageRating || null,
+      topCategories: data.topCategories ? JSON.stringify(data.topCategories) : null,
+    })
+    .execute();
+
+  return result;
+}
+
+/**
+ * Get feedback statistics by type
+ */
+export async function getFeedbackStatsByType(): Promise<any> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db
+    .select({
+      feedbackType: userFeedback.feedbackType,
+      count: count(),
+      avgRating: avg(userFeedback.rating),
+    })
+    .from(userFeedback)
+    .groupBy(userFeedback.feedbackType)
+    .execute();
+
+  return result;
+}
+
+/**
+ * Get feedback statistics by category
+ */
+export async function getFeedbackStatsByCategory(): Promise<any> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db
+    .select({
+      category: userFeedback.category,
+      count: count(),
+      avgRating: avg(userFeedback.rating),
+    })
+    .from(userFeedback)
+    .groupBy(userFeedback.category)
+    .execute();
+
+  return result;
+}
+
+/**
+ * Get feedback by status
+ */
+export async function getFeedbackByStatus(status: "new" | "reviewed" | "in_progress" | "resolved" | "wont_fix", limit = 50, offset = 0): Promise<any[]> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db
+    .select()
+    .from(userFeedback)
+    .where(eq(userFeedback.status, status))
+    .orderBy(desc(userFeedback.createdAt))
+    .limit(limit)
+    .offset(offset)
+    .execute();
+
+  return result;
+}
+
+/**
+ * Get feedback count by status
+ */
+export async function getFeedbackCountByStatus(): Promise<any> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db
+    .select({
+      status: userFeedback.status,
+      count: count(),
+    })
+    .from(userFeedback)
+    .groupBy(userFeedback.status)
     .execute();
 
   return result;

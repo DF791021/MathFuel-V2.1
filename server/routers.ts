@@ -18,6 +18,7 @@ import { goalMonitoringRouter } from "./routers/goalMonitoring";
 import { successStoriesRouter } from "./routers/successStories";
 import { pdfExportRouter } from "./routers/pdfExport";
 import { trialRouter } from "./routers/trial";
+import { feedbackRouter } from "./routers/feedback";
 
 export const appRouter = router({
   system: systemRouter,
@@ -33,6 +34,7 @@ export const appRouter = router({
   successStories: successStoriesRouter,
   pdfExport: pdfExportRouter,
   trial: trialRouter,
+  feedback: feedbackRouter,
   
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
