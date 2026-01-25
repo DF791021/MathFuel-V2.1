@@ -27,6 +27,7 @@ import GoalsManagement from "@/components/GoalsManagement";
 import TeacherGoalMonitoringDashboard from "@/components/TeacherGoalMonitoringDashboard";
 import { AlertEngagementDashboard } from "@/components/AlertEngagementDashboard";
 import SuccessStoriesGallery from "@/components/SuccessStoriesGallery";
+import ExportSuccessStoriesPDF from "@/components/ExportSuccessStoriesPDF";
 import { getLoginUrl } from "@/const";
 
 const CATEGORIES = [
@@ -647,9 +648,14 @@ export default function TeacherPortal() {
 
           <TabsContent value="stories" className="space-y-6">
             <div className="space-y-4">
-              <div>
-                <h2 className="text-3xl font-bold text-gray-900">Success Stories</h2>
-                <p className="text-gray-600 mt-2">Celebrate student achievements and inspire others</p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-3xl font-bold text-gray-900">Success Stories</h2>
+                  <p className="text-gray-600 mt-2">Celebrate student achievements and inspire others</p>
+                </div>
+                {myClasses && myClasses.length > 0 && (
+                  <ExportSuccessStoriesPDF classId={myClasses[0]?.id || 0} className={myClasses[0]?.name || "Class"} />
+                )}
               </div>
               {myClasses && myClasses.length > 0 ? (
                 <div className="space-y-6">

@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, boolean, date } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, boolean, date, json } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -939,3 +939,21 @@ export const successStoryComments = mysqlTable("successStoryComments", {
 });
 export type SuccessStoryComment = typeof successStoryComments.$inferSelect;
 export type InsertSuccessStoryComment = typeof successStoryComments.$inferInsert;
+
+
+/**
+ * Export history for PDF reports
+ */
+export const exportHistory = mysqlTable("exportHistory", {
+  id: int("id").autoincrement().primaryKey(),
+  teacherId: int("teacherId").notNull(),
+  classId: int("classId").notNull(),
+  exportType: varchar("exportType", { length: 50 }).notNull().default("success_stories"),
+  storyCount: int("storyCount").notNull(),
+  dateRange: json("dateRange"),
+  options: json("options"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type ExportHistory = typeof exportHistory.$inferSelect;
+export type InsertExportHistory = typeof exportHistory.$inferInsert;

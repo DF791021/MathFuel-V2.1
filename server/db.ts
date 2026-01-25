@@ -3486,3 +3486,138 @@ export async function deleteSuccessStoryComment(commentId: number) {
 
   return db.delete(successStoryComments).where(eq(successStoryComments.id, commentId));
 }
+
+
+// ============ EXPORT HISTORY FUNCTIONS ============
+
+import { exportHistory, InsertExportHistory } from "../drizzle/schema";
+
+/**
+ * Save export history record
+ */
+export async function saveExportHistory(data: {
+  teacherId: number;
+  classId: number;
+  exportType: string;
+  storyCount: number;
+  dateRange?: { startDate: Date; endDate: Date };
+  options?: Record<string, any>;
+}) {
+  const db = await getDb();
+  if (!db) return null;
+
+  const result = await db.insert(exportHistory).values({
+    teacherId: data.teacherId,
+    classId: data.classId,
+    exportType: data.exportType,
+    storyCount: data.storyCount,
+    dateRange: data.dateRange ? JSON.stringify(data.dateRange) : null,
+    options: data.options ? JSON.stringify(data.options) : null,
+  });
+
+  return result;
+}
+
+/**
+ * Get export history for a class
+ */
+export async function getExportHistory(
+  classId: number,
+  limit: number = 10,
+  offset: number = 0
+) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const records = await db
+    .select()
+    .from(exportHistory)
+    .where(eq(exportHistory.classId, classId))
+    .orderBy(desc(exportHistory.createdAt))
+    .limit(limit)
+    .offset(offset);
+
+  return records.map((record) => ({
+    ...record,
+    dateRange: record.dateRange ? JSON.parse(record.dateRange as string) : null,
+    options: record.options ? JSON.parse(record.options as string) : null,
+  }));
+}
+
+/**
+ * Get total count of export records for a class
+ */
+export async function getExportHistoryCount(classId: number) {
+  const db = await getDb();
+  if (!db) return 0;
+
+  const result = await db
+    .select({ count: count() })
+    .from(exportHistory)
+    .where(eq(exportHistory.classId, classId));
+
+  return result[0]?.count || 0;
+}
+
+/**
+ * Get export history record by ID
+ */
+export async function getExportHistoryById(exportId: number) {
+  const db = await getDb();
+  if (!db) return null;
+
+  const record = await db
+    .select()
+    .from(exportHistory)
+    .where(eq(exportHistory.id, exportId))
+    .limit(1);
+
+  if (!record.length) return null;
+
+  const data = record[0];
+  return {
+    ...data,
+    dateRange: data.dateRange ? JSON.parse(data.dateRange as string) : null,
+    options: data.options ? JSON.parse(data.options as string) : null,
+  };
+}
+
+/**
+ * Delete export history record
+ */
+export async function deleteExportHistory(exportId: number) {
+  const db = await getDb();
+  if (!db) return null;
+
+  return await db
+    .delete(exportHistory)
+    .where(eq(exportHistory.id, exportId));
+}
+
+/**
+ * Get export statistics for a teacher
+ */
+export async function getExportStats(teacherId: number) {
+  const db = await getDb();
+  if (!db) return { totalExports: 0, totalStories: 0, byType: {}, lastExport: null };
+
+  const records = await db
+    .select()
+    .from(exportHistory)
+    .where(eq(exportHistory.teacherId, teacherId));
+
+  const totalExports = records.length;
+  const totalStories = records.reduce((sum, r) => sum + r.storyCount, 0);
+  const byType: Record<string, number> = {};
+
+  for (const record of records) {
+    byType[record.exportType] = (byType[record.exportType] || 0) + 1;
+  }
+
+  return {
+    totalExports,
+    totalStories,
+    byType,
+    lastExport: records.length > 0 ? records[0].createdAt : null,
+  };
+}
