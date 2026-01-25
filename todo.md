@@ -542,3 +542,17 @@
 - [x] Add teacher notes and commentary fields to PDF
 - [x] Write tests for PDF generation functionality
 - [x] Integrate PDF export into Teacher Portal Success Stories tab
+
+
+## Multi-Class Success Stories Bundle Feature - COMPLETED
+- [x] Design multi-class bundle architecture and data model
+- [x] Extend database schema to support bundle preferences and selections
+- [x] Build backend procedures for multi-class story retrieval (3 procedures: generateMultiClassBundle, getClassesForBundling, previewBundleStories)
+- [x] Create class selection UI component with checkboxes (MultiClassSelector.tsx)
+- [x] Implement story preview and filtering across multiple classes
+- [x] Build multi-class export dialog with bundle options (MultiClassBundleExport.tsx)
+- [x] Implement consolidated PDF generation with class sections
+- [x] Add bundle metadata and organization features (by-class, by-goal, chronological)
+- [x] Create export history tracking for bundles
+- [x] Write comprehensive tests for multi-class bundling (31 tests passing)
+- [x] Integrate into TeacherPortal with bundle export button

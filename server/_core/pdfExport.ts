@@ -33,6 +33,8 @@ export interface ReportOptions {
   primaryColor?: string;
   secondaryColor?: string;
   teacherNotes?: string;
+  isMultiClass?: boolean;
+  classCount?: number;
 }
 
 /**
@@ -250,7 +252,8 @@ async function addExecutiveSummary(
     0
   );
 
-  const summaryText = `This report showcases ${totalStories} inspiring success stories from ${options.className}. Our students have demonstrated remarkable growth and achievement. The average impact score across all stories is ${avgImpactScore.toFixed(1)}/100, with a combined engagement of ${totalEngagement} reactions and comments from the school community.`;
+  const classInfo = options.isMultiClass ? `${options.classCount} classes` : options.className;
+  const summaryText = `This report showcases ${totalStories} inspiring success stories from ${classInfo}. Our students have demonstrated remarkable growth and achievement. The average impact score across all stories is ${avgImpactScore.toFixed(1)}/100, with a combined engagement of ${totalEngagement} reactions and comments from the school community.`;
 
   const lines = wrapText(summaryText, 70);
   for (const line of lines) {
