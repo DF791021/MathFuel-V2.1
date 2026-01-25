@@ -120,6 +120,20 @@
       "when": 1769325677430,
       "tag": "0016_narrow_quicksilver",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "5",
+      "when": 1769326936319,
+      "tag": "0017_milky_blindfold",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "5",
+      "when": 1769328693780,
+      "tag": "0018_burly_golden_guardian",
+      "breakpoints": true
     }
   ]
 }
