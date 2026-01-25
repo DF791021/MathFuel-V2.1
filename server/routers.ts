@@ -15,6 +15,7 @@ import { alertPreferencesRouter } from "./routers/alertPreferences";
 import { alertAnalyticsRouter } from "./routers/alertAnalytics";
 import { journalRouter } from "./routers/journal";
 import { goalMonitoringRouter } from "./routers/goalMonitoring";
+import { successStoriesRouter } from "./routers/successStories";
 
 export const appRouter = router({
   system: systemRouter,
@@ -27,6 +28,7 @@ export const appRouter = router({
   alertAnalytics: alertAnalyticsRouter,
   journal: journalRouter,
   goalMonitoring: goalMonitoringRouter,
+  successStories: successStoriesRouter,
   
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),

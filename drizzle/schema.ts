@@ -876,3 +876,66 @@ export const alertHistory = mysqlTable("alertHistory", {
 
 export type AlertHistory = typeof alertHistory.$inferSelect;
 export type InsertAlertHistory = typeof alertHistory.$inferInsert;
+
+
+/**
+ * Success Stories
+ * Showcase students who achieved their goals
+ */
+export const successStories = mysqlTable("successStories", {
+  id: int("id").autoincrement().primaryKey(),
+  studentId: int("studentId").notNull(),
+  studentName: varchar("studentName", { length: 255 }).notNull(),
+  goalId: int("goalId").notNull(),
+  goalName: varchar("goalName", { length: 255 }).notNull(),
+  goalType: mysqlEnum("goalType", ["accuracy", "score", "games_played", "streak", "topic_mastery"]).notNull(),
+  targetValue: int("targetValue").notNull(),
+  achievedValue: int("achievedValue").notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description").notNull(),
+  testimonial: text("testimonial"),
+  tips: text("tips"), // JSON array of tips
+  imageUrl: varchar("imageUrl", { length: 500 }),
+  impactScore: int("impactScore").default(0), // 0-100 based on difficulty and improvement
+  receivedAlerts: boolean("receivedAlerts").default(false).notNull(),
+  alertsCount: int("alertsCount").default(0),
+  daysToAchieve: int("daysToAchieve"),
+  isPublished: boolean("isPublished").default(false).notNull(),
+  isFeature: boolean("isFeature").default(false).notNull(), // Featured story
+  classId: int("classId"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  achievedAt: timestamp("achievedAt"),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type SuccessStory = typeof successStories.$inferSelect;
+export type InsertSuccessStory = typeof successStories.$inferInsert;
+
+/**
+ * Success Story Reactions
+ * Track likes and reactions from other students
+ */
+export const successStoryReactions = mysqlTable("successStoryReactions", {
+  id: int("id").autoincrement().primaryKey(),
+  storyId: int("storyId").notNull(),
+  studentId: int("studentId").notNull(),
+  reactionType: mysqlEnum("reactionType", ["like", "inspired", "helpful", "motivating"]).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type SuccessStoryReaction = typeof successStoryReactions.$inferSelect;
+export type InsertSuccessStoryReaction = typeof successStoryReactions.$inferInsert;
+
+/**
+ * Success Story Comments
+ * Allow students to comment on success stories
+ */
+export const successStoryComments = mysqlTable("successStoryComments", {
+  id: int("id").autoincrement().primaryKey(),
+  storyId: int("storyId").notNull(),
+  studentId: int("studentId").notNull(),
+  studentName: varchar("studentName", { length: 255 }).notNull(),
+  comment: text("comment").notNull(),
+  isApproved: boolean("isApproved").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type SuccessStoryComment = typeof successStoryComments.$inferSelect;
+export type InsertSuccessStoryComment = typeof successStoryComments.$inferInsert;

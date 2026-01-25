@@ -1,6 +1,7 @@
 import { eq, desc, and, lt, gte, isNull, lte, asc, sql, count, countDistinct, avg, sum, max } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, gameScores, InsertGameScore, customQuestions, InsertCustomQuestion, classes, InsertClass, classMembers, InsertClassMember, emailTemplates, InsertEmailTemplate, scheduledEmails, InsertScheduledEmail, issuedCertificates, InsertIssuedCertificate, zipEmailHistory, InsertZipEmailHistory, templateShares, InsertTemplateShare, sharedTemplateLibrary, InsertSharedTemplateLibrary, templateImports, InsertTemplateImport, chatConversations, InsertChatConversation, chatMessages, InsertChatMessage, gameAnalyticsStudentSummary, InsertGameAnalyticsStudentSummary, gameAnalyticsQuestionPerformance, InsertGameAnalyticsQuestionPerformance, gameAnalyticsClassPerformance, InsertGameAnalyticsClassPerformance, gameAnalyticsDailyEngagement, InsertGameAnalyticsDailyEngagement, gameAnalyticsTopicMastery, InsertGameAnalyticsTopicMastery, gameAnalyticsDifficultyProgression, InsertGameAnalyticsDifficultyProgression, gameAnalyticsHistoricalSnapshots, InsertGameAnalyticsHistoricalSnapshot, gameAnalyticsStudentImprovement, InsertGameAnalyticsStudentImprovement, gameAnalyticsClassImprovement, InsertGameAnalyticsClassImprovement, gameAnalyticsRankingHistory, InsertGameAnalyticsRankingHistory, gameAnalyticsPerformanceMilestones, InsertGameAnalyticsPerformanceMilestone, rouletteGameSessions, rouletteGamePlayers, rouletteRoundResults, studentPerformanceGoals, InsertStudentPerformanceGoal, goalProgressHistory, InsertGoalProgressHistory, goalAchievements, InsertGoalAchievement, goalFeedback, InsertGoalFeedback, journalEntries, InsertJournalEntry, reflectionPrompts, InsertReflectionPrompt, journalInsights, InsertJournalInsight, journalReflectionsSummary, InsertJournalReflectionsSummary, goalDeadlineAlerts, InsertGoalDeadlineAlert, alertPreferences, InsertAlertPreferences, alertHistory, InsertAlertHistory } from "../drizzle/schema";
+import { InsertUser, users, gameScores, InsertGameScore, customQuestions, InsertCustomQuestion, classes, InsertClass, classMembers, InsertClassMember, emailTemplates, InsertEmailTemplate, scheduledEmails, InsertScheduledEmail, issuedCertificates, InsertIssuedCertificate, zipEmailHistory, InsertZipEmailHistory, templateShares, InsertTemplateShare, sharedTemplateLibrary, InsertSharedTemplateLibrary, templateImports, InsertTemplateImport, chatConversations, InsertChatConversation, chatMessages, InsertChatMessage, gameAnalyticsStudentSummary, InsertGameAnalyticsStudentSummary, gameAnalyticsQuestionPerformance, InsertGameAnalyticsQuestionPerformance, gameAnalyticsClassPerformance, InsertGameAnalyticsClassPerformance, gameAnalyticsDailyEngagement, InsertGameAnalyticsDailyEngagement, gameAnalyticsTopicMastery, InsertGameAnalyticsTopicMastery, gameAnalyticsDifficultyProgression, InsertGameAnalyticsDifficultyProgression, gameAnalyticsHistoricalSnapshots, InsertGameAnalyticsHistoricalSnapshot, gameAnalyticsStudentImprovement, InsertGameAnalyticsStudentImprovement, gameAnalyticsClassImprovement, InsertGameAnalyticsClassImprovement, gameAnalyticsRankingHistory, InsertGameAnalyticsRankingHistory, gameAnalyticsPerformanceMilestones, InsertGameAnalyticsPerformanceMilestone, rouletteGameSessions, rouletteGamePlayers, rouletteRoundResults, studentPerformanceGoals, InsertStudentPerformanceGoal, goalProgressHistory, InsertGoalProgressHistory, goalAchievements, InsertGoalAchievement, goalFeedback, InsertGoalFeedback, journalEntries, InsertJournalEntry, reflectionPrompts, InsertReflectionPrompt, journalInsights, InsertJournalInsight, journalReflectionsSummary, InsertJournalReflectionsSummary, goalDeadlineAlerts, InsertGoalDeadlineAlert, alertPreferences, InsertAlertPreferences, alertHistory, InsertAlertHistory, successStories, InsertSuccessStory, successStoryReactions, InsertSuccessStoryReaction, successStoryComments, InsertSuccessStoryComment } from "../drizzle/schema";
+
 import { nanoid } from 'nanoid';
 import { ENV } from './_core/env';
 
@@ -3179,4 +3180,309 @@ export async function getStudentGoalCompletionRate(studentId: number) {
   
   if (result.length === 0 || !result[0].total) return 0;
   return Math.round((Number(result[0].completed) / Number(result[0].total)) * 100);
+}
+
+
+// Success Stories Functions
+
+export async function createSuccessStory(data: {
+  studentId: number;
+  studentName: string;
+  goalId: number;
+  goalName: string;
+  goalType: string;
+  targetValue: number;
+  achievedValue: number;
+  title: string;
+  description: string;
+  testimonial?: string;
+  tips?: string;
+  imageUrl?: string;
+  impactScore?: number;
+  receivedAlerts?: boolean;
+  alertsCount?: number;
+  daysToAchieve?: number;
+  classId?: number;
+  achievedAt?: Date;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.insert(successStories).values({
+    studentId: data.studentId,
+    studentName: data.studentName,
+    goalId: data.goalId,
+    goalName: data.goalName,
+    goalType: data.goalType as any,
+    targetValue: data.targetValue,
+    achievedValue: data.achievedValue,
+    title: data.title,
+    description: data.description,
+    testimonial: data.testimonial || null,
+    tips: data.tips || null,
+    imageUrl: data.imageUrl || null,
+    impactScore: data.impactScore || 0,
+    receivedAlerts: data.receivedAlerts || false,
+    alertsCount: data.alertsCount || 0,
+    daysToAchieve: data.daysToAchieve || null,
+    classId: data.classId || null,
+    achievedAt: data.achievedAt || new Date(),
+  });
+
+  return result;
+}
+
+export async function getSuccessStories(filters?: {
+  classId?: number;
+  goalType?: string;
+  isPublished?: boolean;
+  isFeature?: boolean;
+  limit?: number;
+  offset?: number;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const conditions = [];
+  if (filters?.classId) conditions.push(eq(successStories.classId, filters.classId));
+  if (filters?.goalType) conditions.push(eq(successStories.goalType, filters.goalType as any));
+  if (filters?.isPublished !== undefined) conditions.push(eq(successStories.isPublished, filters.isPublished));
+  if (filters?.isFeature !== undefined) conditions.push(eq(successStories.isFeature, filters.isFeature));
+
+  let baseQuery = db.select().from(successStories).orderBy(desc(successStories.createdAt));
+  
+  if (conditions.length > 0) {
+    baseQuery = baseQuery.where(and(...conditions)) as any;
+  }
+  
+  if (filters?.limit) {
+    baseQuery = baseQuery.limit(filters.limit) as any;
+  }
+  if (filters?.offset) {
+    baseQuery = baseQuery.offset(filters.offset) as any;
+  }
+
+  return baseQuery;
+}
+
+export async function getSuccessStoryById(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.select().from(successStories).where(eq(successStories.id, id)).limit(1);
+  return result[0] || null;
+}
+
+export async function getFeaturedSuccessStories(limit = 5) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return db.select()
+    .from(successStories)
+    .where(and(eq(successStories.isFeature, true), eq(successStories.isPublished, true)))
+    .orderBy(desc(successStories.impactScore))
+    .limit(limit);
+}
+
+export async function getStudentSuccessStories(studentId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return db.select()
+    .from(successStories)
+    .where(eq(successStories.studentId, studentId))
+    .orderBy(desc(successStories.createdAt));
+}
+
+export async function updateSuccessStory(id: number, data: Partial<{
+  title: string;
+  description: string;
+  testimonial: string;
+  tips: string;
+  imageUrl: string;
+  impactScore: number;
+  isPublished: boolean;
+  isFeature: boolean;
+}>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return db.update(successStories).set({
+    ...data,
+    updatedAt: new Date(),
+  }).where(eq(successStories.id, id));
+}
+
+export async function deleteSuccessStory(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return db.delete(successStories).where(eq(successStories.id, id));
+}
+
+export async function addSuccessStoryReaction(storyId: number, studentId: number, reactionType: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return db.insert(successStoryReactions).values({
+    storyId,
+    studentId,
+    reactionType: reactionType as any,
+  });
+}
+
+export async function getSuccessStoryReactions(storyId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return db.select().from(successStoryReactions).where(eq(successStoryReactions.storyId, storyId));
+}
+
+export async function addSuccessStoryComment(storyId: number, studentId: number, studentName: string, comment: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return db.insert(successStoryComments).values({
+    storyId,
+    studentId,
+    studentName,
+    comment,
+  });
+}
+
+export async function getSuccessStoryComments(storyId: number, approved = true) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const conditions = [eq(successStoryComments.storyId, storyId)];
+  if (approved) conditions.push(eq(successStoryComments.isApproved, true));
+
+  return db.select().from(successStoryComments)
+    .where(and(...conditions) as any)
+    .orderBy(desc(successStoryComments.createdAt)) as any;
+}
+
+export async function getSuccessStoriesWithStats(classId?: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const stories = await getSuccessStories({ classId, isPublished: true });
+  
+  const storiesWithStats = await Promise.all(stories.map(async (story) => {
+    const reactions = await getSuccessStoryReactions(story.id);
+    const comments = await getSuccessStoryComments(story.id);
+    
+    const reactionCounts = {
+      like: reactions.filter(r => r.reactionType === 'like').length,
+      inspired: reactions.filter(r => r.reactionType === 'inspired').length,
+      helpful: reactions.filter(r => r.reactionType === 'helpful').length,
+      motivating: reactions.filter(r => r.reactionType === 'motivating').length,
+    };
+
+    return {
+      ...story,
+      reactionCounts,
+      commentCount: comments.length,
+      totalEngagement: Object.values(reactionCounts).reduce((a, b) => a + b, 0) + comments.length,
+    };
+  }));
+
+  return storiesWithStats.sort((a, b) => b.totalEngagement - a.totalEngagement);
+}
+
+
+// Helper function to get class by ID
+export async function getClassById(classId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const result = await db.select().from(classes).where(eq(classes.id, classId)).limit(1);
+  return result.length > 0 ? result[0] : null;
+}
+
+// Helper function to create success story reaction
+export async function createSuccessStoryReaction(data: {
+  storyId: number;
+  studentId: number;
+  reactionType: string;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return db.insert(successStoryReactions).values({
+    storyId: data.storyId,
+    studentId: data.studentId,
+    reactionType: data.reactionType as any,
+  });
+}
+
+// Helper function to get a specific reaction
+export async function getSuccessStoryReaction(storyId: number, studentId: number) {
+  const db = await getDb();
+  if (!db) return null;
+
+  const result = await db.select().from(successStoryReactions)
+    .where(and(eq(successStoryReactions.storyId, storyId), eq(successStoryReactions.studentId, studentId)))
+    .limit(1);
+  
+  return result.length > 0 ? result[0] : null;
+}
+
+// Helper function to update a reaction
+export async function updateSuccessStoryReaction(storyId: number, studentId: number, reactionType: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return db.update(successStoryReactions)
+    .set({ reactionType: reactionType as any })
+    .where(and(eq(successStoryReactions.storyId, storyId), eq(successStoryReactions.studentId, studentId)));
+}
+
+// Helper function to delete a reaction
+export async function deleteSuccessStoryReaction(storyId: number, studentId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return db.delete(successStoryReactions)
+    .where(and(eq(successStoryReactions.storyId, storyId), eq(successStoryReactions.studentId, studentId)));
+}
+
+// Helper function to create a comment
+export async function createSuccessStoryComment(data: {
+  storyId: number;
+  studentId: number;
+  studentName: string;
+  comment: string;
+  isApproved: boolean;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return db.insert(successStoryComments).values({
+    storyId: data.storyId,
+    studentId: data.studentId,
+    studentName: data.studentName,
+    comment: data.comment,
+    isApproved: data.isApproved,
+  });
+}
+
+// Helper function to get a comment by ID
+export async function getSuccessStoryCommentById(commentId: number) {
+  const db = await getDb();
+  if (!db) return null;
+
+  const result = await db.select().from(successStoryComments)
+    .where(eq(successStoryComments.id, commentId))
+    .limit(1);
+  
+  return result.length > 0 ? result[0] : null;
+}
+
+// Helper function to delete a comment
+export async function deleteSuccessStoryComment(commentId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return db.delete(successStoryComments).where(eq(successStoryComments.id, commentId));
 }

@@ -18,13 +18,15 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Plus, Trash2, Edit, Users, BookOpen, Trophy, 
   Copy, CheckCircle, XCircle, ArrowLeft, Sparkles,
-  GraduationCap, ClipboardList, BarChart3, Award, Clock, Target
-, Bell } from "lucide-react";
+  GraduationCap, ClipboardList, BarChart3, Award, Clock, Target, Bell 
+} from "lucide-react";
 import Certificate from "@/components/Certificate";
 import BatchCertificates from "@/components/BatchCertificates";
 import ScheduledEmails from "@/components/ScheduledEmails";
 import GoalsManagement from "@/components/GoalsManagement";
 import TeacherGoalMonitoringDashboard from "@/components/TeacherGoalMonitoringDashboard";
+import { AlertEngagementDashboard } from "@/components/AlertEngagementDashboard";
+import SuccessStoriesGallery from "@/components/SuccessStoriesGallery";
 import { getLoginUrl } from "@/const";
 
 const CATEGORIES = [
@@ -190,7 +192,7 @@ export default function TeacherPortal() {
       {/* Main Content */}
       <main className="container py-8">
         <Tabs defaultValue="questions" className="space-y-6">
-          <TabsList className="grid w-full max-w-4xl grid-cols-7 h-12">
+          <TabsList className="grid w-full max-w-5xl grid-cols-9 h-12">
             <TabsTrigger value="questions" className="text-sm">
               <ClipboardList className="h-4 w-4 mr-2" />
               Questions
@@ -222,6 +224,10 @@ export default function TeacherPortal() {
             <TabsTrigger value="goals" className="text-sm">
               <Target className="h-4 w-4 mr-2" />
               Goals
+            </TabsTrigger>
+            <TabsTrigger value="stories" className="text-sm">
+              <Sparkles className="h-4 w-4 mr-2" />
+              Success Stories
             </TabsTrigger>
           </TabsList>
 
@@ -637,7 +643,33 @@ export default function TeacherPortal() {
               </CardContent>
             </Card>
           )}
-        </TabsContent>
+          </TabsContent>
+
+          <TabsContent value="stories" className="space-y-6">
+            <div className="space-y-4">
+              <div>
+                <h2 className="text-3xl font-bold text-gray-900">Success Stories</h2>
+                <p className="text-gray-600 mt-2">Celebrate student achievements and inspire others</p>
+              </div>
+              {myClasses && myClasses.length > 0 ? (
+                <div className="space-y-6">
+                  {myClasses.map((classData) => (
+                    <div key={classData.id} className="space-y-3">
+                      <h3 className="text-lg font-semibold text-gray-800">{classData.name}</h3>
+                      <SuccessStoriesGallery classId={classData.id} />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <Card className="border-2">
+                  <CardContent className="p-8 text-center">
+                    <Trophy className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                    <p className="text-gray-500">No classes found</p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </TabsContent>
 
       </Tabs>
       </main>

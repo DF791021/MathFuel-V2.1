@@ -23,6 +23,7 @@ import EncouragementMessages from "@/components/EncouragementMessages";
 import { AlertPreferencesForm } from "@/components/AlertPreferencesForm";
 import JournalInsightsPanel from "@/components/JournalInsightsPanel";
 import RecommendedGoalsPanel from "@/components/RecommendedGoalsPanel";
+import SuccessStoriesGallery from "@/components/SuccessStoriesGallery";
 
 type GoalStatus = "active" | "completed" | "failed" | "paused";
 type SortBy = "dueDate" | "progress" | "priority" | "created";
@@ -182,7 +183,7 @@ export default function StudentGoalPortal() {
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="goals" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="goals">
             <Target className="w-4 h-4 mr-2" />
             Goals
@@ -206,6 +207,10 @@ export default function StudentGoalPortal() {
           <TabsTrigger value="recommendations">
             <Zap className="w-4 h-4 mr-2" />
             Recommended
+          </TabsTrigger>
+          <TabsTrigger value="stories">
+            <Award className="w-4 h-4 mr-2" />
+            Stories
           </TabsTrigger>
         </TabsList>
 
@@ -313,7 +318,13 @@ export default function StudentGoalPortal() {
             />
           )}
         </TabsContent>
-              <TabsContent value="settings">
+
+        {/* Success Stories Tab */}
+        <TabsContent value="stories" className="space-y-4">
+          <SuccessStoriesGallery showFeaturedOnly={false} />
+        </TabsContent>
+
+        <TabsContent value="settings">
           <AlertPreferencesForm />
         </TabsContent>
 
