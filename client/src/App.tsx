@@ -24,6 +24,7 @@ import Pricing from "./pages/Pricing";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentFailure from "./pages/PaymentFailure";
 import AdminNotificationPreferences from "./pages/AdminNotificationPreferences";
+import NotificationHistoryArchive from "./pages/NotificationHistoryArchive";
 
 function Router() {
   return (
@@ -44,6 +45,7 @@ function Router() {
       <Route path="/payment/success" component={PaymentSuccess} />
       <Route path="/payment/failure" component={PaymentFailure} />
       <Route path="/admin/notification-preferences" component={AdminNotificationPreferences} />
+      <Route path="/admin/notification-archive" component={NotificationHistoryArchive} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

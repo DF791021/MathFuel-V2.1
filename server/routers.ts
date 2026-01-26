@@ -21,6 +21,7 @@ import { trialRouter } from "./routers/trial";
 import { feedbackRouter } from "./routers/feedback";
 import { paymentRouter } from "./routers/payment";
 import { notificationPreferencesRouter } from "./routers/notificationPreferences";
+import { notificationArchiveRouter } from "./routers/notificationArchive";
 
 export const appRouter = router({
   system: systemRouter,
@@ -39,6 +40,7 @@ export const appRouter = router({
   feedback: feedbackRouter,
   payment: paymentRouter,
   notificationPreferences: notificationPreferencesRouter,
+  notificationArchive: notificationArchiveRouter,
   
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),

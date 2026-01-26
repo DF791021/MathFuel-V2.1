@@ -4407,3 +4407,242 @@ export async function shouldSendNotification(
 
   return { shouldSend: true, channels };
 }
+
+
+// ============================================================================
+// NOTIFICATION HISTORY ARCHIVE & EXPORT
+// ============================================================================
+
+/**
+ * Get notification history with date range filtering
+ */
+export async function getNotificationHistoryByDateRange(
+  adminId: number,
+  startDate: Date,
+  endDate: Date,
+  limit?: number,
+  offset?: number
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  let query = db
+    .select()
+    .from(notificationHistory)
+    .where(
+      and(
+        eq(notificationHistory.adminId, adminId),
+        gte(notificationHistory.createdAt, startDate),
+        lte(notificationHistory.createdAt, endDate)
+      )
+    )
+    .orderBy(desc(notificationHistory.createdAt));
+
+  if (limit) query = query.limit(limit);
+  if (offset) query = query.offset(offset);
+
+  return query;
+}
+
+/**
+ * Get notification statistics for date range
+ */
+export async function getNotificationStatsForDateRange(
+  adminId: number,
+  startDate: Date,
+  endDate: Date
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const notifications = await db
+    .select()
+    .from(notificationHistory)
+    .where(
+      and(
+        eq(notificationHistory.adminId, adminId),
+        gte(notificationHistory.createdAt, startDate),
+        lte(notificationHistory.createdAt, endDate)
+      )
+    );
+
+  // Calculate statistics
+  const stats = {
+    total: notifications.length,
+    byType: {} as Record<string, number>,
+    bySubType: {} as Record<string, number>,
+    read: notifications.filter((n) => n.isRead).length,
+    unread: notifications.filter((n) => !n.isRead).length,
+    emailSent: notifications.filter((n) => n.emailSent).length,
+    inAppShown: notifications.filter((n) => n.inAppShown).length,
+    dateRange: {
+      start: startDate.toISOString(),
+      end: endDate.toISOString(),
+    },
+  };
+
+  // Count by type
+  notifications.forEach((n) => {
+    stats.byType[n.type] = (stats.byType[n.type] || 0) + 1;
+    if (n.subType) {
+      stats.bySubType[n.subType] = (stats.bySubType[n.subType] || 0) + 1;
+    }
+  });
+
+  return stats;
+}
+
+/**
+ * Get all notifications for export (no pagination)
+ */
+export async function getAllNotificationsForExport(
+  adminId: number,
+  startDate?: Date,
+  endDate?: Date
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  let whereClause = eq(notificationHistory.adminId, adminId);
+
+  if (startDate && endDate) {
+    whereClause = and(
+      whereClause,
+      gte(notificationHistory.createdAt, startDate),
+      lte(notificationHistory.createdAt, endDate)
+    );
+  }
+
+  return db
+    .select()
+    .from(notificationHistory)
+    .where(whereClause)
+    .orderBy(desc(notificationHistory.createdAt));
+}
+
+/**
+ * Delete old notifications (archive cleanup)
+ */
+export async function deleteNotificationsOlderThan(
+  adminId: number,
+  beforeDate: Date
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db
+    .delete(notificationHistory)
+    .where(
+      and(
+        eq(notificationHistory.adminId, adminId),
+        lt(notificationHistory.createdAt, beforeDate)
+      )
+    )
+    .execute();
+
+  return (result as any).rowsAffected || 0;
+}
+
+/**
+ * Archive notifications (mark as archived)
+ */
+export async function archiveNotifications(
+  adminId: number,
+  startDate: Date,
+  endDate: Date
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  // Get notifications in range
+  const toArchive = await db
+    .select()
+    .from(notificationHistory)
+    .where(
+      and(
+        eq(notificationHistory.adminId, adminId),
+        gte(notificationHistory.createdAt, startDate),
+        lte(notificationHistory.createdAt, endDate)
+      )
+    );
+
+  return toArchive;
+}
+
+/**
+ * Get notification trends for reporting
+ */
+export async function getNotificationTrends(
+  adminId: number,
+  startDate: Date,
+  endDate: Date,
+  groupBy: "day" | "week" | "month" = "day"
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const notifications = await db
+    .select()
+    .from(notificationHistory)
+    .where(
+      and(
+        eq(notificationHistory.adminId, adminId),
+        gte(notificationHistory.createdAt, startDate),
+        lte(notificationHistory.createdAt, endDate)
+      )
+    );
+
+  // Group by date
+  const grouped: Record<string, number> = {};
+
+  notifications.forEach((n) => {
+    const date = new Date(n.createdAt);
+    let key: string;
+
+    if (groupBy === "day") {
+      key = date.toISOString().split("T")[0]; // YYYY-MM-DD
+    } else if (groupBy === "week") {
+      const weekStart = new Date(date);
+      weekStart.setDate(date.getDate() - date.getDay());
+      key = weekStart.toISOString().split("T")[0];
+    } else {
+      // month
+      key = date.toISOString().substring(0, 7); // YYYY-MM
+    }
+
+    grouped[key] = (grouped[key] || 0) + 1;
+  });
+
+  return Object.entries(grouped)
+    .map(([date, count]) => ({ date, count }))
+    .sort((a, b) => a.date.localeCompare(b.date));
+}
+
+/**
+ * Get high-priority notifications for reporting
+ */
+export async function getHighPriorityNotifications(
+  adminId: number,
+  startDate: Date,
+  endDate: Date
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return db
+    .select()
+    .from(notificationHistory)
+    .where(
+      and(
+        eq(notificationHistory.adminId, adminId),
+        gte(notificationHistory.createdAt, startDate),
+        lte(notificationHistory.createdAt, endDate),
+        or(
+          eq(notificationHistory.type, "feedback"),
+          eq(notificationHistory.subType, "low_rating"),
+          eq(notificationHistory.subType, "bug_report")
+        )
+      )
+    )
+    .orderBy(desc(notificationHistory.createdAt));
+}

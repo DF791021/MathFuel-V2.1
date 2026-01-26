@@ -754,3 +754,14 @@
 - [x] Integrate preferences into feedback notification system
 - [ ] Write vitest tests for preferences procedures
 - [ ] Test end-to-end notification flow with preferences
+
+
+## Notification History Archive & Export - COMPLETE
+- [x] Add archive database functions for date-range queries
+- [x] Create export procedures (CSV, JSON, PDF formats)
+- [x] Build notification history archive UI with date filtering
+- [x] Implement bulk export functionality
+- [x] Add compliance report generation
+- [x] Create pattern analysis queries
+- [ ] Write tests for archive and export functions
+- [ ] Test end-to-end export workflow
