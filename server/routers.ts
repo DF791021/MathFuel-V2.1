@@ -20,6 +20,7 @@ import { pdfExportRouter } from "./routers/pdfExport";
 import { trialRouter } from "./routers/trial";
 import { feedbackRouter } from "./routers/feedback";
 import { paymentRouter } from "./routers/payment";
+import { notificationPreferencesRouter } from "./routers/notificationPreferences";
 
 export const appRouter = router({
   system: systemRouter,
@@ -37,6 +38,7 @@ export const appRouter = router({
   trial: trialRouter,
   feedback: feedbackRouter,
   payment: paymentRouter,
+  notificationPreferences: notificationPreferencesRouter,
   
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),

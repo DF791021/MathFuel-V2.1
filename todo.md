@@ -739,3 +739,18 @@
 - [x] Build subscription management page
 - [x] Implement payment history display
 - [x] Write tests for payment flow
+
+
+## Admin Notification Preferences Settings - COMPLETE
+- [x] Design notification preferences database schema
+- [x] Add notification preferences table to schema
+- [x] Create database helper functions for preferences
+- [x] Build tRPC procedures for getting/updating preferences
+- [x] Create admin notification preferences UI component
+- [x] Implement frequency selection (immediate, daily digest, weekly)
+- [x] Implement channel selection (email, in-app, dashboard)
+- [x] Implement notification type filtering (all, low ratings, bugs, feedback only)
+- [x] Add test notification feature
+- [x] Integrate preferences into feedback notification system
+- [ ] Write vitest tests for preferences procedures
+- [ ] Test end-to-end notification flow with preferences

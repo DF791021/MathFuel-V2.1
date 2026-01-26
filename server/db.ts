@@ -4205,3 +4205,205 @@ export async function getTrialsExpiringWithin(days: number): Promise<any[]> {
 
   return result;
 }
+
+
+// ============================================================================
+// NOTIFICATION PREFERENCES
+// ============================================================================
+
+import { notificationPreferences, InsertNotificationPreferences, notificationHistory, InsertNotificationHistory } from "../drizzle/schema";
+
+/**
+ * Get admin notification preferences (creates defaults if not exists)
+ */
+export async function getNotificationPreferences(adminId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  let prefs = await db
+    .select()
+    .from(notificationPreferences)
+    .where(eq(notificationPreferences.adminId, adminId))
+    .limit(1);
+
+  if (prefs.length === 0) {
+    // Create default preferences
+    await db.insert(notificationPreferences).values({
+      adminId,
+      frequency: "immediate",
+      emailEnabled: true,
+      inAppEnabled: true,
+      dashboardEnabled: true,
+      feedbackEnabled: true,
+      lowRatingsEnabled: true,
+      bugsEnabled: true,
+      trialEventsEnabled: true,
+      paymentEventsEnabled: false,
+      digestTime: "09:00",
+      quietHoursEnabled: false,
+    });
+
+    prefs = await db
+      .select()
+      .from(notificationPreferences)
+      .where(eq(notificationPreferences.adminId, adminId))
+      .limit(1);
+  }
+
+  return prefs[0];
+}
+
+/**
+ * Update admin notification preferences
+ */
+export async function updateNotificationPreferences(
+  adminId: number,
+  updates: Partial<InsertNotificationPreferences>
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db
+    .update(notificationPreferences)
+    .set({ ...updates, updatedAt: new Date() })
+    .where(eq(notificationPreferences.adminId, adminId));
+
+  return getNotificationPreferences(adminId);
+}
+
+/**
+ * Send test notification
+ */
+export async function recordTestNotification(adminId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db
+    .update(notificationPreferences)
+    .set({ lastTestSentAt: new Date() })
+    .where(eq(notificationPreferences.adminId, adminId));
+}
+
+/**
+ * Add notification to history
+ */
+export async function addNotificationToHistory(
+  adminId: number,
+  notification: InsertNotificationHistory
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.insert(notificationHistory).values({
+    ...notification,
+    adminId,
+  });
+}
+
+/**
+ * Get notification history for admin
+ */
+export async function getNotificationHistory(
+  adminId: number,
+  limit: number = 50,
+  offset: number = 0
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return db
+    .select()
+    .from(notificationHistory)
+    .where(eq(notificationHistory.adminId, adminId))
+    .orderBy(desc(notificationHistory.createdAt))
+    .limit(limit)
+    .offset(offset);
+}
+
+/**
+ * Mark notification as read
+ */
+export async function markNotificationAsRead(notificationId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db
+    .update(notificationHistory)
+    .set({ isRead: true })
+    .where(eq(notificationHistory.id, notificationId));
+}
+
+/**
+ * Mark all notifications as read for admin
+ */
+export async function markAllNotificationsAsRead(adminId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db
+    .update(notificationHistory)
+    .set({ isRead: true })
+    .where(eq(notificationHistory.adminId, adminId));
+}
+
+/**
+ * Get unread notification count
+ */
+export async function getUnreadNotificationCount(adminId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db
+    .select({ count: count() })
+    .from(notificationHistory)
+    .where(
+      and(
+        eq(notificationHistory.adminId, adminId),
+        eq(notificationHistory.isRead, false)
+      )
+    );
+
+  return result[0]?.count || 0;
+}
+
+/**
+ * Check if admin should receive notification based on preferences
+ */
+export async function shouldSendNotification(
+  adminId: number,
+  notificationType: "feedback" | "trial" | "payment" | "system",
+  subType?: string
+): Promise<{
+  shouldSend: boolean;
+  channels: ("email" | "inApp" | "dashboard")[];
+}> {
+  const prefs = await getNotificationPreferences(adminId);
+
+  // Check if notification type is enabled
+  let typeEnabled = true;
+  if (notificationType === "feedback") {
+    if (subType === "low_rating") {
+      typeEnabled = prefs.lowRatingsEnabled;
+    } else if (subType === "bug_report") {
+      typeEnabled = prefs.bugsEnabled;
+    } else {
+      typeEnabled = prefs.feedbackEnabled;
+    }
+  } else if (notificationType === "trial") {
+    typeEnabled = prefs.trialEventsEnabled;
+  } else if (notificationType === "payment") {
+    typeEnabled = prefs.paymentEventsEnabled;
+  }
+
+  if (!typeEnabled) {
+    return { shouldSend: false, channels: [] };
+  }
+
+  // Determine channels
+  const channels: ("email" | "inApp" | "dashboard")[] = [];
+  if (prefs.emailEnabled) channels.push("email");
+  if (prefs.inAppEnabled) channels.push("inApp");
+  if (prefs.dashboardEnabled) channels.push("dashboard");
+
+  return { shouldSend: true, channels };
+}

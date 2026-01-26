@@ -1096,3 +1096,59 @@ export const feedbackAnalytics = mysqlTable("feedback_analytics", {
 
 export type FeedbackAnalytics = typeof feedbackAnalytics.$inferSelect;
 export type InsertFeedbackAnalytics = typeof feedbackAnalytics.$inferInsert;
+
+
+/**
+ * Admin notification preferences for customizing alerts
+ */
+export const notificationPreferences = mysqlTable("notificationPreferences", {
+  id: int("id").autoincrement().primaryKey(),
+  adminId: int("adminId").notNull(),
+  // Frequency settings
+  frequency: mysqlEnum("frequency", ["immediate", "daily", "weekly"]).default("immediate").notNull(),
+  // Channel preferences
+  emailEnabled: boolean("emailEnabled").default(true).notNull(),
+  inAppEnabled: boolean("inAppEnabled").default(true).notNull(),
+  dashboardEnabled: boolean("dashboardEnabled").default(true).notNull(),
+  // Notification type filters
+  feedbackEnabled: boolean("feedbackEnabled").default(true).notNull(),
+  lowRatingsEnabled: boolean("lowRatingsEnabled").default(true).notNull(),
+  bugsEnabled: boolean("bugsEnabled").default(true).notNull(),
+  trialEventsEnabled: boolean("trialEventsEnabled").default(true).notNull(),
+  paymentEventsEnabled: boolean("paymentEventsEnabled").default(false).notNull(),
+  // Daily digest time (for daily/weekly frequency)
+  digestTime: varchar("digestTime", { length: 5 }), // Format: "HH:MM" (24-hour)
+  // Quiet hours (no notifications during this time)
+  quietHoursStart: varchar("quietHoursStart", { length: 5 }), // Format: "HH:MM"
+  quietHoursEnd: varchar("quietHoursEnd", { length: 5 }), // Format: "HH:MM"
+  quietHoursEnabled: boolean("quietHoursEnabled").default(false).notNull(),
+  // Test notification sent
+  lastTestSentAt: timestamp("lastTestSentAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type NotificationPreferences = typeof notificationPreferences.$inferSelect;
+export type InsertNotificationPreferences = typeof notificationPreferences.$inferInsert;
+
+/**
+ * Notification history/inbox for admins
+ */
+export const notificationHistory = mysqlTable("notificationHistory", {
+  id: int("id").autoincrement().primaryKey(),
+  adminId: int("adminId").notNull(),
+  type: mysqlEnum("type", ["feedback", "trial", "payment", "system"]).notNull(),
+  subType: varchar("subType", { length: 50 }), // e.g., "low_rating", "bug_report", "trial_expiring"
+  title: varchar("title", { length: 200 }).notNull(),
+  message: text("message").notNull(),
+  relatedEntityId: int("relatedEntityId"), // ID of feedback, trial, etc.
+  relatedEntityType: varchar("relatedEntityType", { length: 50 }), // "feedback", "trial", "payment"
+  isRead: boolean("isRead").default(false).notNull(),
+  actionUrl: varchar("actionUrl", { length: 500 }), // Link to take action
+  emailSent: boolean("emailSent").default(false).notNull(),
+  inAppShown: boolean("inAppShown").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type NotificationHistory = typeof notificationHistory.$inferSelect;
+export type InsertNotificationHistory = typeof notificationHistory.$inferInsert;
