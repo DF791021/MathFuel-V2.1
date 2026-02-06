@@ -1,11 +1,12 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Check, X } from "lucide-react";
+import { Check, X, Brain, Users, BarChart3, Zap } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useLocation } from "wouter";
+import { motion } from "framer-motion";
 
 export default function Pricing() {
   const [billingInterval, setBillingInterval] = useState<"month" | "year">("year");
@@ -32,7 +33,6 @@ export default function Pricing() {
         billingInterval,
       });
 
-      // Open checkout in new tab
       window.open(result.checkoutUrl, "_blank");
     } catch (error) {
       console.error("Error creating checkout session:", error);
@@ -51,190 +51,270 @@ export default function Pricing() {
   const districtPricing = pricing.district.pricing[billingInterval];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-amber-50 to-white">
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 via-purple-50 to-indigo-50">
       {/* Header */}
-      <div className="container py-12 text-center">
-        <h1 className="text-4xl font-bold text-green-900 mb-4">Simple, Transparent Pricing</h1>
-        <p className="text-lg text-gray-600 mb-8">
-          Choose the plan that's right for your school or district
-        </p>
+      <div className="container py-8 sm:py-16 text-center">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+        >
+          <h1 className="text-3xl sm:text-5xl font-bold text-primary mb-4">
+            Simple, Transparent Pricing
+          </h1>
+          <p className="text-base sm:text-lg text-gray-600 mb-8 px-4">
+            Choose the plan that's right for your school or district. Start with a free 30-day trial.
+          </p>
 
-        {/* Billing Toggle */}
-        <div className="flex justify-center items-center gap-4 mb-12">
-          <span className={billingInterval === "month" ? "font-semibold text-green-900" : "text-gray-600"}>
-            Monthly
-          </span>
-          <button
-            onClick={() => setBillingInterval(billingInterval === "month" ? "year" : "month")}
-            className="relative inline-flex h-8 w-14 items-center rounded-full bg-gray-300"
-          >
-            <span
-              className={`inline-block h-6 w-6 transform rounded-full bg-white transition ${
-                billingInterval === "year" ? "translate-x-7" : "translate-x-1"
-              }`}
-            />
-          </button>
-          <span className={billingInterval === "year" ? "font-semibold text-green-900" : "text-gray-600"}>
-            Annual
-          </span>
-          {billingInterval === "year" && (
-            <Badge className="bg-green-600 ml-2">Save 2 months!</Badge>
-          )}
-        </div>
+          {/* Billing Toggle */}
+          <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-12">
+            <span className={`text-sm sm:text-base ${billingInterval === "month" ? "font-semibold text-primary" : "text-gray-600"}`}>
+              Monthly
+            </span>
+            <button
+              onClick={() => setBillingInterval(billingInterval === "month" ? "year" : "month")}
+              className="relative inline-flex h-8 w-14 items-center rounded-full bg-gray-300 hover:bg-gray-400 transition"
+            >
+              <span
+                className={`inline-block h-6 w-6 transform rounded-full bg-white transition ${
+                  billingInterval === "year" ? "translate-x-7" : "translate-x-1"
+                }`}
+              />
+            </button>
+            <span className={`text-sm sm:text-base ${billingInterval === "year" ? "font-semibold text-primary" : "text-gray-600"}`}>
+              Annual
+            </span>
+            {billingInterval === "year" && (
+              <Badge className="bg-orange-500 ml-2 text-xs sm:text-sm">Save 2 months!</Badge>
+            )}
+          </div>
+        </motion.div>
       </div>
 
       {/* Pricing Cards */}
-      <div className="container mb-16">
-        <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+      <div className="container mb-16 px-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 max-w-5xl mx-auto">
           {/* School License */}
-          <Card className="relative border-2 border-gray-200 hover:border-green-500 transition">
-            <CardHeader>
-              <CardTitle className="text-2xl text-green-900">{pricing.school.name}</CardTitle>
-              <CardDescription>{pricing.school.description}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Price */}
-              <div>
-                <div className="text-4xl font-bold text-green-900">
-                  {schoolPricing.formatted}
-                </div>
-                <p className="text-sm text-gray-600 mt-2">
-                  Billed {billingInterval === "month" ? "monthly" : "annually"}
-                </p>
-                {billingInterval === "year" && (
-                  <p className="text-sm text-green-600 font-semibold mt-1">
-                    Save {pricing.school.pricing.annual.savings} annually
-                  </p>
-                )}
-              </div>
-
-              {/* CTA Button */}
-              <Button
-                onClick={() => handleSelectTier("school")}
-                disabled={isLoading && selectedTier === "school"}
-                className="w-full bg-green-600 hover:bg-green-700 text-white"
-              >
-                {isLoading && selectedTier === "school" ? "Processing..." : "Get Started"}
-              </Button>
-
-              {/* Features */}
-              <div className="space-y-3 pt-6 border-t">
-                {pricing.school.features.map((feature, idx) => (
-                  <div key={idx} className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                    <span className="text-sm text-gray-700">{feature}</span>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.1 }}
+          >
+            <Card className="relative border-2 border-gray-200 hover:border-primary transition h-full flex flex-col">
+              <CardHeader>
+                <CardTitle className="text-xl sm:text-2xl text-primary flex items-center gap-2">
+                  <Brain className="h-6 w-6" />
+                  {pricing.school.name}
+                </CardTitle>
+                <CardDescription className="text-sm sm:text-base">{pricing.school.description}</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6 flex-1 flex flex-col">
+                {/* Price */}
+                <div>
+                  <div className="text-3xl sm:text-4xl font-bold text-primary">
+                    {schoolPricing.formatted}
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                  <p className="text-xs sm:text-sm text-gray-600 mt-2">
+                    per school, {billingInterval === "month" ? "monthly" : "annually"}
+                  </p>
+                </div>
+
+                {/* Features */}
+                <div className="space-y-3 flex-1">
+                  {[
+                    "Up to 500 students",
+                    "Unlimited math topics",
+                    "Teacher analytics dashboard",
+                    "Parent engagement tools",
+                    "Student progress tracking",
+                    "Certificate generation",
+                    "Email support",
+                  ].map((feature, idx) => (
+                    <div key={idx} className="flex items-start gap-3">
+                      <Check className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
+                      <span className="text-sm sm:text-base text-gray-700">{feature}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* CTA */}
+                <Button
+                  onClick={() => handleSelectTier("school")}
+                  disabled={isLoading && selectedTier === "school"}
+                  className="w-full mt-6"
+                  size="lg"
+                >
+                  {isLoading && selectedTier === "school" ? "Processing..." : "Start Free Trial"}
+                </Button>
+              </CardContent>
+            </Card>
+          </motion.div>
 
           {/* District License */}
-          <Card className="relative border-2 border-green-500 shadow-lg">
-            <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-              <Badge className="bg-green-600">Most Popular</Badge>
-            </div>
-            <CardHeader>
-              <CardTitle className="text-2xl text-green-900">{pricing.district.name}</CardTitle>
-              <CardDescription>{pricing.district.description}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Price */}
-              <div>
-                <div className="text-4xl font-bold text-green-900">
-                  {districtPricing.formatted}
-                </div>
-                <p className="text-sm text-gray-600 mt-2">
-                  Billed {billingInterval === "month" ? "monthly" : "annually"}
-                </p>
-                {billingInterval === "year" && (
-                  <p className="text-sm text-green-600 font-semibold mt-1">
-                    Save {pricing.district.pricing.annual.savings} annually
-                  </p>
-                )}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+          >
+            <Card className="relative border-2 border-primary shadow-lg hover:shadow-xl transition h-full flex flex-col">
+              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                <Badge className="bg-orange-500 text-xs sm:text-sm">Most Popular</Badge>
               </div>
-
-              {/* CTA Button */}
-              <Button
-                onClick={() => handleSelectTier("district")}
-                disabled={isLoading && selectedTier === "district"}
-                className="w-full bg-green-600 hover:bg-green-700 text-white"
-              >
-                {isLoading && selectedTier === "district" ? "Processing..." : "Get Started"}
-              </Button>
-
-              {/* Features */}
-              <div className="space-y-3 pt-6 border-t">
-                {pricing.district.features.map((feature, idx) => (
-                  <div key={idx} className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                    <span className="text-sm text-gray-700">{feature}</span>
+              <CardHeader>
+                <CardTitle className="text-xl sm:text-2xl text-primary flex items-center gap-2">
+                  <Users className="h-6 w-6" />
+                  {pricing.district.name}
+                </CardTitle>
+                <CardDescription className="text-sm sm:text-base">{pricing.district.description}</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6 flex-1 flex flex-col">
+                {/* Price */}
+                <div>
+                  <div className="text-3xl sm:text-4xl font-bold text-primary">
+                    {districtPricing.formatted}
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                  <p className="text-xs sm:text-sm text-gray-600 mt-2">
+                    per district, {billingInterval === "month" ? "monthly" : "annually"}
+                  </p>
+                </div>
+
+                {/* Features */}
+                <div className="space-y-3 flex-1">
+                  {[
+                    "Unlimited students",
+                    "All math topics & levels",
+                    "Advanced analytics",
+                    "District-wide reporting",
+                    "Custom branding",
+                    "Professional development",
+                    "Dedicated support",
+                    "API access",
+                  ].map((feature, idx) => (
+                    <div key={idx} className="flex items-start gap-3">
+                      <Check className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
+                      <span className="text-sm sm:text-base text-gray-700">{feature}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* CTA */}
+                <Button
+                  onClick={() => handleSelectTier("district")}
+                  disabled={isLoading && selectedTier === "district"}
+                  className="w-full mt-6"
+                  size="lg"
+                >
+                  {isLoading && selectedTier === "district" ? "Processing..." : "Start Free Trial"}
+                </Button>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
+      </div>
+
+      {/* Comparison Table */}
+      <div className="container mb-16 px-4">
+        <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8 text-primary">
+          Detailed Feature Comparison
+        </h2>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b-2 border-primary">
+                <th className="text-left py-4 px-2 sm:px-4 font-semibold text-primary">Feature</th>
+                <th className="text-center py-4 px-2 sm:px-4 font-semibold text-primary">School</th>
+                <th className="text-center py-4 px-2 sm:px-4 font-semibold text-primary">District</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[
+                { feature: "Math Topics", school: "All", district: "All" },
+                { feature: "Grade Levels", school: "K-12", district: "K-12" },
+                { feature: "Student Limit", school: "500", district: "Unlimited" },
+                { feature: "Teacher Accounts", school: "Unlimited", district: "Unlimited" },
+                { feature: "Analytics", school: "Basic", district: "Advanced" },
+                { feature: "Custom Branding", school: false, district: true },
+                { feature: "API Access", school: false, district: true },
+                { feature: "Dedicated Support", school: false, district: true },
+              ].map((row, idx) => (
+                <tr key={idx} className="border-b border-gray-200 hover:bg-blue-50">
+                  <td className="py-4 px-2 sm:px-4 font-medium text-gray-700">{row.feature}</td>
+                  <td className="py-4 px-2 sm:px-4 text-center">
+                    {typeof row.school === "boolean" ? (
+                      row.school ? (
+                        <Check className="h-5 w-5 text-green-500 mx-auto" />
+                      ) : (
+                        <X className="h-5 w-5 text-gray-300 mx-auto" />
+                      )
+                    ) : (
+                      <span className="text-gray-700">{row.school}</span>
+                    )}
+                  </td>
+                  <td className="py-4 px-2 sm:px-4 text-center">
+                    {typeof row.district === "boolean" ? (
+                      row.district ? (
+                        <Check className="h-5 w-5 text-green-500 mx-auto" />
+                      ) : (
+                        <X className="h-5 w-5 text-gray-300 mx-auto" />
+                      )
+                    ) : (
+                      <span className="text-gray-700">{row.district}</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
 
       {/* FAQ Section */}
-      <div className="bg-white py-16 border-t">
-        <div className="container max-w-3xl">
-          <h2 className="text-3xl font-bold text-green-900 mb-12 text-center">Frequently Asked Questions</h2>
-
-          <div className="space-y-8">
-            <div>
-              <h3 className="text-lg font-semibold text-green-900 mb-2">Can I switch plans later?</h3>
-              <p className="text-gray-700">
-                Yes! You can upgrade or downgrade your plan at any time. Changes take effect at your next billing cycle.
-              </p>
-            </div>
-
-            <div>
-              <h3 className="text-lg font-semibold text-green-900 mb-2">What payment methods do you accept?</h3>
-              <p className="text-gray-700">
-                We accept all major credit cards (Visa, Mastercard, American Express) and can discuss other payment options for large district orders.
-              </p>
-            </div>
-
-            <div>
-              <h3 className="text-lg font-semibold text-green-900 mb-2">Is there a discount for multi-year commitments?</h3>
-              <p className="text-gray-700">
-                Yes! We offer special pricing for 2-year and 3-year commitments. Contact our sales team for details.
-              </p>
-            </div>
-
-            <div>
-              <h3 className="text-lg font-semibold text-green-900 mb-2">Do you offer educational discounts?</h3>
-              <p className="text-gray-700">
-                Absolutely. All public and private schools qualify for our educational pricing. Contact sales@wisconsinfoodexplorer.com for more information.
-              </p>
-            </div>
-
-            <div>
-              <h3 className="text-lg font-semibold text-green-900 mb-2">What happens after my trial ends?</h3>
-              <p className="text-gray-700">
-                Your trial account will transition to read-only mode. You can convert to a paid plan at any time to regain full access.
-              </p>
-            </div>
-          </div>
+      <div className="container mb-16 px-4">
+        <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8 text-primary">
+          Frequently Asked Questions
+        </h2>
+        <div className="max-w-3xl mx-auto space-y-4">
+          {[
+            {
+              q: "Can I upgrade or downgrade my plan?",
+              a: "Yes, you can change your plan at any time. Changes take effect at the next billing cycle.",
+            },
+            {
+              q: "What payment methods do you accept?",
+              a: "We accept all major credit cards (Visa, Mastercard, American Express) and bank transfers for district accounts.",
+            },
+            {
+              q: "Is there a setup fee?",
+              a: "No, there are no setup fees. You only pay the monthly or annual subscription price.",
+            },
+            {
+              q: "Do you offer discounts for multi-year commitments?",
+              a: "Yes, contact our sales team for volume discounts and multi-year pricing options.",
+            },
+          ].map((faq, idx) => (
+            <Card key={idx} className="hover:shadow-md transition">
+              <CardHeader>
+                <CardTitle className="text-base sm:text-lg text-primary">{faq.q}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm sm:text-base text-gray-700">{faq.a}</p>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </div>
 
-      {/* CTA Section */}
-      <div className="bg-green-900 text-white py-16">
-        <div className="container text-center">
-          <h2 className="text-3xl font-bold mb-4">Ready to Transform Nutrition Education?</h2>
-          <p className="text-lg mb-8 text-green-100">
-            Start your free 30-day trial today. No credit card required.
-          </p>
-          <Button
-            onClick={() => setLocation("/")}
-            className="bg-white text-green-900 hover:bg-gray-100"
-          >
-            Start Free Trial
-          </Button>
-        </div>
+      {/* CTA Footer */}
+      <div className="container py-12 sm:py-16 text-center border-t">
+        <h2 className="text-2xl sm:text-3xl font-bold mb-4 text-primary">
+          Questions? Let's Talk
+        </h2>
+        <p className="text-base sm:text-lg text-gray-600 mb-8">
+          Our team is ready to help you find the perfect plan for your school or district.
+        </p>
+        <Button size="lg" variant="outline" className="gap-2">
+          <span>Schedule a Demo</span>
+        </Button>
       </div>
     </div>
   );
