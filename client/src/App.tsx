@@ -25,6 +25,10 @@ import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentFailure from "./pages/PaymentFailure";
 import AdminNotificationPreferences from "./pages/AdminNotificationPreferences";
 import NotificationHistoryArchive from "./pages/NotificationHistoryArchive";
+import ParentDashboard from "./pages/ParentDashboard";
+import HomePracticeView from "./pages/HomePracticeView";
+import ProgressTrackingDashboard from "./pages/ProgressTrackingDashboard";
+import ParentTeacherMessaging from "./pages/ParentTeacherMessaging";
 
 function Router() {
   return (
@@ -46,6 +50,10 @@ function Router() {
       <Route path="/payment/failure" component={PaymentFailure} />
       <Route path="/admin/notification-preferences" component={AdminNotificationPreferences} />
       <Route path="/admin/notification-archive" component={NotificationHistoryArchive} />
+      <Route path="/parent" component={ParentDashboard} />
+      <Route path="/parent/practice/:studentId" component={HomePracticeView} />
+      <Route path="/parent/progress/:studentId" component={ProgressTrackingDashboard} />
+      <Route path="/parent/messages/:studentId" component={ParentTeacherMessaging} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

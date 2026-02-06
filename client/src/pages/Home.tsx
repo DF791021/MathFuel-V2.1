@@ -1,4 +1,4 @@
-import React from "react";
+import { useEffect } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,12 +9,16 @@ import {
   ChevronRight, Star, Zap, Brain, Target, BarChart3
 } from "lucide-react";
 import GameBoard from "@/components/GameBoard";
+import Testimonials from "@/components/Testimonials";
 import { trpc } from "@/lib/trpc";
 import { getLoginUrl } from "@/const";
 
 export default function Home() {
   const { user, isAuthenticated } = useAuth();
   const { data: leaderboard } = trpc.game.getLeaderboard.useQuery({ limit: 3 });
+  useEffect(() => {
+    document.title = "MathMastery - Adaptive Math Learning Platform for K-12 Schools";
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 via-purple-50 to-indigo-50">
@@ -238,6 +242,9 @@ export default function Home() {
           </div>
         </section>
       )}
+
+      {/* Testimonials Section */}
+      <Testimonials />
 
       {/* CTA Section */}
       <section className="container py-12 sm:py-16 text-center">
