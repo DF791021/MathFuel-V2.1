@@ -1,6 +1,6 @@
 import { eq, desc, and, lt, gte, isNull, lte, asc, sql, count, countDistinct, avg, sum, max } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, gameScores, InsertGameScore, customQuestions, InsertCustomQuestion, classes, InsertClass, classMembers, InsertClassMember, emailTemplates, InsertEmailTemplate, scheduledEmails, InsertScheduledEmail, issuedCertificates, InsertIssuedCertificate, zipEmailHistory, InsertZipEmailHistory, templateShares, InsertTemplateShare, sharedTemplateLibrary, InsertSharedTemplateLibrary, templateImports, InsertTemplateImport, chatConversations, InsertChatConversation, chatMessages, InsertChatMessage, gameAnalyticsStudentSummary, InsertGameAnalyticsStudentSummary, gameAnalyticsQuestionPerformance, InsertGameAnalyticsQuestionPerformance, gameAnalyticsClassPerformance, InsertGameAnalyticsClassPerformance, gameAnalyticsDailyEngagement, InsertGameAnalyticsDailyEngagement, gameAnalyticsTopicMastery, InsertGameAnalyticsTopicMastery, gameAnalyticsDifficultyProgression, InsertGameAnalyticsDifficultyProgression, gameAnalyticsHistoricalSnapshots, InsertGameAnalyticsHistoricalSnapshot, gameAnalyticsStudentImprovement, InsertGameAnalyticsStudentImprovement, gameAnalyticsClassImprovement, InsertGameAnalyticsClassImprovement, gameAnalyticsRankingHistory, InsertGameAnalyticsRankingHistory, gameAnalyticsPerformanceMilestones, InsertGameAnalyticsPerformanceMilestone, rouletteGameSessions, rouletteGamePlayers, rouletteRoundResults, studentPerformanceGoals, InsertStudentPerformanceGoal, goalProgressHistory, InsertGoalProgressHistory, goalAchievements, InsertGoalAchievement, goalFeedback, InsertGoalFeedback, journalEntries, InsertJournalEntry, reflectionPrompts, InsertReflectionPrompt, journalInsights, InsertJournalInsight, journalReflectionsSummary, InsertJournalReflectionsSummary, goalDeadlineAlerts, InsertGoalDeadlineAlert, alertPreferences, InsertAlertPreferences, alertHistory, InsertAlertHistory, successStories, InsertSuccessStory, successStoryReactions, InsertSuccessStoryReaction, successStoryComments, InsertSuccessStoryComment, trialRequests, trialAccounts, trialMetrics, trialFollowUps, exportHistory, userFeedback, feedbackResponses, feedbackAnalytics } from "../drizzle/schema";
+import { InsertUser, users, gameScores, InsertGameScore, customQuestions, InsertCustomQuestion, classes, InsertClass, classMembers, InsertClassMember, emailTemplates, InsertEmailTemplate, scheduledEmails, InsertScheduledEmail, issuedCertificates, InsertIssuedCertificate, zipEmailHistory, InsertZipEmailHistory, templateShares, InsertTemplateShare, sharedTemplateLibrary, InsertSharedTemplateLibrary, templateImports, InsertTemplateImport, chatConversations, InsertChatConversation, chatMessages, InsertChatMessage, gameAnalyticsStudentSummary, InsertGameAnalyticsStudentSummary, gameAnalyticsQuestionPerformance, InsertGameAnalyticsQuestionPerformance, gameAnalyticsClassPerformance, InsertGameAnalyticsClassPerformance, gameAnalyticsDailyEngagement, InsertGameAnalyticsDailyEngagement, gameAnalyticsTopicMastery, InsertGameAnalyticsTopicMastery, gameAnalyticsDifficultyProgression, InsertGameAnalyticsDifficultyProgression, gameAnalyticsHistoricalSnapshots, InsertGameAnalyticsHistoricalSnapshot, gameAnalyticsStudentImprovement, InsertGameAnalyticsStudentImprovement, gameAnalyticsClassImprovement, InsertGameAnalyticsClassImprovement, gameAnalyticsRankingHistory, InsertGameAnalyticsRankingHistory, gameAnalyticsPerformanceMilestones, InsertGameAnalyticsPerformanceMilestone, rouletteGameSessions, rouletteGamePlayers, rouletteRoundResults, studentPerformanceGoals, InsertStudentPerformanceGoal, goalProgressHistory, InsertGoalProgressHistory, goalAchievements, InsertGoalAchievement, goalFeedback, InsertGoalFeedback, journalEntries, InsertJournalEntry, reflectionPrompts, InsertReflectionPrompt, journalInsights, InsertJournalInsight, journalReflectionsSummary, InsertJournalReflectionsSummary, goalDeadlineAlerts, InsertGoalDeadlineAlert, alertPreferences, InsertAlertPreferences, alertHistory, InsertAlertHistory, successStories, InsertSuccessStory, successStoryReactions, InsertSuccessStoryReaction, successStoryComments, InsertSuccessStoryComment, trialRequests, trialAccounts, trialMetrics, trialFollowUps, exportHistory, userFeedback, feedbackResponses, feedbackAnalytics, parentAccounts, studentParentLinks, homePracticeAssignments, homePracticeProgress, studentAchievements, parentTeacherMessages, parentProgressReports } from "../drizzle/schema";
 
 import { nanoid } from 'nanoid';
 import { ENV } from './_core/env';
@@ -4646,3 +4646,177 @@ export async function getHighPriorityNotifications(
     )
     .orderBy(desc(notificationHistory.createdAt));
 }
+
+
+// ============= PARENT PORTAL FUNCTIONS =============
+
+export async function getParentAccount(userId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const result = await db.select().from(parentAccounts).where(eq(parentAccounts.userId, userId)).limit(1);
+  return result.length > 0 ? result[0] : null;
+}
+
+export async function createParentAccount(data: any) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const result = await db.insert(parentAccounts).values(data);
+  return result;
+}
+
+export async function getStudentsForParent(parentId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const result = await db.select().from(studentParentLinks).where(eq(studentParentLinks.parentId, parentId));
+  return result;
+}
+
+export async function linkStudentToParent(studentId: number, parentId: number, relationship: string, accessLevel: string) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const result = await db.insert(studentParentLinks).values({
+    studentId,
+    parentId,
+    relationship,
+    accessLevel: accessLevel as any,
+  });
+  return result;
+}
+
+export async function getHomePracticeAssignmentsForStudent(studentId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const result = await db.select().from(homePracticeAssignments)
+    .where(eq(homePracticeAssignments.studentId, studentId))
+    .orderBy(desc(homePracticeAssignments.dueDate));
+  return result;
+}
+
+export async function getHomePracticeProgress(assignmentId: number, studentId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const result = await db.select().from(homePracticeProgress)
+    .where(and(
+      eq(homePracticeProgress.assignmentId, assignmentId),
+      eq(homePracticeProgress.studentId, studentId)
+    ))
+    .limit(1);
+  return result.length > 0 ? result[0] : null;
+}
+
+export async function updateHomePracticeProgress(assignmentId: number, studentId: number, data: any) {
+  const db = await getDb();
+  if (!db) return;
+  
+  await db.update(homePracticeProgress)
+    .set(data)
+    .where(and(
+      eq(homePracticeProgress.assignmentId, assignmentId),
+      eq(homePracticeProgress.studentId, studentId)
+    ));
+}
+
+export async function getStudentBadges(studentId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const result = await db.select().from(studentAchievements)
+    .where(eq(studentAchievements.studentId, studentId))
+    .orderBy(desc(studentAchievements.earnedAt));
+  return result;
+}
+
+export async function createStudentAchievement(data: any) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  return db.insert(studentAchievements).values(data);
+}
+
+export async function getParentTeacherMessages(parentId: number, studentId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const result = await db.select().from(parentTeacherMessages)
+    .where(and(
+      eq(parentTeacherMessages.studentId, studentId),
+      or(
+        eq(parentTeacherMessages.senderId, parentId),
+        eq(parentTeacherMessages.recipientId, parentId)
+      )
+    ))
+    .orderBy(desc(parentTeacherMessages.createdAt));
+  return result;
+}
+
+export async function sendParentTeacherMessage(data: any) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  return db.insert(parentTeacherMessages).values(data);
+}
+
+export async function markMessageAsRead(messageId: number) {
+  const db = await getDb();
+  if (!db) return;
+  
+  await db.update(parentTeacherMessages)
+    .set({ isRead: true, readAt: new Date() })
+    .where(eq(parentTeacherMessages.id, messageId));
+}
+
+export async function getParentProgressReports(studentId: number, parentId: number, limit = 12) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const result = await db.select().from(parentProgressReports)
+    .where(and(
+      eq(parentProgressReports.studentId, studentId),
+      eq(parentProgressReports.parentId, parentId)
+    ))
+    .orderBy(desc(parentProgressReports.startDate))
+    .limit(limit);
+  return result;
+}
+
+export async function createParentProgressReport(data: any) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  return db.insert(parentProgressReports).values(data);
+}
+
+export async function getStudentProgressSummary(studentId: number, daysBack = 30) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const startDate = new Date(Date.now() - daysBack * 24 * 60 * 60 * 1000);
+  
+  const progressData = await db.select().from(homePracticeProgress)
+    .where(and(
+      eq(homePracticeProgress.studentId, studentId),
+      gte(homePracticeProgress.completedAt, startDate)
+    ));
+
+  const totalAttempted = progressData.reduce((sum: number, p: any) => sum + p.problemsAttempted, 0);
+  const totalCorrect = progressData.reduce((sum: number, p: any) => sum + p.problemsCorrect, 0);
+  const avgAccuracy = totalAttempted > 0 ? Math.round((totalCorrect / totalAttempted) * 100) : 0;
+  const totalTimeMinutes = progressData.reduce((sum: number, p: any) => sum + p.timeSpentMinutes, 0);
+
+  return {
+    totalProblemsAttempted: totalAttempted,
+    totalProblemsCorrect: totalCorrect,
+    averageAccuracy: avgAccuracy,
+    totalTimeMinutes,
+    assignmentsCompleted: progressData.filter((p: any) => p.status === 'completed').length,
+    assignmentsInProgress: progressData.filter((p: any) => p.status === 'in_progress').length,
+  };
+}
+
+

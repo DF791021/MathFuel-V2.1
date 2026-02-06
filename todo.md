@@ -793,3 +793,16 @@
 - [x] Update trial onboarding messaging
 - [x] Update pricing page for math platform
 - [x] Update all email templates and notifications
+
+
+## Parent Engagement Portal - IN PROGRESS
+- [x] Design parent portal database schema
+- [x] Create parent account linking to students
+- [x] Build home practice assignment system
+- [x] Implement progress tracking dashboard
+- [x] Create achievement and milestone notifications
+- [x] Build parent-teacher messaging system
+- [x] Implement practice recommendations based on student performance
+- [ ] Create parent mobile-optimized UI
+- [ ] Add parent account settings and preferences
+- [ ] Write tests for parent portal features

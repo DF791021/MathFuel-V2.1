@@ -1152,3 +1152,146 @@ export const notificationHistory = mysqlTable("notificationHistory", {
 
 export type NotificationHistory = typeof notificationHistory.$inferSelect;
 export type InsertNotificationHistory = typeof notificationHistory.$inferInsert;
+
+
+/**
+ * Parent accounts - allows parents to track their children's progress
+ */
+export const parentAccounts = mysqlTable("parentAccounts", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().unique(),
+  firstName: varchar("firstName", { length: 100 }).notNull(),
+  lastName: varchar("lastName", { length: 100 }).notNull(),
+  email: varchar("email", { length: 320 }).notNull(),
+  phone: varchar("phone", { length: 20 }),
+  preferredLanguage: varchar("preferredLanguage", { length: 10 }).default("en").notNull(),
+  notificationPreference: mysqlEnum("notificationPreference", ["email", "sms", "both", "none"]).default("email").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ParentAccount = typeof parentAccounts.$inferSelect;
+export type InsertParentAccount = typeof parentAccounts.$inferInsert;
+
+/**
+ * Student-parent relationships
+ */
+export const studentParentLinks = mysqlTable("studentParentLinks", {
+  id: int("id").autoincrement().primaryKey(),
+  studentId: int("studentId").notNull(),
+  parentId: int("parentId").notNull(),
+  relationship: varchar("relationship", { length: 50 }).notNull(), // "mother", "father", "guardian", "tutor"
+  accessLevel: mysqlEnum("accessLevel", ["view_only", "view_and_comment", "full_access"]).default("view_only").notNull(),
+  linkedAt: timestamp("linkedAt").defaultNow().notNull(),
+});
+
+export type StudentParentLink = typeof studentParentLinks.$inferSelect;
+export type InsertStudentParentLink = typeof studentParentLinks.$inferInsert;
+
+/**
+ * Home practice assignments assigned by teachers to students
+ */
+export const homePracticeAssignments = mysqlTable("homePracticeAssignments", {
+  id: int("id").autoincrement().primaryKey(),
+  teacherId: int("teacherId").notNull(),
+  studentId: int("studentId").notNull(),
+  classId: int("classId"),
+  title: varchar("title", { length: 200 }).notNull(),
+  description: text("description"),
+  category: varchar("category", { length: 50 }).notNull(), // "arithmetic", "algebra", "geometry", etc.
+  problemCount: int("problemCount").notNull().default(5),
+  difficulty: mysqlEnum("difficulty", ["easy", "medium", "hard", "adaptive"]).default("adaptive").notNull(),
+  dueDate: timestamp("dueDate"),
+  assignedDate: timestamp("assignedDate").defaultNow().notNull(),
+  status: mysqlEnum("status", ["active", "completed", "overdue", "cancelled"]).default("active").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type HomePracticeAssignment = typeof homePracticeAssignments.$inferSelect;
+export type InsertHomePracticeAssignment = typeof homePracticeAssignments.$inferInsert;
+
+/**
+ * Student progress on home practice assignments
+ */
+export const homePracticeProgress = mysqlTable("homePracticeProgress", {
+  id: int("id").autoincrement().primaryKey(),
+  assignmentId: int("assignmentId").notNull(),
+  studentId: int("studentId").notNull(),
+  problemsAttempted: int("problemsAttempted").notNull().default(0),
+  problemsCorrect: int("problemsCorrect").notNull().default(0),
+  accuracyPercentage: int("accuracyPercentage").notNull().default(0),
+  timeSpentMinutes: int("timeSpentMinutes").notNull().default(0),
+  completionPercentage: int("completionPercentage").notNull().default(0),
+  status: mysqlEnum("status", ["not_started", "in_progress", "completed"]).default("not_started").notNull(),
+  startedAt: timestamp("startedAt"),
+  completedAt: timestamp("completedAt"),
+  lastAttemptAt: timestamp("lastAttemptAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type HomePracticeProgress = typeof homePracticeProgress.$inferSelect;
+export type InsertHomePracticeProgress = typeof homePracticeProgress.$inferInsert;
+
+/**
+ * Student achievements and milestones
+ */
+export const studentAchievements = mysqlTable("studentAchievements", {
+  id: int("id").autoincrement().primaryKey(),
+  studentId: int("studentId").notNull(),
+  achievementType: varchar("achievementType", { length: 100 }).notNull(), // "perfect_score", "streak_7_days", "mastered_algebra", etc.
+  title: varchar("title", { length: 200 }).notNull(),
+  description: text("description"),
+  badgeIcon: varchar("badgeIcon", { length: 500 }), // URL to badge image
+  earnedAt: timestamp("earnedAt").defaultNow().notNull(),
+  notifiedAt: timestamp("notifiedAt"),
+});
+
+export type StudentAchievement = typeof studentAchievements.$inferSelect;
+export type InsertStudentAchievement = typeof studentAchievements.$inferInsert;
+
+/**
+ * Parent-teacher messages and communication
+ */
+export const parentTeacherMessages = mysqlTable("parentTeacherMessages", {
+  id: int("id").autoincrement().primaryKey(),
+  senderId: int("senderId").notNull(), // parent or teacher
+  recipientId: int("recipientId").notNull(),
+  studentId: int("studentId").notNull(), // context of the message
+  subject: varchar("subject", { length: 200 }).notNull(),
+  message: text("message").notNull(),
+  messageType: mysqlEnum("messageType", ["general", "progress_update", "concern", "celebration", "question"]).default("general").notNull(),
+  isRead: boolean("isRead").default(false).notNull(),
+  readAt: timestamp("readAt"),
+  attachmentUrl: varchar("attachmentUrl", { length: 500 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ParentTeacherMessage = typeof parentTeacherMessages.$inferSelect;
+export type InsertParentTeacherMessage = typeof parentTeacherMessages.$inferInsert;
+
+/**
+ * Parent-visible progress summaries (weekly/monthly)
+ */
+export const parentProgressReports = mysqlTable("parentProgressReports", {
+  id: int("id").autoincrement().primaryKey(),
+  studentId: int("studentId").notNull(),
+  parentId: int("parentId").notNull(),
+  reportPeriod: mysqlEnum("reportPeriod", ["weekly", "biweekly", "monthly"]).default("weekly").notNull(),
+  startDate: timestamp("startDate").notNull(),
+  endDate: timestamp("endDate").notNull(),
+  totalProblemsAttempted: int("totalProblemsAttempted").notNull().default(0),
+  totalProblemsCorrect: int("totalProblemsCorrect").notNull().default(0),
+  averageAccuracy: int("averageAccuracy").notNull().default(0),
+  topicsMastered: text("topicsMastered"), // JSON array of topics
+  topicsNeedingWork: text("topicsNeedingWork"), // JSON array of topics
+  recommendedPracticeAreas: text("recommendedPracticeAreas"), // JSON array
+  summaryNotes: text("summaryNotes"),
+  sentAt: timestamp("sentAt").defaultNow().notNull(),
+  viewedAt: timestamp("viewedAt"),
+});
+
+export type ParentProgressReport = typeof parentProgressReports.$inferSelect;
+export type InsertParentProgressReport = typeof parentProgressReports.$inferInsert;
