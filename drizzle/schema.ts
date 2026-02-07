@@ -184,9 +184,44 @@ export const templateShares = mysqlTable("templateShares", {
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
+export type TemplateRating = typeof templateRatings.$inferSelect;
+export type InsertTemplateRating = typeof templateRatings.$inferInsert;
 
-export type TemplateShare = typeof templateShares.$inferSelect;
-export type InsertTemplateShare = typeof templateShares.$inferInsert;
+/**
+ * Notifications table for in-app notifications and notification center
+ */
+export const notifications = mysqlTable("notifications", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  role: mysqlEnum("role", ["student", "teacher", "admin"]).notNull(),
+  type: mysqlEnum("type", [
+    "challenge_completed",
+    "achievement_earned",
+    "task_assigned",
+    "task_due_soon",
+    "feedback_posted",
+    "level_up",
+    "streak_milestone",
+    "student_completed_task",
+    "student_needs_help",
+    "new_student_joined",
+    "account_change",
+    "system_alert",
+  ]).notNull(),
+  title: varchar("title", { length: 200 }).notNull(),
+  body: text("body").notNull(),
+  linkUrl: varchar("linkUrl", { length: 500 }),
+  metadata: json("metadata"), // Store additional context as JSON
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  readAt: timestamp("readAt"), // Null if unread
+  dismissedAt: timestamp("dismissedAt"), // Optional: for dismissed notifications
+});
+
+export type Notification = typeof notifications.$inferSelect;
+export type InsertNotification = typeof notifications.$inferInsert;
+
+// User notification preferences removed - MathFuel Phase 1 is admin-only notifications
+// Students do not receive notifications to preserve flow and encouragement
 
 /**
  * Shared template library - public templates that teachers can discover and import
@@ -1101,7 +1136,7 @@ export type InsertFeedbackAnalytics = typeof feedbackAnalytics.$inferInsert;
 /**
  * Admin notification preferences for customizing alerts
  */
-export const notificationPreferences = mysqlTable("notificationPreferences", {
+export const adminNotificationPreferences = mysqlTable("adminNotificationPreferences", {
   id: int("id").autoincrement().primaryKey(),
   adminId: int("adminId").notNull(),
   // Frequency settings
@@ -1128,8 +1163,8 @@ export const notificationPreferences = mysqlTable("notificationPreferences", {
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 
-export type NotificationPreferences = typeof notificationPreferences.$inferSelect;
-export type InsertNotificationPreferences = typeof notificationPreferences.$inferInsert;
+export type AdminNotificationPreferences = typeof adminNotificationPreferences.$inferSelect;
+export type InsertAdminNotificationPreferences = typeof adminNotificationPreferences.$inferInsert;
 
 /**
  * Notification history/inbox for admins

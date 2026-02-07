@@ -851,3 +851,25 @@
 - [x] Test testimonials responsiveness
 - [x] Verify filter functionality (All, Teachers, Parents)
 - [x] Test animations and transitions
+
+
+## Notification System - Phase 1 (In-App + Persistent Center)
+- [ ] Create notifications table in database schema
+- [ ] Create notification_preferences table in database schema
+- [ ] Run database migrations with pnpm db:push
+- [ ] Create notification type enums and constants
+- [ ] Build Toast notification component (shadcn/ui)
+- [ ] Build Bell icon with unread badge in header
+- [ ] Build Notification dropdown preview (latest 10 items)
+- [ ] Build Notification Center page with filters (All/Unread/Type)
+- [ ] Implement mark as read functionality
+- [ ] Implement mark all as read functionality
+- [ ] Create tRPC procedures for notification CRUD
+- [ ] Create tRPC procedures for preferences management
+- [ ] Integrate notifications with achievement events
+- [ ] Integrate notifications with task assignment events
+- [ ] Integrate notifications with teacher feedback events
+- [ ] Integrate notifications with level-up/streak events
+- [ ] Create notification preferences settings page
+- [ ] Test notification system end-to-end
+- [ ] Write vitest tests for notification logic

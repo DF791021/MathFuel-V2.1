@@ -20,9 +20,9 @@ import { pdfExportRouter } from "./routers/pdfExport";
 import { trialRouter } from "./routers/trial";
 import { feedbackRouter } from "./routers/feedback";
 import { paymentRouter } from "./routers/payment";
-import { notificationPreferencesRouter } from "./routers/notificationPreferences";
-import { notificationArchiveRouter } from "./routers/notificationArchive";
-import { parentPortalRouter } from "./routers/parentPortal";
+// Notification system implemented in server/notifications.ts and routers/notifications.ts
+import { parentPortalRouter } from "./routers/parentPortal.js";
+import { notificationsRouter } from "./routers/notifications.js";
 
 export const appRouter = router({
   system: systemRouter,
@@ -40,9 +40,9 @@ export const appRouter = router({
   trial: trialRouter,
   feedback: feedbackRouter,
   payment: paymentRouter,
-  notificationPreferences: notificationPreferencesRouter,
-  notificationArchive: notificationArchiveRouter,
+
   parentPortal: parentPortalRouter,
+  notifications: notificationsRouter,
   
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),

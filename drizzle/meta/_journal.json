@@ -162,6 +162,13 @@
       "when": 1770373980669,
       "tag": "0022_organic_mercury",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "5",
+      "when": 1770386644123,
+      "tag": "0023_condemned_viper",
+      "breakpoints": true
     }
   ]
 }
