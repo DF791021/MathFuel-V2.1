@@ -9,6 +9,11 @@ import { TRPCError } from "@trpc/server";
 import Stripe from "stripe";
 // @ts-ignore
 import { STRIPE_PRODUCTS, formatPrice } from "../_core/stripeProducts";
+import {
+  sendPaymentConfirmationNotification,
+  sendPaymentFailureNotification,
+  sendPaymentMethodUpdateNotification,
+} from "../paymentNotifications";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
   apiVersion: "2024-11-20",
@@ -161,6 +166,20 @@ export const paymentRouter = router({
       try {
         const session = await stripe.checkout.sessions.retrieve(input.sessionId);
 
+        // If payment was successful, send notification
+        if (session.payment_status === "paid" && session.metadata) {
+          const metadata = session.metadata as any;
+          await sendPaymentConfirmationNotification({
+            amount: session.amount_total || 0,
+            currency: session.currency || "usd",
+            tier: metadata.tier as "school" | "district",
+            billingInterval: "month",
+            customerEmail: session.customer_email || "unknown",
+            customerName: metadata.customer_name,
+            sessionId: session.id,
+          });
+        }
+
         return {
           id: session.id,
           status: session.payment_status,
@@ -246,6 +265,13 @@ export const paymentRouter = router({
       try {
         // In a real app, you would update the Stripe customer with this information
         // using stripe.customers.update()
+
+        // Send notification about billing information update
+        await sendPaymentMethodUpdateNotification({
+          customerEmail: input.billingEmail,
+          customerName: input.billingName,
+          paymentMethodType: "billing_info",
+        });
 
         return {
           success: true,
