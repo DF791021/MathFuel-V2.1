@@ -23,6 +23,7 @@ import { paymentRouter } from "./routers/payment";
 // Notification system implemented in server/notifications.ts and routers/notifications.ts
 import { parentPortalRouter } from "./routers/parentPortal.js";
 import { notificationsRouter } from "./routers/notifications.js";
+import { adminSettingsRouter } from "./routers/adminSettings";
 
 export const appRouter = router({
   system: systemRouter,
@@ -43,6 +44,7 @@ export const appRouter = router({
 
   parentPortal: parentPortalRouter,
   notifications: notificationsRouter,
+  adminSettings: adminSettingsRouter,
   
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),

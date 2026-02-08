@@ -29,6 +29,7 @@ import ParentDashboard from "./pages/ParentDashboard";
 import HomePracticeView from "./pages/HomePracticeView";
 import ProgressTrackingDashboard from "./pages/ProgressTrackingDashboard";
 import ParentTeacherMessaging from "./pages/ParentTeacherMessaging";
+import { Admin } from "./pages/Admin";
 
 function Router() {
   return (
@@ -54,6 +55,7 @@ function Router() {
       <Route path="/parent/practice/:studentId" component={HomePracticeView} />
       <Route path="/parent/progress/:studentId" component={ProgressTrackingDashboard} />
       <Route path="/parent/messages/:studentId" component={ParentTeacherMessaging} />
+      <Route path="/admin" component={Admin} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>
