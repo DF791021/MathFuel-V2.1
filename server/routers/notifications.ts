@@ -6,35 +6,27 @@
 import { z } from "zod";
 import { protectedProcedure, router } from "../_core/trpc";
 import {
-  getAdminUnreadNotifications,
-  getAdminNotifications,
-  getAdminNotificationsByType,
+  getUserUnreadNotifications,
+  getUserNotifications,
   markNotificationAsRead,
-  markAllAdminNotificationsAsRead,
-  getAdminUnreadNotificationCount,
-  getAdminNotificationPreferences,
-  updateAdminNotificationPreferences,
+  markAllNotificationsAsRead,
+  getUnreadNotificationCount,
   dismissNotification,
-  createAdminNotification,
+  createNotification,
 } from "../notifications";
-import { NOTIFICATION_TYPES } from "../../shared/notifications";
 
 export const notificationsRouter = router({
   /**
-   * Get unread notifications for current admin (latest 10)
+   * Get unread notifications for current user (latest 10)
    */
   getUnread: protectedProcedure
     .input(z.object({ limit: z.number().default(10) }).optional())
     .query(async ({ ctx, input }) => {
-      // Only admins can access notifications
-      if (ctx.user.role !== "admin") {
-        return [];
-      }
-      return getAdminUnreadNotifications(ctx.user.id, input?.limit);
+      return getUserUnreadNotifications(ctx.user.id, input?.limit || 10);
     }),
 
   /**
-   * Get all notifications for current admin with pagination
+   * Get all notifications for current user with pagination
    */
   getAll: protectedProcedure
     .input(
@@ -44,37 +36,14 @@ export const notificationsRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
-      if (ctx.user.role !== "admin") {
-        return [];
-      }
-      return getAdminNotifications(ctx.user.id, input.limit, input.offset);
+      return getUserNotifications(ctx.user.id, input.limit, input.offset);
     }),
 
   /**
-   * Get notifications by type
-   */
-  getByType: protectedProcedure
-    .input(
-      z.object({
-        type: z.string(),
-        limit: z.number().default(20),
-      })
-    )
-    .query(async ({ ctx, input }) => {
-      if (ctx.user.role !== "admin") {
-        return [];
-      }
-      return getAdminNotificationsByType(ctx.user.id, input.type, input.limit);
-    }),
-
-  /**
-   * Get unread count for current admin
+   * Get unread count for current user
    */
   getUnreadCount: protectedProcedure.query(async ({ ctx }) => {
-    if (ctx.user.role !== "admin") {
-      return { count: 0 };
-    }
-    const count = await getAdminUnreadNotificationCount(ctx.user.id);
+    const count = await getUnreadNotificationCount(ctx.user.id);
     return { count };
   }),
 
@@ -84,9 +53,6 @@ export const notificationsRouter = router({
   markAsRead: protectedProcedure
     .input(z.object({ notificationId: z.number() }))
     .mutation(async ({ ctx, input }) => {
-      if (ctx.user.role !== "admin") {
-        throw new Error("Unauthorized");
-      }
       await markNotificationAsRead(input.notificationId);
       return { success: true };
     }),
@@ -95,10 +61,7 @@ export const notificationsRouter = router({
    * Mark all notifications as read
    */
   markAllAsRead: protectedProcedure.mutation(async ({ ctx }) => {
-    if (ctx.user.role !== "admin") {
-      throw new Error("Unauthorized");
-    }
-    await markAllAdminNotificationsAsRead(ctx.user.id);
+    await markAllNotificationsAsRead(ctx.user.id);
     return { success: true };
   }),
 
@@ -108,59 +71,23 @@ export const notificationsRouter = router({
   dismiss: protectedProcedure
     .input(z.object({ notificationId: z.number() }))
     .mutation(async ({ ctx, input }) => {
-      if (ctx.user.role !== "admin") {
-        throw new Error("Unauthorized");
-      }
       await dismissNotification(input.notificationId);
       return { success: true };
     }),
 
   /**
-   * Get admin notification preferences
-   */
-  getPreferences: protectedProcedure.query(async ({ ctx }) => {
-    if (ctx.user.role !== "admin") {
-      throw new Error("Unauthorized");
-    }
-    return getAdminNotificationPreferences(ctx.user.id);
-  }),
-
-  /**
-   * Update admin notification preferences
-   */
-  updatePreferences: protectedProcedure
-    .input(
-      z.object({
-        inAppPayments: z.boolean().optional(),
-        inAppSystemAlerts: z.boolean().optional(),
-        inAppAccountChanges: z.boolean().optional(),
-        emailPayments: z.boolean().optional(),
-        emailSystemAlerts: z.boolean().optional(),
-        emailAccountChanges: z.boolean().optional(),
-        emailDigestFrequency: z.enum(["none", "daily", "weekly"]).optional(),
-        quietHoursStart: z.string().optional(),
-        quietHoursEnd: z.string().optional(),
-        quietHoursEnabled: z.boolean().optional(),
-      })
-    )
-    .mutation(async ({ ctx, input }) => {
-      if (ctx.user.role !== "admin") {
-        throw new Error("Unauthorized");
-      }
-      await updateAdminNotificationPreferences(ctx.user.id, input);
-      return { success: true };
-    }),
-
-  /**
-   * Send test notification (for testing preferences)
+   * Send test notification (for testing)
    */
   sendTest: protectedProcedure.mutation(async ({ ctx }) => {
+    // Only admins can send test notifications
     if (ctx.user.role !== "admin") {
       throw new Error("Unauthorized");
     }
-    await createAdminNotification({
-      adminId: ctx.user.id,
-      type: NOTIFICATION_TYPES.SYSTEM_ALERT,
+
+    await createNotification({
+      userId: ctx.user.id,
+      role: "admin",
+      type: "system_alert",
       title: "Test Notification",
       body: "This is a test notification to verify your notification settings are working correctly.",
       linkUrl: "/notifications",

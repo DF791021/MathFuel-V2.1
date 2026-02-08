@@ -881,3 +881,67 @@
 - [ ] Create notification preferences settings page
 - [ ] Test notification system end-to-end
 - [ ] Write vitest tests for notification logic
+
+
+## Revenue Engine Build - Phase 1: Database & Architecture - IN PROGRESS
+- [ ] Create subscriptions table with Stripe ledger schema
+- [ ] Create admin_settings table (toggles, feature flags, announcements)
+- [ ] Create audit_log table (comprehensive action logging)
+- [ ] Create feature_flags table (typed, named, with description/owner)
+- [ ] Create email_templates table (for tracking sent emails)
+- [ ] Create webhook_events table (for retry visualization)
+- [ ] Run migrations (pnpm db:push)
+- [ ] Set up RBAC architecture (permissions table, capability checks)
+
+## Revenue Engine Build - Phase 2: Admin Settings Panel - TODO
+- [ ] Create /admin route with RBAC protection
+- [ ] Build admin dashboard layout
+- [ ] Implement site-wide toggles (maintenance mode, feature flags)
+- [ ] Implement pricing plan management UI
+- [ ] Implement announcement banner editor
+- [ ] Implement testimonials CRUD
+- [ ] Implement content visibility controls
+- [ ] Implement system actions (resend notifications, disable users, refund logging)
+- [ ] Build user detail view (profile, subscription history)
+- [ ] Build subscription timeline/events view
+- [ ] Implement webhook retry visualization (recent events table, detail view, replay button)
+- [ ] Write admin panel tests
+
+## Revenue Engine Build - Phase 3: Email Notifications - TODO
+- [ ] Set up Resend integration
+- [ ] Create email template components (React)
+- [ ] Implement user emails (welcome, password reset, receipt, renewal, failed payment, cancellation)
+- [ ] Implement admin emails (new purchase, failed payment, refund request, high-value signup, error spike)
+- [ ] Implement email retry logic
+- [ ] Implement email delivery tracking
+- [ ] Write email notification tests
+
+## Revenue Engine Build - Phase 4: Observability - TODO
+- [ ] Set up Sentry integration
+- [ ] Implement Pino structured logging
+- [ ] Implement Prometheus metrics collection
+- [ ] Build health check endpoint with KPIs
+- [ ] Implement error tracking and grouping
+- [ ] Write observability tests
+
+## Revenue Engine Build - Phase 5: Stripe Webhook Integration - TODO
+- [ ] Ensure webhook handler is wired for all payment events
+- [ ] Implement subscription ledger updates from webhooks
+- [ ] Implement reconciliation logic
+- [ ] Add webhook retry visualization
+- [ ] Write webhook integration tests
+
+## Revenue Engine Build - Phase 6: Integration & Testing - TODO
+- [ ] End-to-end testing (admin panel, emails, webhooks)
+- [ ] Performance testing (p95 latency, error rate)
+- [ ] Email delivery testing
+- [ ] Webhook retry testing
+- [ ] Audit log testing
+
+## Revenue Engine Build - Phase 7: Documentation & Deployment - TODO
+- [ ] Create admin runbook
+- [ ] Create email template customization guide
+- [ ] Create troubleshooting guide
+- [ ] Create feature flag management guide
+- [ ] Save checkpoint
+- [ ] Deliver revenue engine

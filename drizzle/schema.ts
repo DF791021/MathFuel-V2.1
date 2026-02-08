@@ -1330,3 +1330,146 @@ export const parentProgressReports = mysqlTable("parentProgressReports", {
 
 export type ParentProgressReport = typeof parentProgressReports.$inferSelect;
 export type InsertParentProgressReport = typeof parentProgressReports.$inferInsert;
+
+
+/**
+ * ============================================================================
+ * REVENUE ENGINE TABLES - Admin Controls, Payments, Observability
+ * ============================================================================
+ */
+
+/**
+ * Subscriptions - Stripe ledger for KPIs and operations
+ * Source of truth: Stripe, but maintained locally for performance and KPIs
+ */
+export const subscriptions = mysqlTable("subscriptions", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  stripeCustomerId: varchar("stripeCustomerId", { length: 100 }).notNull().unique(),
+  stripeSubscriptionId: varchar("stripeSubscriptionId", { length: 100 }).notNull().unique(),
+  status: mysqlEnum("status", ["trialing", "active", "incomplete", "incomplete_expired", "past_due", "canceled", "unpaid"]).notNull(),
+  priceId: varchar("priceId", { length: 100 }).notNull(),
+  currentPeriodStart: timestamp("currentPeriodStart").notNull(),
+  currentPeriodEnd: timestamp("currentPeriodEnd").notNull(),
+  cancelAtPeriodEnd: boolean("cancelAtPeriodEnd").default(false).notNull(),
+  canceledAt: timestamp("canceledAt"),
+  latestInvoiceId: varchar("latestInvoiceId", { length: 100 }),
+  lastPaymentStatus: mysqlEnum("lastPaymentStatus", ["succeeded", "failed", "pending"]),
+  lastWebhookEventId: varchar("lastWebhookEventId", { length: 100 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Subscription = typeof subscriptions.$inferSelect;
+export type InsertSubscription = typeof subscriptions.$inferInsert;
+
+/**
+ * Admin Settings - Site-wide toggles, feature flags, announcements
+ */
+export const adminSettings = mysqlTable("adminSettings", {
+  id: int("id").autoincrement().primaryKey(),
+  key: varchar("key", { length: 100 }).notNull().unique(),
+  value: json("value").notNull(),
+  type: mysqlEnum("type", ["boolean", "string", "number", "json"]).notNull(),
+  description: text("description"),
+  updatedBy: int("updatedBy").notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type AdminSetting = typeof adminSettings.$inferSelect;
+export type InsertAdminSetting = typeof adminSettings.$inferInsert;
+
+/**
+ * Feature Flags - Typed, named flags with description and owner
+ */
+export const featureFlags = mysqlTable("featureFlags", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 100 }).notNull().unique(),
+  description: text("description"),
+  enabled: boolean("enabled").default(false).notNull(),
+  owner: varchar("owner", { length: 100 }).notNull(),
+  rolloutPercentage: int("rolloutPercentage").default(0).notNull(), // 0-100 for gradual rollout
+  targetRoles: varchar("targetRoles", { length: 255 }), // Comma-separated: admin,teacher,student
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type FeatureFlag = typeof featureFlags.$inferSelect;
+export type InsertFeatureFlag = typeof featureFlags.$inferInsert;
+
+/**
+ * Audit Log - Comprehensive logging of all admin actions
+ */
+export const auditLog = mysqlTable("auditLog", {
+  id: int("id").autoincrement().primaryKey(),
+  adminId: int("adminId").notNull(),
+  action: varchar("action", { length: 100 }).notNull(), // e.g., "toggle_maintenance", "refund_issued", "user_disabled"
+  resourceType: varchar("resourceType", { length: 50 }).notNull(), // e.g., "user", "subscription", "setting"
+  resourceId: varchar("resourceId", { length: 100 }),
+  changes: json("changes"), // Before/after values
+  metadata: json("metadata"), // Additional context
+  ipAddress: varchar("ipAddress", { length: 45 }),
+  userAgent: text("userAgent"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type AuditLogEntry = typeof auditLog.$inferSelect;
+export type InsertAuditLogEntry = typeof auditLog.$inferInsert;
+
+/**
+ * Webhook Events - For retry visualization and monitoring
+ */
+export const webhookEvents = mysqlTable("webhookEvents", {
+  id: int("id").autoincrement().primaryKey(),
+  externalId: varchar("externalId", { length: 100 }).notNull().unique(), // Stripe event ID
+  type: varchar("type", { length: 100 }).notNull(), // e.g., "payment_intent.succeeded"
+  status: mysqlEnum("status", ["pending", "succeeded", "failed"]).default("pending").notNull(),
+  payload: json("payload").notNull(),
+  error: text("error"),
+  attempts: int("attempts").default(0).notNull(),
+  maxRetries: int("maxRetries").default(3).notNull(),
+  nextRetryAt: timestamp("nextRetryAt"),
+  lastAttemptAt: timestamp("lastAttemptAt"),
+  succeededAt: timestamp("succeededAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type WebhookEvent = typeof webhookEvents.$inferSelect;
+export type InsertWebhookEvent = typeof webhookEvents.$inferInsert;
+
+/**
+ * Email Sends - Track email delivery for observability
+ */
+export const emailSends = mysqlTable("emailSends", {
+  id: int("id").autoincrement().primaryKey(),
+  recipientEmail: varchar("recipientEmail", { length: 320 }).notNull(),
+  recipientUserId: int("recipientUserId"),
+  type: varchar("type", { length: 50 }).notNull(), // e.g., "welcome", "receipt", "failed_payment"
+  subject: varchar("subject", { length: 255 }).notNull(),
+  status: mysqlEnum("status", ["pending", "sent", "failed", "bounced"]).default("pending").notNull(),
+  externalId: varchar("externalId", { length: 100 }), // Resend message ID
+  error: text("error"),
+  sentAt: timestamp("sentAt"),
+  openedAt: timestamp("openedAt"),
+  clickedAt: timestamp("clickedAt"),
+  bouncedAt: timestamp("bouncedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type EmailSend = typeof emailSends.$inferSelect;
+export type InsertEmailSend = typeof emailSends.$inferInsert;
+
+/**
+ * RBAC Permissions - For future role expansion (binary admin/user now)
+ */
+export const permissions = mysqlTable("permissions", {
+  id: int("id").autoincrement().primaryKey(),
+  role: varchar("role", { length: 50 }).notNull(), // e.g., "admin", "support", "finance", "content"
+  capability: varchar("capability", { length: 100 }).notNull(), // e.g., "manage_users", "view_payments", "edit_content"
+  description: text("description"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Permission = typeof permissions.$inferSelect;
+export type InsertPermission = typeof permissions.$inferInsert;

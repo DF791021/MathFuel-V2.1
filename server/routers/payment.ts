@@ -15,9 +15,7 @@ import {
   sendPaymentMethodUpdateNotification,
 } from "../paymentNotifications";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
-  apiVersion: "2024-11-20",
-});
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "");
 
 export const paymentRouter = router({
   /**
@@ -53,11 +51,11 @@ export const paymentRouter = router({
 
         // Create checkout session
         const session = await stripe.checkout.sessions.create({
-          mode: "subscription" as const,
-          payment_method_types: ["card"] as const,
-          customer_email: ctx.user.email,
+          mode: "subscription",
+          payment_method_types: ["card"],
+          customer_email: ctx.user.email || undefined,
           client_reference_id: ctx.user.id.toString(),
-        metadata: {
+          metadata: {
           user_id: ctx.user.id.toString(),
             tier: input.tier,
             trial_account_id: input.trialAccountId?.toString() || "",
@@ -269,8 +267,7 @@ export const paymentRouter = router({
         // Send notification about billing information update
         await sendPaymentMethodUpdateNotification({
           customerEmail: input.billingEmail,
-          customerName: input.billingName,
-          paymentMethodType: "billing_info",
+          cardLast4: undefined,
         });
 
         return {

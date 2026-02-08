@@ -14,9 +14,7 @@ import {
   sendRefundNotification,
 } from "../paymentNotifications";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
-  apiVersion: "2024-11-20",
-});
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "");
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || "";
 
@@ -167,11 +165,8 @@ async function handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent) {
   await sendPaymentFailureNotification({
     amount: paymentIntent.amount,
     currency: paymentIntent.currency,
-    tier,
-    billingInterval,
     customerEmail: metadata.customer_email || "unknown",
-    customerName: metadata.customer_name,
-    failureReason,
+    reason: failureReason,
     sessionId: paymentIntent.id,
   });
 }
@@ -223,7 +218,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
     const tier = (metadata.tier || "school") as "school" | "district";
     const billingInterval = (subscription.items.data[0]?.plan.interval || "month") as "month" | "year";
     const amount = subscription.items.data[0]?.plan.amount || 0;
-    const currentPeriodEnd = new Date(subscription.current_period_end * 1000);
+    const currentPeriodEnd = (subscription as any).current_period_end ? new Date((subscription as any).current_period_end * 1000) : new Date();
 
     // Get customer email
     let customerEmail = "unknown";
@@ -245,14 +240,11 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
 
     if (daysUntilRenewal <= 7 && daysUntilRenewal > 0) {
       await sendSubscriptionRenewalNotification({
+        subscriptionId: subscription.id,
         amount,
         currency: subscription.currency,
-        tier,
-        billingInterval,
         customerEmail,
-        customerName: metadata.customer_name,
-        renewalDate: currentPeriodEnd,
-        subscriptionId: subscription.id,
+        nextBillingDate: currentPeriodEnd,
       });
     }
   }
@@ -281,11 +273,9 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   }
 
   await sendSubscriptionCancellationNotification({
-    tier,
-    customerEmail,
-    customerName: metadata.customer_name,
-    cancellationReason: "Subscription cancelled",
     subscriptionId: subscription.id,
+    customerEmail,
+    reason: "Subscription cancelled",
   });
 }
 
@@ -315,13 +305,11 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
   }
 
   await sendRefundNotification({
+    refundId: charge.id,
     amount: charge.amount_refunded || charge.amount,
     currency: charge.currency,
     customerEmail,
-    customerName: metadata.customer_name,
-    refundReason: charge.refunded ? "Refund processed" : "Unknown",
-    chargeId: charge.id,
-    refundId: charge.id,
+    reason: charge.refunded ? "Refund processed" : "Unknown",
   });
 }
 
@@ -383,11 +371,8 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
   await sendPaymentFailureNotification({
     amount: invoice.total || 0,
     currency: invoice.currency,
-    tier,
-    billingInterval: "month",
     customerEmail,
-    customerName: metadata.customer_name,
-    failureReason: "Invoice payment failed",
+    reason: "Invoice payment failed",
     sessionId: invoice.id,
   });
 }

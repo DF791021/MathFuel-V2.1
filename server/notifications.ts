@@ -1,24 +1,48 @@
 /**
  * Admin Notification Database Helpers
  * Handles CRUD operations for admin-only notifications
- * No student-facing notifications in Phase 1
+ * Uses userId + role filter (no separate adminId column)
  */
 
 import { getDb } from "./db";
-import { notifications, adminNotificationPreferences } from "../drizzle/schema";
+import { notifications } from "../drizzle/schema";
 import { eq, and, desc, isNull } from "drizzle-orm";
-import { NotificationPayload, AdminNotificationPreferencesPayload } from "../shared/notifications";
+
+export type NotificationType =
+  | "challenge_completed"
+  | "achievement_earned"
+  | "task_assigned"
+  | "task_due_soon"
+  | "feedback_posted"
+  | "level_up"
+  | "streak_milestone"
+  | "student_completed_task"
+  | "student_needs_help"
+  | "new_student_joined"
+  | "account_change"
+  | "system_alert";
+
+export interface CreateNotificationPayload {
+  userId: number;
+  role: "student" | "teacher" | "admin";
+  type: NotificationType;
+  title: string;
+  body: string;
+  linkUrl?: string;
+  metadata?: Record<string, any>;
+}
 
 /**
- * Create a new admin notification
+ * Create a new notification for a user
  */
-export async function createAdminNotification(payload: NotificationPayload) {
+export async function createNotification(payload: CreateNotificationPayload) {
   try {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
 
     const result = await db.insert(notifications).values({
-      adminId: payload.adminId,
+      userId: payload.userId,
+      role: payload.role,
       type: payload.type,
       title: payload.title,
       body: payload.body,
@@ -34,9 +58,9 @@ export async function createAdminNotification(payload: NotificationPayload) {
 }
 
 /**
- * Get unread notifications for an admin
+ * Get unread notifications for a user
  */
-export async function getAdminUnreadNotifications(adminId: number, limit: number = 10) {
+export async function getUserUnreadNotifications(userId: number, limit: number = 10) {
   try {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
@@ -44,23 +68,19 @@ export async function getAdminUnreadNotifications(adminId: number, limit: number
     return await db
       .select()
       .from(notifications)
-      .where(and(eq(notifications.adminId, adminId), isNull(notifications.readAt)))
+      .where(and(eq(notifications.userId, userId), isNull(notifications.readAt)))
       .orderBy(desc(notifications.createdAt))
       .limit(limit);
   } catch (error) {
     console.error("Failed to get unread notifications:", error);
-    return [];
+    throw error;
   }
 }
 
 /**
- * Get all notifications for an admin with pagination
+ * Get all notifications for a user (paginated)
  */
-export async function getAdminNotifications(
-  adminId: number,
-  limit: number = 20,
-  offset: number = 0
-) {
+export async function getUserNotifications(userId: number, limit: number = 20, offset: number = 0) {
   try {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
@@ -68,61 +88,18 @@ export async function getAdminNotifications(
     return await db
       .select()
       .from(notifications)
-      .where(eq(notifications.adminId, adminId))
+      .where(eq(notifications.userId, userId))
       .orderBy(desc(notifications.createdAt))
       .limit(limit)
       .offset(offset);
   } catch (error) {
     console.error("Failed to get notifications:", error);
-    return [];
+    throw error;
   }
 }
 
 /**
- * Get notifications by type for an admin
- */
-export async function getAdminNotificationsByType(
-  adminId: number,
-  type: string,
-  limit: number = 20
-) {
-  try {
-    const db = await getDb();
-    if (!db) throw new Error("Database not available");
-
-    return await db
-      .select()
-      .from(notifications)
-      .where(and(eq(notifications.adminId, adminId), eq(notifications.type, type)))
-      .orderBy(desc(notifications.createdAt))
-      .limit(limit);
-  } catch (error) {
-    console.error("Failed to get notifications by type:", error);
-    return [];
-  }
-}
-
-/**
- * Get unread notification count for an admin
- */
-export async function getAdminUnreadNotificationCount(adminId: number): Promise<number> {
-  try {
-    const db = await getDb();
-    if (!db) throw new Error("Database not available");
-
-    const result = await db
-      .select()
-      .from(notifications)
-      .where(and(eq(notifications.adminId, adminId), isNull(notifications.readAt)));
-    return result.length;
-  } catch (error) {
-    console.error("Failed to get unread count:", error);
-    return 0;
-  }
-}
-
-/**
- * Mark a notification as read
+ * Mark notification as read
  */
 export async function markNotificationAsRead(notificationId: number) {
   try {
@@ -140,9 +117,9 @@ export async function markNotificationAsRead(notificationId: number) {
 }
 
 /**
- * Mark all notifications as read for an admin
+ * Mark all notifications as read for a user
  */
-export async function markAllAdminNotificationsAsRead(adminId: number) {
+export async function markAllNotificationsAsRead(userId: number) {
   try {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
@@ -150,15 +127,15 @@ export async function markAllAdminNotificationsAsRead(adminId: number) {
     return await db
       .update(notifications)
       .set({ readAt: new Date() })
-      .where(and(eq(notifications.adminId, adminId), isNull(notifications.readAt)));
+      .where(and(eq(notifications.userId, userId), isNull(notifications.readAt)));
   } catch (error) {
-    console.error("Failed to mark all as read:", error);
+    console.error("Failed to mark all notifications as read:", error);
     throw error;
   }
 }
 
 /**
- * Dismiss a notification
+ * Dismiss notification
  */
 export async function dismissNotification(notificationId: number) {
   try {
@@ -176,67 +153,56 @@ export async function dismissNotification(notificationId: number) {
 }
 
 /**
- * Get or create admin notification preferences
+ * Delete notification
  */
-export async function getAdminNotificationPreferences(adminId: number) {
+export async function deleteNotification(notificationId: number) {
   try {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
 
-    let prefs = await db
-      .select()
-      .from(adminNotificationPreferences)
-      .where(eq(adminNotificationPreferences.adminId, adminId));
-
-    if (prefs.length === 0) {
-      // Create default preferences
-      await db.insert(adminNotificationPreferences).values({
-        adminId,
-        inAppPayments: true,
-        inAppSystemAlerts: true,
-        inAppAccountChanges: true,
-        emailPayments: true,
-        emailSystemAlerts: true,
-        emailAccountChanges: false,
-        emailDigestFrequency: "daily",
-        quietHoursEnabled: false,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
-
-      prefs = await db
-        .select()
-        .from(adminNotificationPreferences)
-        .where(eq(adminNotificationPreferences.adminId, adminId));
-    }
-
-    return prefs[0] || null;
+    return await db.delete(notifications).where(eq(notifications.id, notificationId));
   } catch (error) {
-    console.error("Failed to get notification preferences:", error);
-    return null;
+    console.error("Failed to delete notification:", error);
+    throw error;
   }
 }
 
 /**
- * Update admin notification preferences
+ * Get notification count for a user
  */
-export async function updateAdminNotificationPreferences(
-  adminId: number,
-  updates: AdminNotificationPreferencesPayload
-) {
+export async function getNotificationCount(userId: number) {
   try {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
 
-    return await db
-      .update(adminNotificationPreferences)
-      .set({
-        ...updates,
-        updatedAt: new Date(),
-      })
-      .where(eq(adminNotificationPreferences.adminId, adminId));
+    const result = await db
+      .select({ count: notifications.id })
+      .from(notifications)
+      .where(eq(notifications.userId, userId));
+
+    return result.length;
   } catch (error) {
-    console.error("Failed to update notification preferences:", error);
+    console.error("Failed to get notification count:", error);
+    throw error;
+  }
+}
+
+/**
+ * Get unread notification count for a user
+ */
+export async function getUnreadNotificationCount(userId: number) {
+  try {
+    const db = await getDb();
+    if (!db) throw new Error("Database not available");
+
+    const result = await db
+      .select({ count: notifications.id })
+      .from(notifications)
+      .where(and(eq(notifications.userId, userId), isNull(notifications.readAt)));
+
+    return result.length;
+  } catch (error) {
+    console.error("Failed to get unread notification count:", error);
     throw error;
   }
 }
