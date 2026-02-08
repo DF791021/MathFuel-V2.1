@@ -1,9 +1,19 @@
 import nodemailer from "nodemailer";
+import { Resend } from "resend";
 import { ENV } from "./env";
 
-// For development, we'll use a test account or log emails
-// For production, configure with your SMTP settings via environment variables
+// Email transporter (nodemailer for SMTP)
 let transporter: nodemailer.Transporter | null = null;
+
+// Resend client for transactional emails
+const resendApiKey = process.env.RESEND_API_KEY;
+const resend = resendApiKey ? new Resend(resendApiKey) : null;
+
+if (resendApiKey) {
+  console.log("[Email] Resend configured for transactional emails");
+} else if (!process.env.SMTP_HOST) {
+  console.log("[Email] Using development mode (Ethereal test account)");
+}
 
 export async function getEmailTransporter() {
   if (transporter) {
@@ -56,6 +66,25 @@ export interface SendEmailOptions {
 
 export async function sendEmail(options: SendEmailOptions): Promise<boolean> {
   try {
+    // Use Resend if configured (preferred for transactional emails)
+    if (resend) {
+      const result = await resend.emails.send({
+        from: "MathFuel <noreply@mathfuel.io>",
+        to: options.to,
+        subject: options.subject,
+        html: options.html,
+      });
+
+      if (result.error) {
+        console.error("[Email] Resend failed:", result.error);
+        return false;
+      }
+
+      console.log("[Email] Sent via Resend:", result.data?.id);
+      return true;
+    }
+
+    // Fallback to nodemailer (for backward compatibility)
     const transporter = await getEmailTransporter();
 
     const mailOptions = {
