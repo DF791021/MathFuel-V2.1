@@ -15,6 +15,7 @@ import {
   Play, Trophy, Sparkles, Clock, Zap, RotateCcw, Home, Bot,
   ThumbsUp, ThumbsDown,
 } from "lucide-react";
+import HintSystem from "@/components/HintSystem";
 import { toast } from "sonner";
 
 const PROBLEMS_PER_SESSION = 10;
@@ -416,48 +417,24 @@ function ProblemScreen({ problem, answer, setAnswer, onSubmit, onGetHint, visibl
           />
         )}
 
-        {/* Submit + Hint buttons */}
-        <div className="flex gap-2 sm:gap-3">
-          <Button onClick={onSubmit} disabled={!answer.trim() || isSubmitting}
-            className="flex-1 h-11 sm:h-12 text-sm sm:text-lg gap-1.5 sm:gap-2"
-          >
-            {isSubmitting ? <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-b-2 border-white" /> : <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5" />}
-            {isSubmitting ? "Checking..." : "Submit"}
-          </Button>
-          <Button variant="outline" onClick={onGetHint} disabled={isLoadingHint}
-            className="h-11 sm:h-12 gap-1.5 sm:gap-2 px-3 sm:px-4"
-          >
-            {isLoadingHint ? <div className="animate-spin rounded-full h-3.5 w-3.5 sm:h-4 sm:w-4 border-b-2 border-yellow-500" /> : <Lightbulb className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500" />}
-            <span className="hidden sm:inline">{isLoadingHint ? "Thinking..." : "Hint"}</span>
-          </Button>
-        </div>
+        {/* Submit button */}
+        <Button onClick={onSubmit} disabled={!answer.trim() || isSubmitting}
+          className="w-full h-11 sm:h-12 text-sm sm:text-lg gap-1.5 sm:gap-2"
+        >
+          {isSubmitting ? <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-b-2 border-white" /> : <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5" />}
+          {isSubmitting ? "Checking..." : "Submit Answer"}
+        </Button>
       </div>
 
-      {/* AI Hints */}
-      <AnimatePresence>
-        {visibleHints.length > 0 && (
-          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="space-y-2">
-            {visibleHints.map((hint, i) => (
-              <motion.div key={i} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}
-                className="flex gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg bg-yellow-50 border border-yellow-200"
-              >
-                <div className="flex-shrink-0 mt-0.5">
-                  <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-yellow-200 flex items-center justify-center">
-                    <Bot className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-yellow-700" />
-                  </div>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[10px] sm:text-xs font-medium text-yellow-600 mb-0.5">Hint {i + 1}</p>
-                  <p className="text-xs sm:text-sm text-yellow-800 leading-relaxed">{hint}</p>
-                </div>
-                <div className="flex-shrink-0 self-center">
-                  <RatingButtons currentRating={hintRatings[i] ?? null} onRate={(rating) => onRateHint(i, rating, hint)} />
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Animated Hint System */}
+      <HintSystem
+        visibleHints={visibleHints}
+        hintsViewed={hintsViewed}
+        isLoadingHint={isLoadingHint}
+        onGetHint={onGetHint}
+        hintRatings={hintRatings}
+        onRateHint={onRateHint}
+      />
     </motion.div>
   );
 }

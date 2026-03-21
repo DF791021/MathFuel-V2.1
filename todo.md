@@ -80,3 +80,13 @@
 - [x] ParentDashboard: child selector, progress charts, session table to cards on mobile
 - [x] Global CSS: base font scaling, container padding, touch target minimums, safe-area insets
 - [x] Test all pages at 375px and 390px widths
+
+## Phase 9: Animated Incremental Hint System
+- [x] Animated "Need a Hint?" button with pulse/glow effect when idle
+- [x] Incremental hint reveal (one clue at a time, not all at once)
+- [x] Smooth slide-in/fade-in animation for each new hint
+- [x] Visual hint counter (e.g., "Hint 1 of 3")
+- [x] Progressive hint styling (each hint visually distinct)
+- [x] Gentle encouragement copy between hints
+- [x] Disable hint button briefly after reveal to prevent spam-clicking
+- [x] Mobile-optimized hint panel with proper touch targets
