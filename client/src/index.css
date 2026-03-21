@@ -43,18 +43,18 @@
 }
 
 :root {
-  /* MathMastery Palette - Math-Focused Design */
-  /* Primary: Deep Blue (Math/Science) */
-  --primary: oklch(0.42 0.15 260); 
-  --primary-foreground: oklch(0.98 0.02 95);
+  /* MathFuel Palette - Warm, Inviting, Child-Friendly */
+  /* Primary: Warm Indigo */
+  --primary: oklch(0.45 0.16 270);
+  --primary-foreground: oklch(0.98 0.01 90);
   
-  /* Secondary: Purple (Logic/Creativity) */
-  --secondary: oklch(0.50 0.12 290);
-  --secondary-foreground: oklch(0.98 0.02 95);
+  /* Secondary: Soft Teal */
+  --secondary: oklch(0.55 0.12 180);
+  --secondary-foreground: oklch(0.98 0.01 90);
   
-  /* Accent: Bright Orange (Energy/Progress) */
-  --accent: oklch(0.65 0.22 45);
-  --accent-foreground: oklch(0.98 0.02 95);
+  /* Accent: Sunny Amber */
+  --accent: oklch(0.72 0.18 75);
+  --accent-foreground: oklch(0.20 0.04 50);
   
   /* Background: Clean White */
   --background: oklch(0.99 0.01 95);
@@ -81,12 +81,12 @@
   --input: oklch(0.90 0.04 260);
   --ring: oklch(0.42 0.15 260);
   
-  /* Charts (Math-themed) */
-  --chart-1: oklch(0.42 0.15 260);
-  --chart-2: oklch(0.65 0.22 45);
-  --chart-3: oklch(0.50 0.12 290);
+  /* Charts */
+  --chart-1: oklch(0.45 0.16 270);
+  --chart-2: oklch(0.72 0.18 75);
+  --chart-3: oklch(0.55 0.12 180);
   --chart-4: oklch(0.60 0.18 150);
-  --chart-5: oklch(0.55 0.20 20);
+  --chart-5: oklch(0.65 0.16 340);
   
   /* Sidebar */
   --sidebar: oklch(0.96 0.03 260);
@@ -141,10 +141,10 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground font-['Poppins',sans-serif];
+    @apply bg-background text-foreground font-['Nunito',sans-serif];
   }
   h1, h2, h3, h4, h5, h6 {
-    @apply font-['Poppins',sans-serif] font-bold;
+    @apply font-['Nunito',sans-serif] font-bold;
   }
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]),
@@ -166,7 +166,7 @@
     margin-right: auto;
     padding-left: 1rem;
     padding-right: 1rem;
-    min-height: 100vh;
+
   }
 
   .flex {

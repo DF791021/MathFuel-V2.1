@@ -1,113 +1,46 @@
-/**
- * Admin Settings Router
- * tRPC procedures for managing feature flags and admin settings
- */
-
 import { router, protectedProcedure } from "../_core/trpc";
 import { z } from "zod";
-import {
-  getAllFeatureFlags,
-  getFeatureFlag,
-  toggleFeatureFlag,
-  getMaintenanceModeStatus,
-  enableMaintenanceMode,
-  disableMaintenanceMode,
-  getAnnouncementBanner,
-  setAnnouncementBanner,
-} from "../adminSettings";
-import { getAllFeatureFlagNames } from "../../shared/featureFlags";
+import * as db from "../db";
+import { TRPCError } from "@trpc/server";
 
-/**
- * Admin-only middleware
- */
-const adminOnly = protectedProcedure.use(async ({ ctx, next }) => {
+const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
   if (ctx.user.role !== "admin") {
-    throw new Error("Unauthorized: Admin access required");
+    throw new TRPCError({ code: "FORBIDDEN", message: "Admin access required" });
   }
   return next({ ctx });
 });
 
 export const adminSettingsRouter = router({
-  /**
-   * Get all feature flags
-   */
-  getAllFlags: adminOnly.query(async () => {
-    return getAllFeatureFlags();
+  getFeatureFlags: adminProcedure.query(async () => {
+    return db.getAllFeatureFlags();
   }),
 
-  /**
-   * Get a specific feature flag
-   */
-  getFlag: adminOnly.input(z.object({ name: z.string() })).query(async ({ input }) => {
-    return getFeatureFlag(input.name as any);
-  }),
-
-  /**
-   * Toggle a feature flag
-   */
-  toggleFlag: adminOnly
-    .input(
-      z.object({
-        name: z.string(),
-        enabled: z.boolean(),
-      })
-    )
-    .mutation(async ({ input, ctx }) => {
-      return toggleFeatureFlag(input.name as any, input.enabled, ctx.user.id);
+  toggleFeatureFlag: adminProcedure
+    .input(z.object({ name: z.string(), enabled: z.boolean() }))
+    .mutation(async ({ ctx, input }) => {
+      await db.setFeatureFlag(input.name, input.enabled, ctx.user.name ?? "admin");
+      return { success: true };
     }),
 
-  /**
-   * Get maintenance mode status
-   */
-  getMaintenanceMode: adminOnly.query(async () => {
-    return getMaintenanceModeStatus();
+  getSettings: adminProcedure.query(async () => {
+    return db.getAllAdminSettings();
   }),
 
-  /**
-   * Enable maintenance mode
-   */
-  enableMaintenance: adminOnly
-    .input(
-      z.object({
-        message: z.string().min(1).max(500),
-      })
-    )
-    .mutation(async ({ input, ctx }) => {
-      return enableMaintenanceMode(input.message, ctx.user.id);
+  setSetting: adminProcedure
+    .input(z.object({
+      key: z.string(),
+      value: z.any(),
+      type: z.enum(["boolean", "string", "number", "json"]),
+      description: z.string().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      await db.setAdminSetting(input.key, input.value, input.type, input.description ?? "", ctx.user.id);
+      return { success: true };
     }),
 
-  /**
-   * Disable maintenance mode
-   */
-  disableMaintenance: adminOnly.mutation(async ({ ctx }) => {
-    return disableMaintenanceMode(ctx.user.id);
-  }),
-
-  /**
-   * Get announcement banner
-   */
-  getAnnouncement: adminOnly.query(async () => {
-    return getAnnouncementBanner();
-  }),
-
-  /**
-   * Set announcement banner
-   */
-  setAnnouncement: adminOnly
-    .input(
-      z.object({
-        message: z.string().min(1).max(500),
-        enabled: z.boolean(),
-      })
-    )
-    .mutation(async ({ input, ctx }) => {
-      return setAnnouncementBanner(input.message, input.enabled, ctx.user.id);
+  getAuditLogs: adminProcedure
+    .input(z.object({ limit: z.number().int().min(1).max(500).default(100) }).optional())
+    .query(async ({ input }) => {
+      return db.getAuditLogs(input?.limit ?? 100);
     }),
-
-  /**
-   * Get all available feature flag names (for UI)
-   */
-  getAvailableFlags: adminOnly.query(async () => {
-    return getAllFeatureFlagNames();
-  }),
 });
