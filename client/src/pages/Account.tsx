@@ -7,7 +7,7 @@ import { Link, useLocation } from "wouter";
 import { motion } from "framer-motion";
 import {
   ArrowLeft, Crown, CreditCard, Settings, User, Mail,
-  Calendar, Shield, Loader2, ExternalLink, Zap, CheckCircle2,
+  Calendar, Shield, Loader2, ExternalLink, Zap, CheckCircle2, Gift,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -236,8 +236,34 @@ export default function Account() {
           </Card>
         </motion.div>
 
-        {/* Actions Card */}
+        {/* Referral Card */}
         <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={3}>
+          <Card className="mb-6 border-0 shadow-sm bg-white">
+            <CardContent className="p-5 sm:p-6">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center">
+                  <Gift className="w-5 h-5 text-amber-600" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-foreground">Refer a Friend</h2>
+                  <p className="text-xs text-muted-foreground">
+                    Earn a free month for each friend who subscribes
+                  </p>
+                </div>
+              </div>
+              <Link href="/referrals" className="no-underline block">
+                <Button variant="outline" className="w-full gap-2">
+                  <Gift className="w-4 h-4" />
+                  View Referral Program
+                  <ExternalLink className="w-3.5 h-3.5 ml-auto opacity-50" />
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Actions Card */}
+        <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={4}>
           <Card className="border-0 shadow-sm bg-white">
             <CardContent className="p-5 sm:p-6">
               <div className="flex items-center gap-3 mb-4">

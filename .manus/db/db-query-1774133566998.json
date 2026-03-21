@@ -1,0 +1,265 @@
+{
+  "query": "SHOW TABLES;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KTJMGanAQiuu2AH.d2e93e708435 --database BAbKuMSfjHaa9ao8qByqEp --execute SHOW TABLES;",
+  "rows": [
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "__drizzle_migrations"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "adminNotificationPreferences"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "adminSettings"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "aiFeedback"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "alertHistory"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "alertPreferences"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "auditLog"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "chatConversations"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "chatMessages"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "classMembers"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "classes"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "customQuestions"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "emailSends"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "emailTemplates"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "exportHistory"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "featureFlags"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "feedback_analytics"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "feedback_responses"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "gameAnalyticsClassImprovement"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "gameAnalyticsClassPerformance"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "gameAnalyticsDailyEngagement"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "gameAnalyticsDifficultyProgression"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "gameAnalyticsHistoricalSnapshots"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "gameAnalyticsPerformanceMilestones"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "gameAnalyticsQuestionPerformance"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "gameAnalyticsRankingHistory"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "gameAnalyticsStudentImprovement"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "gameAnalyticsStudentSummary"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "gameAnalyticsTopicMastery"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "gameScores"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "goalAchievements"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "goalDeadlineAlerts"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "goalFeedback"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "goalProgressHistory"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "homePracticeAssignments"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "homePracticeProgress"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "inviteCodes"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "issuedCertificates"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "journalEntries"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "journalInsights"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "journalReflectionsSummary"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "mathDomains"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "mathProblems"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "mathSkills"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "notificationHistory"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "notifications"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "parentAccounts"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "parentProgressReports"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "parentStudentLinks"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "parentTeacherMessages"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "passwordResetTokens"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "permissions"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "practiceSessions"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "problemAttempts"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "reflectionPrompts"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "rouletteChallengeTypes"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "rouletteChallenges"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "rouletteGamePlayers"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "rouletteGameSessions"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "roulettePlayerPowerUps"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "roulettePowerUps"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "rouletteRoundResults"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "scheduledEmails"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "sharedTemplateLibrary"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "studentAchievements"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "studentBadges"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "studentDailyStats"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "studentParentLinks"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "studentPerformanceGoals"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "studentSkillMastery"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "studentStreaks"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "subscriptions"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "successStories"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "successStoryComments"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "successStoryReactions"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "templateImports"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "templateShares"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "trialAccounts"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "trialFollowUps"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "trialMetrics"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "trialRequests"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "user_feedback"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "users"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "webhookEvents"
+    },
+    {
+      "Tables_in_BAbKuMSfjHaa9ao8qByqEp": "zipEmailHistory"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_BAbKuMSfjHaa9ao8qByqEp\n__drizzle_migrations\nadminNotificationPreferences\nadminSettings\naiFeedback\nalertHistory\nalertPreferences\nauditLog\nchatConversations\nchatMessages\nclassMembers\nclasses\ncustomQuestions\nemailSends\nemailTemplates\nexportHistory\nfeatureFlags\nfeedback_analytics\nfeedback_responses\ngameAnalyticsClassImprovement\ngameAnalyticsClassPerformance\ngameAnalyticsDailyEngagement\ngameAnalyticsDifficultyProgression\ngameAnalyticsHistoricalSnapshots\ngameAnalyticsPerformanceMilestones\ngameAnalyticsQuestionPerformance\ngameAnalyticsRankingHistory\ngameAnalyticsStudentImprovement\ngameAnalyticsStudentSummary\ngameAnalyticsTopicMastery\ngameScores\ngoalAchievements\ngoalDeadlineAlerts\ngoalFeedback\ngoalProgressHistory\nhomePracticeAssignments\nhomePracticeProgress\ninviteCodes\nissuedCertificates\njournalEntries\njournalInsights\njournalReflectionsSummary\nmathDomains\nmathProblems\nmathSkills\nnotificationHistory\nnotifications\nparentAccounts\nparentProgressReports\nparentStudentLinks\nparentTeacherMessages\npasswordResetTokens\npermissions\npracticeSessions\nproblemAttempts\nreflectionPrompts\nrouletteChallengeTypes\nrouletteChallenges\nrouletteGamePlayers\nrouletteGameSessions\nroulettePlayerPowerUps\nroulettePowerUps\nrouletteRoundResults\nscheduledEmails\nsharedTemplateLibrary\nstudentAchievements\nstudentBadges\nstudentDailyStats\nstudentParentLinks\nstudentPerformanceGoals\nstudentSkillMastery\nstudentStreaks\nsubscriptions\nsuccessStories\nsuccessStoryComments\nsuccessStoryReactions\ntemplateImports\ntemplateShares\ntrialAccounts\ntrialFollowUps\ntrialMetrics\ntrialRequests\nuser_feedback\nusers\nwebhookEvents\nzipEmailHistory\n",
+  "stderr": "",
+  "execution_time_ms": 63
+}

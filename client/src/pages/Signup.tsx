@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useLocation } from "wouter";
+import { useState, useEffect, useMemo } from "react";
+import { useLocation, useSearch } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ import {
   Users,
   CheckCircle2,
   Sparkles,
+  Gift,
 } from "lucide-react";
 
 const LOGO_URL = import.meta.env.VITE_APP_LOGO || "";
@@ -64,6 +65,7 @@ const GRADE_OPTIONS = [
 
 export default function Signup() {
   const [, navigate] = useLocation();
+  const searchString = useSearch();
   const [step, setStep] = useState<Step>("role");
   const [userType, setUserType] = useState<UserType | null>(null);
   const [name, setName] = useState("");
@@ -72,10 +74,43 @@ export default function Signup() {
   const [showPassword, setShowPassword] = useState(false);
   const [gradeLevel, setGradeLevel] = useState<number | null>(null);
 
+  // Extract referral code from URL (?ref=CODE)
+  const referralCode = useMemo(() => {
+    const params = new URLSearchParams(searchString);
+    return params.get("ref") || "";
+  }, [searchString]);
+
+  // Validate the referral code if present
+  const referralValidation = trpc.referral.validateCode.useQuery(
+    { code: referralCode },
+    { enabled: referralCode.length > 0 }
+  );
+
+  const recordReferralMutation = trpc.referral.recordReferral.useMutation();
+
   const registerMutation = trpc.auth.register.useMutation({
     onSuccess: () => {
-      toast.success("Account created! Welcome to MathFuel! 🚀");
-      navigate("/dashboard");
+      // If there's a valid referral code, record the referral
+      if (referralCode && referralValidation.data?.valid) {
+        recordReferralMutation.mutate(
+          { code: referralCode },
+          {
+            onSuccess: () => {
+              toast.success("Account created! Your referral has been recorded. 🎉");
+            },
+            onError: () => {
+              // Still navigate even if referral recording fails
+              toast.success("Account created! Welcome to MathFuel! 🚀");
+            },
+            onSettled: () => {
+              navigate("/dashboard");
+            },
+          }
+        );
+      } else {
+        toast.success("Account created! Welcome to MathFuel! 🚀");
+        navigate("/dashboard");
+      }
     },
     onError: (err) => {
       toast.error(err.message || "Registration failed. Please try again.");
@@ -146,6 +181,29 @@ export default function Signup() {
           <span className="text-lg sm:text-xl font-bold text-indigo-900">MathFuel</span>
         </button>
       </header>
+
+      {/* Referral banner */}
+      {referralCode && referralValidation.data?.valid && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative z-10 mx-4 sm:mx-auto sm:max-w-md mb-4"
+        >
+          <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-200">
+            <div className="shrink-0 w-9 h-9 rounded-full bg-amber-100 flex items-center justify-center">
+              <Gift className="w-5 h-5 text-amber-600" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-amber-800">
+                Referred by {referralValidation.data.referrerName}!
+              </p>
+              <p className="text-xs text-amber-600">
+                Sign up and subscribe to earn them a free month
+              </p>
+            </div>
+          </div>
+        </motion.div>
+      )}
 
       {/* Main content */}
       <main className="relative z-10 flex-1 flex items-center justify-center px-4 sm:px-6 pb-8">

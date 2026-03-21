@@ -1,0 +1,9 @@
+{
+  "query": "SHOW TABLES LIKE 'referral%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KTJMGanAQiuu2AH.d2e93e708435 --database BAbKuMSfjHaa9ao8qByqEp --execute SHOW TABLES LIKE 'referral%';",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 140
+}

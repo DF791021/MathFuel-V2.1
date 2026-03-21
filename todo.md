@@ -138,3 +138,13 @@
 - [x] Wire route in App.tsx and update Stripe checkout success_url
 - [x] Remove success toast from Account page (replaced by dedicated page)
 - [x] Write vitest tests for the new page (156 tests passing)
+
+## Phase 15: Referral Program
+- [x] Add referrals table to database schema (referrer, referee, code, status, reward)
+- [x] Push database migration
+- [x] Build referral tRPC router (generate code, track referrals, claim rewards)
+- [x] Integrate referral code into signup flow (accept ?ref= query param)
+- [x] Build Referrals page with share link, stats, and referral history
+- [x] Add referral link to Account page and Student Dashboard nav
+- [x] Apply Stripe coupon/credit when referral converts to paid subscriber
+- [x] Write vitest tests for referral procedures (17 tests passing, 173 total)

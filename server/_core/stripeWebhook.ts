@@ -8,6 +8,7 @@ import { notifyOwner } from "./notification";
 import { getDb } from "../db";
 import { subscriptions } from "../../drizzle/schema";
 import { eq } from "drizzle-orm";
+import { processReferralRewardFromWebhook } from "../routers/referral";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "");
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || "";
@@ -167,6 +168,14 @@ export async function handleStripeWebhook(req: Request, res: Response) {
         const sub = event.data.object as Stripe.Subscription;
         console.log(`[Stripe] Subscription created: ${sub.id}`);
         await upsertSubscription(sub);
+
+        // Process referral reward if this new subscriber was referred
+        const newSubUserId = sub.metadata?.mathfuel_user_id
+          ? parseInt(sub.metadata.mathfuel_user_id, 10)
+          : null;
+        if (newSubUserId) {
+          await processReferralRewardFromWebhook(newSubUserId);
+        }
         break;
       }
 

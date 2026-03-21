@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS `referralCodes` (\n\t`id` int AUTO_INCREMENT NOT NULL,\n\t`userId` int NOT NULL,\n\t`code` varchar(20) NOT NULL,\n\t`totalReferrals` int NOT NULL DEFAULT 0,\n\t`totalRewardMonths` int NOT NULL DEFAULT 0,\n\t`isActive` boolean NOT NULL DEFAULT true,\n\t`createdAt` timestamp NOT NULL DEFAULT (now()),\n\t`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,\n\tCONSTRAINT `referralCodes_id` PRIMARY KEY(`id`),\n\tCONSTRAINT `referralCodes_userId_unique` UNIQUE(`userId`),\n\tCONSTRAINT `referralCodes_code_unique` UNIQUE(`code`)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KTJMGanAQiuu2AH.d2e93e708435 --database BAbKuMSfjHaa9ao8qByqEp --execute CREATE TABLE IF NOT EXISTS `referralCodes` (\n\t`id` int AUTO_INCREMENT NOT NULL,\n\t`userId` int NOT NULL,\n\t`code` varchar(20) NOT NULL,\n\t`totalReferrals` int NOT NULL DEFAULT 0,\n\t`totalRewardMonths` int NOT NULL DEFAULT 0,\n\t`isActive` boolean NOT NULL DEFAULT true,\n\t`createdAt` timestamp NOT NULL DEFAULT (now()),\n\t`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,\n\tCONSTRAINT `referralCodes_id` PRIMARY KEY(`id`),\n\tCONSTRAINT `referralCodes_userId_unique` UNIQUE(`userId`),\n\tCONSTRAINT `referralCodes_code_unique` UNIQUE(`code`)\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 130
+}

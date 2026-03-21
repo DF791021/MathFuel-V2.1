@@ -464,3 +464,48 @@ export const permissions = mysqlTable("permissions", {
 
 export type Permission = typeof permissions.$inferSelect;
 export type InsertPermission = typeof permissions.$inferInsert;
+
+// ============================================================================
+// MATHFUEL: REFERRAL PROGRAM
+// ============================================================================
+
+/**
+ * Referral codes — each subscriber gets a unique, shareable code.
+ * When a friend signs up with the code AND subscribes, the referrer earns a free month.
+ */
+export const referralCodes = mysqlTable("referralCodes", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().unique(), // one code per user
+  code: varchar("code", { length: 20 }).notNull().unique(), // e.g. "DUNCAN-MF7X"
+  totalReferrals: int("totalReferrals").default(0).notNull(),
+  totalRewardMonths: int("totalRewardMonths").default(0).notNull(), // free months earned
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ReferralCode = typeof referralCodes.$inferSelect;
+export type InsertReferralCode = typeof referralCodes.$inferInsert;
+
+/**
+ * Individual referral records — tracks each friend who signed up via a referral code.
+ */
+export const referrals = mysqlTable("referrals", {
+  id: int("id").autoincrement().primaryKey(),
+  referrerUserId: int("referrerUserId").notNull(), // the person who shared the code
+  refereeUserId: int("refereeUserId").notNull(), // the friend who signed up
+  referralCodeId: int("referralCodeId").notNull(), // which code was used
+  status: mysqlEnum("status", [
+    "signed_up",    // friend created an account
+    "subscribed",   // friend became a paying subscriber → reward triggered
+    "rewarded",     // reward (free month) has been applied to referrer
+    "expired",      // friend never subscribed within the window
+  ]).default("signed_up").notNull(),
+  rewardAppliedAt: timestamp("rewardAppliedAt"), // when the free month was credited
+  stripeCouponId: varchar("stripeCouponId", { length: 100 }), // Stripe coupon used for reward
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Referral = typeof referrals.$inferSelect;
+export type InsertReferral = typeof referrals.$inferInsert;
