@@ -148,3 +148,12 @@
 - [x] Add referral link to Account page and Student Dashboard nav
 - [x] Apply Stripe coupon/credit when referral converts to paid subscriber
 - [x] Write vitest tests for referral procedures (17 tests passing, 173 total)
+
+## Phase 16: Leaderboard Feature
+- [x] Design leaderboard data model (XP-based scoring from practice sessions)
+- [x] Create tRPC router for leaderboard queries (weekly/monthly/all-time, by grade)
+- [x] Build Leaderboard page with animated rankings, filters, and podium display
+- [x] Implement anonymous display names (e.g., "MathWizard #42") for privacy
+- [x] Add current user highlight and rank indicator
+- [x] Wire leaderboard into Student Dashboard nav and Home page
+- [x] Write vitest tests for leaderboard procedures (23 tests passing, 196 total)

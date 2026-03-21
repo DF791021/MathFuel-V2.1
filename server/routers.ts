@@ -9,6 +9,7 @@ import { aiTutorRouter } from "./routers/aiTutor";
 import { customAuthRouter } from "./routers/customAuth";
 import { paymentRouter } from "./routers/payment";
 import { referralRouter } from "./routers/referral";
+import { leaderboardRouter } from "./routers/leaderboard";
 
 export const appRouter = router({
   system: systemRouter,
@@ -21,6 +22,7 @@ export const appRouter = router({
   auth: customAuthRouter,
   payment: paymentRouter,
   referral: referralRouter,
+  leaderboard: leaderboardRouter,
 });
 
 export type AppRouter = typeof appRouter;

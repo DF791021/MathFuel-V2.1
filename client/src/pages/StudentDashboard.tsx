@@ -326,6 +326,12 @@ export default function StudentDashboard() {
                 <span className="hidden xs:inline sm:inline">Parent</span>
               </Button>
             </Link>
+            <Link href="/leaderboard">
+              <Button variant="ghost" size="sm" className="gap-1 px-2 sm:px-3 h-9 sm:h-10 text-xs sm:text-sm">
+                <Trophy className="w-4 h-4" />
+                <span className="hidden sm:inline">Ranks</span>
+              </Button>
+            </Link>
             <Link href="/referrals">
               <Button variant="ghost" size="sm" className="px-2 sm:px-3 h-9 sm:h-10 text-muted-foreground gap-1">
                 <Gift className="w-4 h-4" />

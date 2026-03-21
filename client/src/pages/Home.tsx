@@ -127,6 +127,9 @@ export default function Home() {
 
           {/* Desktop nav */}
           <div className="hidden sm:flex items-center gap-3">
+            <Link href="/leaderboard" className="no-underline">
+              <Button variant="ghost" size="sm">Leaderboard</Button>
+            </Link>
             <Link href="/pricing" className="no-underline">
               <Button variant="ghost" size="sm">Pricing</Button>
             </Link>
@@ -158,6 +161,9 @@ export default function Home() {
             exit={{ opacity: 0, y: -10 }}
             className="sm:hidden bg-white border-t border-border/50 px-4 py-4 space-y-3"
           >
+            <Link href="/leaderboard" className="block no-underline">
+              <Button variant="ghost" className="w-full justify-center">Leaderboard</Button>
+            </Link>
             <Link href="/pricing" className="block no-underline">
               <Button variant="ghost" className="w-full justify-center">Pricing</Button>
             </Link>

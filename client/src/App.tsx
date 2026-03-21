@@ -20,6 +20,7 @@ const Pricing = React.lazy(() => import("./pages/Pricing"));
 const Account = React.lazy(() => import("./pages/Account"));
 const PaymentSuccess = React.lazy(() => import("./pages/PaymentSuccess"));
 const Referrals = React.lazy(() => import("./pages/Referrals"));
+const Leaderboard = React.lazy(() => import("./pages/Leaderboard"));
 
 function Router() {
   return (
@@ -39,6 +40,7 @@ function Router() {
         <Route path="/account" component={Account} />
         <Route path="/payment-success" component={PaymentSuccess} />
         <Route path="/referrals" component={Referrals} />
+        <Route path="/leaderboard" component={Leaderboard} />
         <Route path="/404" component={NotFound} />
         <Route component={NotFound} />
       </Switch>
