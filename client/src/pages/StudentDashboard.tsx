@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
 import {
   Flame, Trophy, Play, Target, BarChart3,
-  BookOpen, LogOut, User, Map, Brain, Copy, Check, UserPlus,
+  BookOpen, LogOut, User, Map, Brain, Copy, Check, UserPlus, Settings,
 } from "lucide-react";
 
 const LOGO_URL = "https://d2xsxph8kpxj0f.cloudfront.net/310519663117001051/BAbKuMSfjHaa9ao8qByqEp/mathfuel-logo-V7jjfN52dexxQobYgXDFCk.webp";
@@ -324,6 +324,11 @@ export default function StudentDashboard() {
               <Button variant="ghost" size="sm" className="gap-1 px-2 sm:px-3 h-9 sm:h-10 text-xs sm:text-sm">
                 <User className="w-4 h-4" />
                 <span className="hidden xs:inline sm:inline">Parent</span>
+              </Button>
+            </Link>
+            <Link href="/account">
+              <Button variant="ghost" size="sm" className="px-2 sm:px-3 h-9 sm:h-10 text-muted-foreground">
+                <Settings className="w-4 h-4" />
               </Button>
             </Link>
             <Button variant="ghost" size="sm" onClick={() => logout()} className="px-2 sm:px-3 h-9 sm:h-10 text-muted-foreground">

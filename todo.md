@@ -119,4 +119,15 @@
 - [x] Delete stale files (old user manuals, docs, etc.)
 - [x] Fix login for duncankfurrh@gmail.com (OAuth accounts can now set password via register or forgot password)
 - [x] Verify clean build with 0 errors (137 tests passing, 0 TS errors)
-- [ ] Push clean code to GitHub (DF791021/new-green) - in progress
+- [x] Push clean code to GitHub (DF791021/mathfuel) - pushed successfully
+
+## Phase 13: Stripe Subscription Integration
+- [x] Create Stripe payment router (createCheckout, createBillingPortal, getSubscription)
+- [x] Build Pricing page with Free/Family plan tiers
+- [x] Integrate Stripe Checkout for subscription creation
+- [x] Integrate Stripe Customer Portal for subscription management
+- [x] Enhance webhook handler to update subscriptions table on events
+- [x] Add subscription status check to protected routes (premium gating)
+- [x] Build Account/Billing page for managing subscription
+- [x] Write vitest tests for payment procedures (18 tests passing)
+- [x] Wire pricing page into navigation and Home page
