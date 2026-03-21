@@ -1,14 +1,13 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { getLoginUrl } from "@/const";
 import { Link, useLocation, useParams } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -22,23 +21,12 @@ const PROBLEMS_PER_SESSION = 10;
 
 type SessionState = "setup" | "playing" | "feedback" | "complete";
 type Problem = {
-  id: number;
-  skillId: number;
-  problemType: string;
-  difficulty: number;
-  questionText: string;
-  questionImage: string | null;
-  answerType: string;
-  choices: any;
+  id: number; skillId: number; problemType: string; difficulty: number;
+  questionText: string; questionImage: string | null; answerType: string; choices: any;
 };
 type FeedbackData = {
-  isCorrect: boolean;
-  correctAnswer: string;
-  explanation: string;
-  hintSteps: any;
-  masteryScore: number;
-  masteryLevel: string;
-  streak: number;
+  isCorrect: boolean; correctAnswer: string; explanation: string;
+  hintSteps: any; masteryScore: number; masteryLevel: string; streak: number;
 };
 
 export default function PracticeSession() {
@@ -70,80 +58,44 @@ export default function PracticeSession() {
   const utils = trpc.useUtils();
   const gradeLevel = user?.gradeLevel ?? 1;
 
+  useEffect(() => { document.title = "Practice - MathFuel"; }, []);
   useEffect(() => {
-    document.title = "Practice - MathFuel";
-  }, []);
-
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      window.location.href = getLoginUrl();
-    }
+    if (!authLoading && !isAuthenticated) window.location.href = getLoginUrl();
   }, [authLoading, isAuthenticated]);
 
   const startSessionMutation = trpc.practice.startSession.useMutation({
-    onSuccess: (data) => {
-      setSessionId(data.sessionId);
-      setState("playing");
-      setProblemCount(0);
-      setCorrectCount(0);
-    },
+    onSuccess: (data) => { setSessionId(data.sessionId); setState("playing"); setProblemCount(0); setCorrectCount(0); },
     onError: (err) => toast.error("Failed to start session: " + err.message),
   });
 
   const submitAnswerMutation = trpc.practice.submitAnswer.useMutation({
     onSuccess: (data) => {
-      setFeedback(data);
-      setState("feedback");
+      setFeedback(data); setState("feedback");
       if (data.isCorrect) setCorrectCount((c) => c + 1);
       setIsSubmitting(false);
-      // Trigger AI explanation generation
-      if (currentProblem) {
-        fetchAIExplanation(currentProblem.id, answer, data.isCorrect);
-      }
+      if (currentProblem) fetchAIExplanation(currentProblem.id, answer, data.isCorrect);
     },
-    onError: (err) => {
-      toast.error("Failed to submit answer: " + err.message);
-      setIsSubmitting(false);
-    },
+    onError: (err) => { toast.error("Failed to submit: " + err.message); setIsSubmitting(false); },
   });
 
   const completeSessionMutation = trpc.practice.completeSession.useMutation({
-    onSuccess: (data) => {
-      setSessionResults(data);
-      setState("complete");
-      // Trigger AI session summary
-      fetchAISessionSummary(data);
-    },
+    onSuccess: (data) => { setSessionResults(data); setState("complete"); fetchAISessionSummary(data); },
     onError: (err) => toast.error("Failed to complete session: " + err.message),
   });
 
-  // AI hint mutation
   const aiHintMutation = trpc.aiTutor.getAIHint.useMutation();
-
-  // AI explanation mutation
   const aiExplanationMutation = trpc.aiTutor.getAIExplanation.useMutation();
-
-  // AI session summary mutation
   const aiSessionSummaryMutation = trpc.aiTutor.getSessionSummary.useMutation();
-
-  // AI feedback mutation
   const submitFeedbackMutation = trpc.aiTutor.submitFeedback.useMutation();
 
-  // Handle rating an AI response
   const handleRateAI = useCallback((params: {
     responseType: "hint" | "explanation" | "session_summary";
-    rating: "up" | "down";
-    aiResponseText?: string;
-    hintIndex?: number;
+    rating: "up" | "down"; aiResponseText?: string; hintIndex?: number;
   }) => {
     submitFeedbackMutation.mutate({
-      sessionId: sessionId ?? undefined,
-      problemId: currentProblem?.id ?? undefined,
-      responseType: params.responseType,
-      rating: params.rating,
-      aiResponseText: params.aiResponseText,
+      sessionId: sessionId ?? undefined, problemId: currentProblem?.id ?? undefined,
+      responseType: params.responseType, rating: params.rating, aiResponseText: params.aiResponseText,
     });
-    // Update local state to show the selection
     if (params.responseType === "hint" && params.hintIndex !== undefined) {
       setHintRatings(prev => ({ ...prev, [params.hintIndex!]: params.rating }));
     } else if (params.responseType === "explanation") {
@@ -153,141 +105,75 @@ export default function PracticeSession() {
     }
   }, [submitFeedbackMutation, sessionId, currentProblem]);
 
-  // Fetch AI explanation after answer submission
   const fetchAIExplanation = useCallback(async (problemId: number, studentAnswer: string, isCorrect: boolean) => {
-    setIsLoadingExplanation(true);
-    setAiExplanation(null);
+    setIsLoadingExplanation(true); setAiExplanation(null);
     try {
-      const result = await aiExplanationMutation.mutateAsync({
-        problemId,
-        studentAnswer,
-        isCorrect,
-      });
+      const result = await aiExplanationMutation.mutateAsync({ problemId, studentAnswer, isCorrect });
       setAiExplanation(result.explanation);
-    } catch (err) {
-      console.error("AI explanation failed, using static fallback");
-    } finally {
-      setIsLoadingExplanation(false);
-    }
+    } catch { console.error("AI explanation failed"); }
+    finally { setIsLoadingExplanation(false); }
   }, [aiExplanationMutation]);
 
-  // Fetch AI session summary
   const fetchAISessionSummary = useCallback(async (results: any) => {
     try {
       const result = await aiSessionSummaryMutation.mutateAsync({
-        totalProblems: results.totalProblems ?? 0,
-        correctAnswers: results.correctAnswers ?? 0,
-        hintsUsed: 0,
-        streak: results.streak ?? 0,
+        totalProblems: results.totalProblems ?? 0, correctAnswers: results.correctAnswers ?? 0,
+        hintsUsed: 0, streak: results.streak ?? 0,
       });
       setAiSessionSummary(result.summary);
-    } catch (err) {
-      console.error("AI session summary failed");
-    }
+    } catch { console.error("AI summary failed"); }
   }, [aiSessionSummaryMutation]);
 
-  // Fetch next problem
   const fetchNextProblem = useCallback(async () => {
     if (!sessionId) return;
     try {
-      const problem = await utils.client.practice.getNextProblem.query({
-        sessionId,
-        gradeLevel,
-      });
+      const problem = await utils.client.practice.getNextProblem.query({ sessionId, gradeLevel });
       if (problem) {
-        setCurrentProblem(problem);
-        setAnswer("");
-        setHintsViewed(0);
-        setVisibleHints([]);
-        setStartTime(Date.now());
-        setProblemCount((c) => c + 1);
-        setState("playing");
-        setAiExplanation(null);
-        setIsLoadingExplanation(false);
-        setHintRatings({});
-        setExplanationRating(null);
+        setCurrentProblem(problem); setAnswer(""); setHintsViewed(0); setVisibleHints([]);
+        setStartTime(Date.now()); setProblemCount((c) => c + 1); setState("playing");
+        setAiExplanation(null); setIsLoadingExplanation(false); setHintRatings({}); setExplanationRating(null);
         setTimeout(() => inputRef.current?.focus(), 100);
       } else {
         completeSessionMutation.mutate({ sessionId });
       }
-    } catch (err: any) {
-      toast.error("Failed to load problem: " + err.message);
-    }
+    } catch (err: any) { toast.error("Failed to load problem: " + err.message); }
   }, [sessionId, gradeLevel, utils, completeSessionMutation]);
 
-  // Start session
   const handleStart = () => {
-    startSessionMutation.mutate({
-      sessionType: "daily",
-      skillIds: skillId ? [skillId] : undefined,
-      gradeLevel,
-    });
+    startSessionMutation.mutate({ sessionType: "daily", skillIds: skillId ? [skillId] : undefined, gradeLevel });
   };
 
-  // Auto-fetch first problem when session starts
   useEffect(() => {
-    if (sessionId && state === "playing" && !currentProblem) {
-      fetchNextProblem();
-    }
+    if (sessionId && state === "playing" && !currentProblem) fetchNextProblem();
   }, [sessionId, state, currentProblem, fetchNextProblem]);
 
-  // Submit answer
   const handleSubmit = () => {
     if (!answer.trim() || !currentProblem || !sessionId || isSubmitting) return;
     setIsSubmitting(true);
     const timeSpent = Math.round((Date.now() - startTime) / 1000);
-    submitAnswerMutation.mutate({
-      sessionId,
-      problemId: currentProblem.id,
-      answer: answer.trim(),
-      timeSpentSeconds: timeSpent,
-      hintsViewed,
-    });
+    submitAnswerMutation.mutate({ sessionId, problemId: currentProblem.id, answer: answer.trim(), timeSpentSeconds: timeSpent, hintsViewed });
   };
 
-  // Get AI hint (replaces static hint system)
   const handleGetHint = async () => {
     if (!currentProblem) return;
     try {
-      const result = await aiHintMutation.mutateAsync({
-        problemId: currentProblem.id,
-        hintsUsed: hintsViewed,
-        previousHints: visibleHints,
-      });
-      if (result.hint) {
-        setVisibleHints((prev) => [...prev, result.hint]);
-        setHintsViewed((h) => h + 1);
-      } else {
-        toast.info("No more hints available!");
-      }
-    } catch (err: any) {
-      // Fallback: try static hint
+      const result = await aiHintMutation.mutateAsync({ problemId: currentProblem.id, hintsUsed: hintsViewed, previousHints: visibleHints });
+      if (result.hint) { setVisibleHints((prev) => [...prev, result.hint]); setHintsViewed((h) => h + 1); }
+      else toast.info("No more hints available!");
+    } catch {
       try {
-        const result = await utils.client.practice.getHint.query({
-          problemId: currentProblem.id,
-          hintIndex: hintsViewed,
-        });
-        if (result.hint) {
-          setVisibleHints((prev) => [...prev, result.hint!]);
-          setHintsViewed((h) => h + 1);
-        } else {
-          toast.info("No more hints available!");
-        }
-      } catch {
-        toast.error("Failed to get hint");
-      }
+        const result = await utils.client.practice.getHint.query({ problemId: currentProblem.id, hintIndex: hintsViewed });
+        if (result.hint) { setVisibleHints((prev) => [...prev, result.hint!]); setHintsViewed((h) => h + 1); }
+        else toast.info("No more hints available!");
+      } catch { toast.error("Failed to get hint"); }
     }
   };
 
-  // Next problem
   const handleNext = () => {
     if (problemCount >= PROBLEMS_PER_SESSION && sessionId) {
       completeSessionMutation.mutate({ sessionId });
     } else {
-      setCurrentProblem(null);
-      setFeedback(null);
-      setAiExplanation(null);
-      fetchNextProblem();
+      setCurrentProblem(null); setFeedback(null); setAiExplanation(null); fetchNextProblem();
     }
   };
 
@@ -300,101 +186,73 @@ export default function PracticeSession() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Top Nav */}
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Compact header */}
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
-        <div className="container flex items-center justify-between h-14">
+        <div className="max-w-2xl mx-auto px-4 flex items-center justify-between h-11 sm:h-14">
           <Link href="/dashboard">
-            <Button variant="ghost" size="sm" className="gap-1">
-              <ArrowLeft className="w-4 h-4" /> Dashboard
+            <Button variant="ghost" size="sm" className="gap-1 px-2 sm:px-3 h-8 sm:h-10 text-xs sm:text-sm">
+              <ArrowLeft className="w-4 h-4" />
+              <span className="hidden sm:inline">Dashboard</span>
+              <span className="sm:hidden">Back</span>
             </Button>
           </Link>
-          {state === "playing" || state === "feedback" ? (
-            <div className="flex items-center gap-3">
-              <span className="text-sm text-muted-foreground">
+          {(state === "playing" || state === "feedback") && (
+            <div className="flex items-center gap-2 sm:gap-3">
+              <span className="text-xs sm:text-sm text-muted-foreground font-medium">
                 {problemCount}/{PROBLEMS_PER_SESSION}
               </span>
-              <Progress value={(problemCount / PROBLEMS_PER_SESSION) * 100} className="w-24 h-2" />
-              <Badge variant="secondary" className="gap-1">
+              <Progress value={(problemCount / PROBLEMS_PER_SESSION) * 100} className="w-16 sm:w-24 h-1.5 sm:h-2" />
+              <Badge variant="secondary" className="gap-0.5 sm:gap-1 text-[10px] sm:text-xs py-0.5 px-1.5 sm:px-2">
                 <CheckCircle2 className="w-3 h-3 text-green-500" />
                 {correctCount}
               </Badge>
             </div>
-          ) : null}
+          )}
         </div>
       </header>
 
-      <main className="container py-6 max-w-2xl mx-auto">
+      <main className="flex-1 max-w-2xl mx-auto w-full px-4 py-4 sm:py-6 safe-bottom">
         <AnimatePresence mode="wait">
           {state === "setup" && (
-            <SetupScreen
-              key="setup"
-              onStart={handleStart}
-              isLoading={startSessionMutation.isPending}
-              skillId={skillId}
-            />
+            <SetupScreen key="setup" onStart={handleStart} isLoading={startSessionMutation.isPending} skillId={skillId} />
           )}
           {state === "playing" && currentProblem && (
             <ProblemScreen
               key={`problem-${currentProblem.id}`}
-              problem={currentProblem}
-              answer={answer}
-              setAnswer={setAnswer}
-              onSubmit={handleSubmit}
-              onGetHint={handleGetHint}
-              visibleHints={visibleHints}
-              hintsViewed={hintsViewed}
-              isSubmitting={isSubmitting}
-              isLoadingHint={aiHintMutation.isPending}
-              inputRef={inputRef}
-              hintRatings={hintRatings}
+              problem={currentProblem} answer={answer} setAnswer={setAnswer}
+              onSubmit={handleSubmit} onGetHint={handleGetHint}
+              visibleHints={visibleHints} hintsViewed={hintsViewed}
+              isSubmitting={isSubmitting} isLoadingHint={aiHintMutation.isPending}
+              inputRef={inputRef} hintRatings={hintRatings}
               onRateHint={(index, rating, text) => handleRateAI({ responseType: "hint", rating, aiResponseText: text, hintIndex: index })}
             />
           )}
           {state === "playing" && !currentProblem && (
-            <motion.div
-              key="loading"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex items-center justify-center py-20"
-            >
+            <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center justify-center py-16 sm:py-20">
               <div className="text-center space-y-3">
-                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mx-auto" />
-                <p className="text-muted-foreground">Loading next problem...</p>
+                <div className="animate-spin rounded-full h-8 w-8 sm:h-10 sm:w-10 border-b-2 border-primary mx-auto" />
+                <p className="text-sm text-muted-foreground">Loading next problem...</p>
               </div>
             </motion.div>
           )}
           {state === "feedback" && feedback && currentProblem && (
             <FeedbackScreen
-              key="feedback"
-              feedback={feedback}
-              problem={currentProblem}
-              answer={answer}
-              onNext={handleNext}
-              isLast={problemCount >= PROBLEMS_PER_SESSION}
-              aiExplanation={aiExplanation}
-              isLoadingExplanation={isLoadingExplanation}
+              key="feedback" feedback={feedback} problem={currentProblem} answer={answer}
+              onNext={handleNext} isLast={problemCount >= PROBLEMS_PER_SESSION}
+              aiExplanation={aiExplanation} isLoadingExplanation={isLoadingExplanation}
               explanationRating={explanationRating}
               onRateExplanation={(rating, text) => handleRateAI({ responseType: "explanation", rating, aiResponseText: text })}
             />
           )}
           {state === "complete" && sessionResults && (
             <CompleteScreen
-              key="complete"
-              results={sessionResults}
-              aiSummary={aiSessionSummary}
+              key="complete" results={sessionResults} aiSummary={aiSessionSummary}
               summaryRating={summaryRating}
               onRateSummary={(rating, text) => handleRateAI({ responseType: "session_summary", rating, aiResponseText: text })}
               onPlayAgain={() => {
-                setState("setup");
-                setSessionId(null);
-                setCurrentProblem(null);
-                setFeedback(null);
-                setSessionResults(null);
-                setAiExplanation(null);
-                setAiSessionSummary(null);
-                setSummaryRating(null);
+                setState("setup"); setSessionId(null); setCurrentProblem(null); setFeedback(null);
+                setSessionResults(null); setAiExplanation(null); setAiSessionSummary(null); setSummaryRating(null);
               }}
             />
           )}
@@ -404,131 +262,91 @@ export default function PracticeSession() {
   );
 }
 
-function SetupScreen({ onStart, isLoading, skillId }: {
-  onStart: () => void;
-  isLoading: boolean;
-  skillId?: number;
-}) {
+/* ─── Setup Screen ─── */
+function SetupScreen({ onStart, isLoading, skillId }: { onStart: () => void; isLoading: boolean; skillId?: number; }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      className="text-center space-y-8 py-12"
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
+      className="text-center space-y-6 sm:space-y-8 py-8 sm:py-12"
     >
       <div>
-        <motion.div
-          animate={{ scale: [1, 1.1, 1] }}
-          transition={{ repeat: Infinity, duration: 2 }}
-          className="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-primary to-blue-600 flex items-center justify-center shadow-lg mb-6"
+        <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ repeat: Infinity, duration: 2 }}
+          className="w-16 h-16 sm:w-20 sm:h-20 mx-auto rounded-full bg-gradient-to-br from-primary to-blue-600 flex items-center justify-center shadow-lg mb-4 sm:mb-6"
         >
-          <Zap className="w-10 h-10 text-white" />
+          <Zap className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
         </motion.div>
-        <h1 className="text-3xl font-bold mb-2">Ready to Practice?</h1>
-        <p className="text-muted-foreground max-w-md mx-auto">
-          You'll solve {PROBLEMS_PER_SESSION} problems. The difficulty adapts to you — 
-          and MathBuddy (your AI tutor) is here to help when you're stuck!
+        <h1 className="!text-2xl sm:!text-3xl font-bold mb-2">Ready to Practice?</h1>
+        <p className="text-sm sm:text-base text-muted-foreground max-w-md mx-auto px-2">
+          You'll solve {PROBLEMS_PER_SESSION} problems. MathBuddy is here to help when you're stuck!
         </p>
       </div>
 
-      {/* AI tutor badge */}
-      <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+      <div className="flex items-center justify-center gap-2 text-xs sm:text-sm text-muted-foreground">
         <Bot className="w-4 h-4 text-primary" />
-        <span>Powered by AI tutor — personalized hints & explanations</span>
+        <span>AI tutor — personalized hints & explanations</span>
       </div>
 
       {skillId && (
-        <Badge variant="secondary" className="text-sm py-1 px-3">
-          Focused practice: Skill #{skillId}
+        <Badge variant="secondary" className="text-xs sm:text-sm py-1 px-3">
+          Focused: Skill #{skillId}
         </Badge>
       )}
 
-      <div className="grid grid-cols-3 gap-4 max-w-sm mx-auto text-center">
-        <div className="p-3 rounded-lg bg-muted/50">
-          <p className="text-2xl font-bold text-primary">{PROBLEMS_PER_SESSION}</p>
-          <p className="text-xs text-muted-foreground">Problems</p>
+      <div className="grid grid-cols-3 gap-3 sm:gap-4 max-w-xs sm:max-w-sm mx-auto text-center">
+        <div className="p-2.5 sm:p-3 rounded-lg bg-muted/50">
+          <p className="text-xl sm:text-2xl font-bold text-primary">{PROBLEMS_PER_SESSION}</p>
+          <p className="text-[10px] sm:text-xs text-muted-foreground">Problems</p>
         </div>
-        <div className="p-3 rounded-lg bg-muted/50">
-          <p className="text-2xl font-bold text-primary">
-            <Lightbulb className="w-6 h-6 mx-auto text-yellow-500" />
-          </p>
-          <p className="text-xs text-muted-foreground">AI Hints</p>
+        <div className="p-2.5 sm:p-3 rounded-lg bg-muted/50">
+          <Lightbulb className="w-5 h-5 sm:w-6 sm:h-6 mx-auto text-yellow-500" />
+          <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">AI Hints</p>
         </div>
-        <div className="p-3 rounded-lg bg-muted/50">
-          <p className="text-2xl font-bold text-primary">
-            <Clock className="w-6 h-6 mx-auto text-blue-500" />
-          </p>
-          <p className="text-xs text-muted-foreground">Your Pace</p>
+        <div className="p-2.5 sm:p-3 rounded-lg bg-muted/50">
+          <Clock className="w-5 h-5 sm:w-6 sm:h-6 mx-auto text-blue-500" />
+          <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">Your Pace</p>
         </div>
       </div>
 
-      <Button
-        onClick={onStart}
-        size="lg"
-        disabled={isLoading}
-        className="h-14 px-10 text-lg gap-2 rounded-full shadow-lg"
+      <Button onClick={onStart} size="lg" disabled={isLoading}
+        className="h-12 sm:h-14 px-8 sm:px-10 text-base sm:text-lg gap-2 rounded-full shadow-lg w-full sm:w-auto"
       >
-        {isLoading ? (
-          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
-        ) : (
-          <Play className="w-5 h-5" />
-        )}
+        {isLoading ? <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" /> : <Play className="w-5 h-5" />}
         {isLoading ? "Starting..." : "Let's Go!"}
       </Button>
     </motion.div>
   );
 }
 
-/** Reusable thumbs up/down rating buttons for AI responses */
-function RatingButtons({ currentRating, onRate, size = "sm" }: {
-  currentRating: "up" | "down" | null;
-  onRate: (rating: "up" | "down") => void;
-  size?: "sm" | "md";
-}) {
-  const iconSize = size === "sm" ? "w-3.5 h-3.5" : "w-4 h-4";
-  const btnSize = size === "sm" ? "w-7 h-7" : "w-8 h-8";
-
+/* ─── Rating Buttons ─── */
+function RatingButtons({ currentRating, onRate }: { currentRating: "up" | "down" | null; onRate: (rating: "up" | "down") => void; }) {
   return (
     <TooltipProvider delayDuration={300}>
       <div className="flex items-center gap-1">
         <Tooltip>
           <TooltipTrigger asChild>
-            <button
-              onClick={() => onRate("up")}
-              className={`${btnSize} rounded-full flex items-center justify-center transition-all duration-200 ${
-                currentRating === "up"
-                  ? "bg-green-100 text-green-600 scale-110 ring-2 ring-green-300"
-                  : "hover:bg-green-50 text-muted-foreground hover:text-green-500"
+            <button onClick={() => onRate("up")} aria-label="Helpful"
+              className={`w-7 h-7 rounded-full flex items-center justify-center transition-all duration-200 ${
+                currentRating === "up" ? "bg-green-100 text-green-600 scale-110 ring-2 ring-green-300" : "hover:bg-green-50 text-muted-foreground hover:text-green-500"
               }`}
-              aria-label="Helpful"
             >
-              <ThumbsUp className={iconSize} />
+              <ThumbsUp className="w-3.5 h-3.5" />
             </button>
           </TooltipTrigger>
           <TooltipContent side="top" className="text-xs">Helpful!</TooltipContent>
         </Tooltip>
         <Tooltip>
           <TooltipTrigger asChild>
-            <button
-              onClick={() => onRate("down")}
-              className={`${btnSize} rounded-full flex items-center justify-center transition-all duration-200 ${
-                currentRating === "down"
-                  ? "bg-red-100 text-red-500 scale-110 ring-2 ring-red-300"
-                  : "hover:bg-red-50 text-muted-foreground hover:text-red-400"
+            <button onClick={() => onRate("down")} aria-label="Not helpful"
+              className={`w-7 h-7 rounded-full flex items-center justify-center transition-all duration-200 ${
+                currentRating === "down" ? "bg-red-100 text-red-500 scale-110 ring-2 ring-red-300" : "hover:bg-red-50 text-muted-foreground hover:text-red-400"
               }`}
-              aria-label="Not helpful"
             >
-              <ThumbsDown className={iconSize} />
+              <ThumbsDown className="w-3.5 h-3.5" />
             </button>
           </TooltipTrigger>
           <TooltipContent side="top" className="text-xs">Not helpful</TooltipContent>
         </Tooltip>
         {currentRating && (
-          <motion.span
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="text-[10px] text-muted-foreground ml-0.5"
-          >
+          <motion.span initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="text-[10px] text-muted-foreground ml-0.5">
             Thanks!
           </motion.span>
         )}
@@ -537,71 +355,53 @@ function RatingButtons({ currentRating, onRate, size = "sm" }: {
   );
 }
 
+/* ─── Problem Screen ─── */
 function ProblemScreen({ problem, answer, setAnswer, onSubmit, onGetHint, visibleHints, hintsViewed, isSubmitting, isLoadingHint, inputRef, hintRatings, onRateHint }: {
-  problem: Problem;
-  answer: string;
-  setAnswer: (v: string) => void;
-  onSubmit: () => void;
-  onGetHint: () => void;
-  visibleHints: string[];
-  hintsViewed: number;
-  isSubmitting: boolean;
-  isLoadingHint: boolean;
-  inputRef: React.RefObject<HTMLInputElement | null>;
-  hintRatings: Record<number, "up" | "down">;
-  onRateHint: (index: number, rating: "up" | "down", text: string) => void;
+  problem: Problem; answer: string; setAnswer: (v: string) => void; onSubmit: () => void;
+  onGetHint: () => void; visibleHints: string[]; hintsViewed: number; isSubmitting: boolean;
+  isLoadingHint: boolean; inputRef: React.RefObject<HTMLInputElement | null>;
+  hintRatings: Record<number, "up" | "down">; onRateHint: (index: number, rating: "up" | "down", text: string) => void;
 }) {
   const choices = problem.choices ? (typeof problem.choices === "string" ? JSON.parse(problem.choices) : problem.choices) : null;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, x: 50 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -50 }}
-      transition={{ duration: 0.3 }}
-      className="space-y-6"
+    <motion.div initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }}
+      transition={{ duration: 0.3 }} className="space-y-4 sm:space-y-6"
     >
-      {/* Difficulty indicator */}
+      {/* Difficulty + type */}
       <div className="flex items-center justify-between">
         <div className="flex gap-1">
           {[1, 2, 3, 4, 5].map((d) => (
-            <div
-              key={d}
-              className={`w-2 h-2 rounded-full ${d <= problem.difficulty ? "bg-primary" : "bg-muted"}`}
-            />
+            <div key={d} className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${d <= problem.difficulty ? "bg-primary" : "bg-muted"}`} />
           ))}
         </div>
-        <Badge variant="secondary" className="text-xs">
+        <Badge variant="secondary" className="text-[10px] sm:text-xs py-0.5 px-1.5 sm:px-2">
           {problem.problemType.replace("_", " ")}
         </Badge>
       </div>
 
-      {/* Question */}
+      {/* Question Card */}
       <Card className="border-2">
-        <CardContent className="p-6 sm:p-8">
-          <p className="text-xl sm:text-2xl font-semibold text-center leading-relaxed">
+        <CardContent className="p-4 sm:p-8">
+          <p className="text-lg sm:text-2xl font-semibold text-center leading-relaxed">
             {problem.questionText}
           </p>
           {problem.questionImage && (
-            <img src={problem.questionImage} alt="Question" className="max-w-xs mx-auto mt-4 rounded-lg" />
+            <img src={problem.questionImage} alt="Question" className="max-w-[200px] sm:max-w-xs mx-auto mt-4 rounded-lg" />
           )}
         </CardContent>
       </Card>
 
       {/* Answer Input */}
-      <div className="space-y-4">
+      <div className="space-y-3 sm:space-y-4">
         {choices ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3">
             {(choices as string[]).map((choice: string, i: number) => (
-              <Button
-                key={i}
-                variant={answer === choice ? "default" : "outline"}
-                className={`p-4 h-auto text-left text-base justify-start ${
-                  answer === choice ? "ring-2 ring-primary" : ""
-                }`}
+              <Button key={i} variant={answer === choice ? "default" : "outline"}
+                className={`p-3 sm:p-4 h-auto text-left text-sm sm:text-base justify-start ${answer === choice ? "ring-2 ring-primary" : ""}`}
                 onClick={() => setAnswer(choice)}
               >
-                <span className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-sm font-bold mr-3 flex-shrink-0">
+                <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-muted flex items-center justify-center text-xs sm:text-sm font-bold mr-2 sm:mr-3 flex-shrink-0">
                   {String.fromCharCode(65 + i)}
                 </span>
                 {choice}
@@ -609,45 +409,26 @@ function ProblemScreen({ problem, answer, setAnswer, onSubmit, onGetHint, visibl
             ))}
           </div>
         ) : (
-          <div className="flex gap-3">
-            <Input
-              ref={inputRef}
-              type={problem.answerType === "number" ? "number" : "text"}
-              value={answer}
-              onChange={(e) => setAnswer(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && onSubmit()}
-              placeholder="Type your answer..."
-              className="text-lg h-14 text-center"
-              autoFocus
-            />
-          </div>
+          <Input ref={inputRef} type={problem.answerType === "number" ? "number" : "text"}
+            value={answer} onChange={(e) => setAnswer(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && onSubmit()}
+            placeholder="Type your answer..." className="text-base sm:text-lg h-12 sm:h-14 text-center" autoFocus
+          />
         )}
 
-        <div className="flex gap-3">
-          <Button
-            onClick={onSubmit}
-            disabled={!answer.trim() || isSubmitting}
-            className="flex-1 h-12 text-lg gap-2"
+        {/* Submit + Hint buttons */}
+        <div className="flex gap-2 sm:gap-3">
+          <Button onClick={onSubmit} disabled={!answer.trim() || isSubmitting}
+            className="flex-1 h-11 sm:h-12 text-sm sm:text-lg gap-1.5 sm:gap-2"
           >
-            {isSubmitting ? (
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
-            ) : (
-              <CheckCircle2 className="w-5 h-5" />
-            )}
+            {isSubmitting ? <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-b-2 border-white" /> : <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5" />}
             {isSubmitting ? "Checking..." : "Submit"}
           </Button>
-          <Button
-            variant="outline"
-            onClick={onGetHint}
-            disabled={isLoadingHint}
-            className="h-12 gap-2"
+          <Button variant="outline" onClick={onGetHint} disabled={isLoadingHint}
+            className="h-11 sm:h-12 gap-1.5 sm:gap-2 px-3 sm:px-4"
           >
-            {isLoadingHint ? (
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-yellow-500" />
-            ) : (
-              <Lightbulb className="w-5 h-5 text-yellow-500" />
-            )}
-            {isLoadingHint ? "Thinking..." : "Hint"}
+            {isLoadingHint ? <div className="animate-spin rounded-full h-3.5 w-3.5 sm:h-4 sm:w-4 border-b-2 border-yellow-500" /> : <Lightbulb className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500" />}
+            <span className="hidden sm:inline">{isLoadingHint ? "Thinking..." : "Hint"}</span>
           </Button>
         </div>
       </div>
@@ -655,33 +436,22 @@ function ProblemScreen({ problem, answer, setAnswer, onSubmit, onGetHint, visibl
       {/* AI Hints */}
       <AnimatePresence>
         {visibleHints.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            className="space-y-2"
-          >
+          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="space-y-2">
             {visibleHints.map((hint, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.1 }}
-                className="flex gap-3 p-3 rounded-lg bg-yellow-50 border border-yellow-200"
+              <motion.div key={i} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}
+                className="flex gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg bg-yellow-50 border border-yellow-200"
               >
                 <div className="flex-shrink-0 mt-0.5">
-                  <div className="w-6 h-6 rounded-full bg-yellow-200 flex items-center justify-center">
-                    <Bot className="w-3.5 h-3.5 text-yellow-700" />
+                  <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-yellow-200 flex items-center justify-center">
+                    <Bot className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-yellow-700" />
                   </div>
                 </div>
-                <div className="flex-1">
-                  <p className="text-xs font-medium text-yellow-600 mb-0.5">MathBuddy Hint {i + 1}</p>
-                  <p className="text-sm text-yellow-800">{hint}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] sm:text-xs font-medium text-yellow-600 mb-0.5">Hint {i + 1}</p>
+                  <p className="text-xs sm:text-sm text-yellow-800 leading-relaxed">{hint}</p>
                 </div>
                 <div className="flex-shrink-0 self-center">
-                  <RatingButtons
-                    currentRating={hintRatings[i] ?? null}
-                    onRate={(rating) => onRateHint(i, rating, hint)}
-                  />
+                  <RatingButtons currentRating={hintRatings[i] ?? null} onRate={(rating) => onRateHint(i, rating, hint)} />
                 </div>
               </motion.div>
             ))}
@@ -692,56 +462,34 @@ function ProblemScreen({ problem, answer, setAnswer, onSubmit, onGetHint, visibl
   );
 }
 
+/* ─── Feedback Screen ─── */
 function FeedbackScreen({ feedback, problem, answer, onNext, isLast, aiExplanation, isLoadingExplanation, explanationRating, onRateExplanation }: {
-  feedback: FeedbackData;
-  problem: Problem;
-  answer: string;
-  onNext: () => void;
-  isLast: boolean;
-  aiExplanation: string | null;
-  isLoadingExplanation: boolean;
-  explanationRating: "up" | "down" | null;
-  onRateExplanation: (rating: "up" | "down", text: string) => void;
+  feedback: FeedbackData; problem: Problem; answer: string; onNext: () => void; isLast: boolean;
+  aiExplanation: string | null; isLoadingExplanation: boolean;
+  explanationRating: "up" | "down" | null; onRateExplanation: (rating: "up" | "down", text: string) => void;
 }) {
-  // Use AI explanation if available, otherwise fall back to static
   const displayExplanation = aiExplanation || feedback.explanation;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      className="space-y-6"
+    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+      className="space-y-4 sm:space-y-6"
     >
       {/* Result Banner */}
-      <motion.div
-        initial={{ scale: 0.8 }}
-        animate={{ scale: 1 }}
-        transition={{ type: "spring", damping: 10 }}
-      >
+      <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} transition={{ type: "spring", damping: 10 }}>
         <Card className={`border-2 ${feedback.isCorrect ? "border-green-300 bg-green-50" : "border-red-200 bg-red-50"}`}>
-          <CardContent className="p-6 text-center">
-            <motion.div
-              initial={{ rotate: -10, scale: 0 }}
-              animate={{ rotate: 0, scale: 1 }}
-              transition={{ type: "spring", delay: 0.1 }}
-            >
+          <CardContent className="p-4 sm:p-6 text-center">
+            <motion.div initial={{ rotate: -10, scale: 0 }} animate={{ rotate: 0, scale: 1 }} transition={{ type: "spring", delay: 0.1 }}>
               {feedback.isCorrect ? (
-                <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-3" />
+                <CheckCircle2 className="w-12 h-12 sm:w-16 sm:h-16 text-green-500 mx-auto mb-2 sm:mb-3" />
               ) : (
-                <XCircle className="w-16 h-16 text-red-400 mx-auto mb-3" />
+                <XCircle className="w-12 h-12 sm:w-16 sm:h-16 text-red-400 mx-auto mb-2 sm:mb-3" />
               )}
             </motion.div>
-            <h2 className={`text-2xl font-bold ${feedback.isCorrect ? "text-green-700" : "text-red-700"}`}>
+            <h2 className={`!text-xl sm:!text-2xl font-bold ${feedback.isCorrect ? "text-green-700" : "text-red-700"}`}>
               {feedback.isCorrect ? "Correct!" : "Not Quite!"}
             </h2>
             {feedback.isCorrect && feedback.streak > 1 && (
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3 }}
-                className="text-green-600 mt-1"
-              >
+              <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="text-green-600 mt-1 text-sm">
                 🔥 {feedback.streak} in a row!
               </motion.p>
             )}
@@ -752,12 +500,12 @@ function FeedbackScreen({ feedback, problem, answer, onNext, isLast, aiExplanati
       {/* Answer Details */}
       {!feedback.isCorrect && (
         <Card>
-          <CardContent className="p-4 space-y-2">
-            <div className="flex justify-between text-sm">
+          <CardContent className="p-3 sm:p-4 space-y-1.5 sm:space-y-2">
+            <div className="flex justify-between text-xs sm:text-sm">
               <span className="text-muted-foreground">Your answer:</span>
               <span className="font-medium text-red-600">{answer}</span>
             </div>
-            <div className="flex justify-between text-sm">
+            <div className="flex justify-between text-xs sm:text-sm">
               <span className="text-muted-foreground">Correct answer:</span>
               <span className="font-medium text-green-600">{feedback.correctAnswer}</span>
             </div>
@@ -767,36 +515,33 @@ function FeedbackScreen({ feedback, problem, answer, onNext, isLast, aiExplanati
 
       {/* AI Explanation */}
       <Card className="bg-blue-50 border-blue-200">
-        <CardContent className="p-4">
-          <div className="flex gap-3">
+        <CardContent className="p-3 sm:p-4">
+          <div className="flex gap-2 sm:gap-3">
             <div className="flex-shrink-0 mt-0.5">
-              <div className="w-8 h-8 rounded-full bg-blue-200 flex items-center justify-center">
-                <Bot className="w-4.5 h-4.5 text-blue-700" />
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-blue-200 flex items-center justify-center">
+                <Bot className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-700" />
               </div>
             </div>
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-1">
-                <p className="font-medium text-blue-800">MathBuddy says:</p>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5 mb-1">
+                <p className="text-xs sm:text-sm font-medium text-blue-800">MathBuddy says:</p>
                 {aiExplanation && (
-                  <Badge variant="secondary" className="text-[10px] py-0 px-1.5 bg-blue-100 text-blue-600 border-blue-200">
-                    <Sparkles className="w-2.5 h-2.5 mr-0.5" />AI
+                  <Badge variant="secondary" className="text-[8px] sm:text-[10px] py-0 px-1 sm:px-1.5 bg-blue-100 text-blue-600 border-blue-200">
+                    <Sparkles className="w-2 h-2 sm:w-2.5 sm:h-2.5 mr-0.5" />AI
                   </Badge>
                 )}
               </div>
               {isLoadingExplanation ? (
-                <div className="flex items-center gap-2 text-sm text-blue-600">
+                <div className="flex items-center gap-2 text-xs sm:text-sm text-blue-600">
                   <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-500" />
                   <span>MathBuddy is thinking...</span>
                 </div>
               ) : (
                 <>
-                  <p className="text-sm text-blue-700 leading-relaxed">{displayExplanation}</p>
-                  <div className="mt-2 flex items-center gap-2">
-                    <span className="text-[10px] text-blue-400">Was this helpful?</span>
-                    <RatingButtons
-                      currentRating={explanationRating}
-                      onRate={(rating) => onRateExplanation(rating, displayExplanation)}
-                    />
+                  <p className="text-xs sm:text-sm text-blue-700 leading-relaxed">{displayExplanation}</p>
+                  <div className="mt-1.5 sm:mt-2 flex items-center gap-2">
+                    <span className="text-[9px] sm:text-[10px] text-blue-400">Was this helpful?</span>
+                    <RatingButtons currentRating={explanationRating} onRate={(rating) => onRateExplanation(rating, displayExplanation)} />
                   </div>
                 </>
               )}
@@ -806,111 +551,74 @@ function FeedbackScreen({ feedback, problem, answer, onNext, isLast, aiExplanati
       </Card>
 
       {/* Mastery Progress */}
-      <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-        <span className="text-sm text-muted-foreground">Skill Mastery</span>
+      <div className="flex items-center justify-between p-2.5 sm:p-3 rounded-lg bg-muted/50">
+        <span className="text-xs sm:text-sm text-muted-foreground">Skill Mastery</span>
         <div className="flex items-center gap-2">
-          <Progress value={feedback.masteryScore} className="w-20 h-2" />
-          <span className="text-sm font-medium">{feedback.masteryScore}%</span>
+          <Progress value={feedback.masteryScore} className="w-16 sm:w-20 h-1.5 sm:h-2" />
+          <span className="text-xs sm:text-sm font-medium">{feedback.masteryScore}%</span>
         </div>
       </div>
 
       {/* Next Button */}
-      <Button onClick={onNext} size="lg" className="w-full h-12 text-lg gap-2">
-        {isLast ? (
-          <>
-            <Trophy className="w-5 h-5" />
-            See Results
-          </>
-        ) : (
-          <>
-            <ChevronRight className="w-5 h-5" />
-            Next Problem
-          </>
-        )}
+      <Button onClick={onNext} size="lg" className="w-full h-11 sm:h-12 text-sm sm:text-lg gap-2">
+        {isLast ? <><Trophy className="w-4 h-4 sm:w-5 sm:h-5" /> See Results</> : <><ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" /> Next Problem</>}
       </Button>
     </motion.div>
   );
 }
 
+/* ─── Complete Screen ─── */
 function CompleteScreen({ results, aiSummary, summaryRating, onRateSummary, onPlayAgain }: {
-  results: any;
-  aiSummary: string | null;
-  summaryRating: "up" | "down" | null;
-  onRateSummary: (rating: "up" | "down", text: string) => void;
-  onPlayAgain: () => void;
+  results: any; aiSummary: string | null; summaryRating: "up" | "down" | null;
+  onRateSummary: (rating: "up" | "down", text: string) => void; onPlayAgain: () => void;
 }) {
   const [, navigate] = useLocation();
   const accuracy = results.accuracy ?? 0;
 
-  // Default summary if AI hasn't responded yet
   const displaySummary = aiSummary || (
-    accuracy >= 90
-      ? "🌟 Outstanding! You're a math superstar!"
-      : accuracy >= 70
-      ? "💪 Great job! Keep practicing to master more skills!"
-      : accuracy >= 50
-      ? "👍 Good effort! Try using hints to learn tricky problems."
-      : "🤗 Don't worry! Every practice makes you stronger. Try again!"
+    accuracy >= 90 ? "Outstanding! You're a math superstar!"
+    : accuracy >= 70 ? "Great job! Keep practicing to master more skills!"
+    : accuracy >= 50 ? "Good effort! Try using hints to learn tricky problems."
+    : "Don't worry! Every practice makes you stronger. Try again!"
   );
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="text-center space-y-8 py-8"
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+      className="text-center space-y-5 sm:space-y-8 py-6 sm:py-8"
     >
-      <motion.div
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        transition={{ type: "spring", damping: 8, delay: 0.2 }}
-      >
-        <div className="w-24 h-24 mx-auto rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center shadow-xl">
-          <Trophy className="w-12 h-12 text-white" />
+      <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", damping: 8, delay: 0.2 }}>
+        <div className="w-18 h-18 sm:w-24 sm:h-24 mx-auto rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center shadow-xl" style={{ width: "4.5rem", height: "4.5rem" }}>
+          <Trophy className="w-9 h-9 sm:w-12 sm:h-12 text-white" />
         </div>
       </motion.div>
 
       <div>
-        <h1 className="text-3xl font-bold mb-2">Session Complete!</h1>
-        <p className="text-muted-foreground">Great work! Here's how you did:</p>
+        <h1 className="!text-2xl sm:!text-3xl font-bold mb-1 sm:mb-2">Session Complete!</h1>
+        <p className="text-xs sm:text-base text-muted-foreground">Great work! Here's how you did:</p>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-lg mx-auto">
-        <div className="p-4 rounded-xl bg-green-50 border border-green-200">
-          <p className="text-3xl font-bold text-green-700">{accuracy}%</p>
-          <p className="text-xs text-green-600">Accuracy</p>
-        </div>
-        <div className="p-4 rounded-xl bg-blue-50 border border-blue-200">
-          <p className="text-3xl font-bold text-blue-700">{results.correctAnswers}</p>
-          <p className="text-xs text-blue-600">Correct</p>
-        </div>
-        <div className="p-4 rounded-xl bg-purple-50 border border-purple-200">
-          <p className="text-3xl font-bold text-purple-700">{results.totalProblems}</p>
-          <p className="text-xs text-purple-600">Total</p>
-        </div>
-        <div className="p-4 rounded-xl bg-orange-50 border border-orange-200">
-          <p className="text-3xl font-bold text-orange-700">{results.streak}</p>
-          <p className="text-xs text-orange-600">Day Streak</p>
-        </div>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4 max-w-lg mx-auto">
+        {[
+          { value: `${accuracy}%`, label: "Accuracy", bg: "bg-green-50 border-green-200", text: "text-green-700", sub: "text-green-600" },
+          { value: results.correctAnswers, label: "Correct", bg: "bg-blue-50 border-blue-200", text: "text-blue-700", sub: "text-blue-600" },
+          { value: results.totalProblems, label: "Total", bg: "bg-purple-50 border-purple-200", text: "text-purple-700", sub: "text-purple-600" },
+          { value: results.streak, label: "Day Streak", bg: "bg-orange-50 border-orange-200", text: "text-orange-700", sub: "text-orange-600" },
+        ].map((stat, i) => (
+          <div key={i} className={`p-3 sm:p-4 rounded-xl ${stat.bg} border`}>
+            <p className={`text-xl sm:text-3xl font-bold ${stat.text}`}>{stat.value}</p>
+            <p className={`text-[10px] sm:text-xs ${stat.sub}`}>{stat.label}</p>
+          </div>
+        ))}
       </div>
 
       {/* Badges earned */}
       {results.badgesEarned?.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="space-y-3"
-        >
-          <h3 className="font-semibold text-lg">Badges Earned!</h3>
-          <div className="flex flex-wrap gap-2 justify-center">
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="space-y-2 sm:space-y-3">
+          <h3 className="font-semibold text-base sm:text-lg">Badges Earned!</h3>
+          <div className="flex flex-wrap gap-1.5 sm:gap-2 justify-center">
             {results.badgesEarned.map((badge: any, i: number) => (
-              <motion.div
-                key={i}
-                initial={{ scale: 0, rotate: -20 }}
-                animate={{ scale: 1, rotate: 0 }}
-                transition={{ delay: 0.6 + i * 0.15, type: "spring" }}
-              >
-                <Badge className="py-2 px-4 text-base gap-2 bg-yellow-100 text-yellow-800 border-yellow-300">
+              <motion.div key={i} initial={{ scale: 0, rotate: -20 }} animate={{ scale: 1, rotate: 0 }} transition={{ delay: 0.6 + i * 0.15, type: "spring" }}>
+                <Badge className="py-1.5 px-3 sm:py-2 sm:px-4 text-xs sm:text-base gap-1.5 sm:gap-2 bg-yellow-100 text-yellow-800 border-yellow-300">
                   <span>{badge.icon}</span>
                   <span>{badge.title}</span>
                 </Badge>
@@ -920,34 +628,27 @@ function CompleteScreen({ results, aiSummary, summaryRating, onRateSummary, onPl
         </motion.div>
       )}
 
-      {/* AI-powered encouragement */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
-      >
+      {/* AI encouragement */}
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
         <Card className="bg-gradient-to-r from-primary/5 to-accent/5 max-w-md mx-auto">
-          <CardContent className="p-4">
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                <Bot className="w-4 h-4 text-primary" />
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex items-start gap-2 sm:gap-3">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <Bot className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
               </div>
-              <div className="text-left">
+              <div className="text-left min-w-0">
                 <div className="flex items-center gap-1.5 mb-1">
-                  <p className="text-xs font-medium text-primary">MathBuddy</p>
+                  <p className="text-[10px] sm:text-xs font-medium text-primary">MathBuddy</p>
                   {aiSummary && (
-                    <Badge variant="secondary" className="text-[10px] py-0 px-1.5">
-                      <Sparkles className="w-2.5 h-2.5 mr-0.5" />AI
+                    <Badge variant="secondary" className="text-[8px] sm:text-[10px] py-0 px-1 sm:px-1.5">
+                      <Sparkles className="w-2 h-2 sm:w-2.5 sm:h-2.5 mr-0.5" />AI
                     </Badge>
                   )}
                 </div>
-                <p className="text-sm leading-relaxed">{displaySummary}</p>
-                <div className="mt-2 flex items-center gap-2">
-                  <span className="text-[10px] text-muted-foreground">Was this helpful?</span>
-                  <RatingButtons
-                    currentRating={summaryRating}
-                    onRate={(rating) => onRateSummary(rating, displaySummary)}
-                  />
+                <p className="text-xs sm:text-sm leading-relaxed">{displaySummary}</p>
+                <div className="mt-1.5 sm:mt-2 flex items-center gap-2">
+                  <span className="text-[9px] sm:text-[10px] text-muted-foreground">Was this helpful?</span>
+                  <RatingButtons currentRating={summaryRating} onRate={(rating) => onRateSummary(rating, displaySummary)} />
                 </div>
               </div>
             </div>
@@ -955,13 +656,13 @@ function CompleteScreen({ results, aiSummary, summaryRating, onRateSummary, onPl
         </Card>
       </motion.div>
 
-      <div className="flex gap-3 justify-center">
-        <Button onClick={onPlayAgain} size="lg" className="gap-2">
-          <RotateCcw className="w-5 h-5" />
+      <div className="flex gap-2 sm:gap-3 justify-center">
+        <Button onClick={onPlayAgain} size="lg" className="gap-1.5 sm:gap-2 text-sm sm:text-base h-11 sm:h-12 px-4 sm:px-6">
+          <RotateCcw className="w-4 h-4 sm:w-5 sm:h-5" />
           Play Again
         </Button>
-        <Button variant="outline" size="lg" onClick={() => navigate("/dashboard")} className="gap-2">
-          <Home className="w-5 h-5" />
+        <Button variant="outline" size="lg" onClick={() => navigate("/dashboard")} className="gap-1.5 sm:gap-2 text-sm sm:text-base h-11 sm:h-12 px-4 sm:px-6">
+          <Home className="w-4 h-4 sm:w-5 sm:h-5" />
           Dashboard
         </Button>
       </div>

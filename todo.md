@@ -71,3 +71,12 @@
 - [x] Generate MathFuel logo (math + jet fuel concept)
 - [x] Integrate logo into app header, favicon, and landing page
 - [x] Verify all pages render correctly after rename
+
+## Phase 8: Brand-Quality Mobile Polish
+- [x] Home page: hero text sizing, nav hamburger, feature cards stacking, CTA spacing, footer layout
+- [x] StudentDashboard: stat cards grid, badge overflow, session history cards, nav spacing
+- [x] PracticeSession: question text sizing, answer input sizing, hint panel width, feedback cards, progress bar
+- [x] SkillMap: domain cards stacking, skill list overflow, mastery badges sizing
+- [x] ParentDashboard: child selector, progress charts, session table to cards on mobile
+- [x] Global CSS: base font scaling, container padding, touch target minimums, safe-area insets
+- [x] Test all pages at 375px and 390px widths

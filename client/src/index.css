@@ -44,51 +44,30 @@
 
 :root {
   /* MathFuel Palette - Warm, Inviting, Child-Friendly */
-  /* Primary: Warm Indigo */
   --primary: oklch(0.45 0.16 270);
   --primary-foreground: oklch(0.98 0.01 90);
-  
-  /* Secondary: Soft Teal */
   --secondary: oklch(0.55 0.12 180);
   --secondary-foreground: oklch(0.98 0.01 90);
-  
-  /* Accent: Sunny Amber */
   --accent: oklch(0.72 0.18 75);
   --accent-foreground: oklch(0.20 0.04 50);
-  
-  /* Background: Clean White */
   --background: oklch(0.99 0.01 95);
   --foreground: oklch(0.20 0.04 260);
-  
-  /* Card: Soft Blue-Tinted White */
   --card: oklch(0.98 0.02 260);
   --card-foreground: oklch(0.20 0.04 260);
-  
-  /* Popover */
   --popover: oklch(0.98 0.02 260);
   --popover-foreground: oklch(0.20 0.04 260);
-  
-  /* Muted: Soft Blue-Gray */
   --muted: oklch(0.88 0.04 260);
   --muted-foreground: oklch(0.50 0.06 260);
-  
-  /* Destructive */
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.985 0 0);
-  
-  /* Border & Input */
   --border: oklch(0.90 0.04 260);
   --input: oklch(0.90 0.04 260);
   --ring: oklch(0.42 0.15 260);
-  
-  /* Charts */
   --chart-1: oklch(0.45 0.16 270);
   --chart-2: oklch(0.72 0.18 75);
   --chart-3: oklch(0.55 0.12 180);
   --chart-4: oklch(0.60 0.18 150);
   --chart-5: oklch(0.65 0.16 340);
-  
-  /* Sidebar */
   --sidebar: oklch(0.96 0.03 260);
   --sidebar-foreground: oklch(0.20 0.04 260);
   --sidebar-primary: oklch(0.42 0.15 260);
@@ -97,7 +76,6 @@
   --sidebar-accent-foreground: oklch(0.20 0.04 260);
   --sidebar-border: oklch(0.90 0.04 260);
   --sidebar-ring: oklch(0.42 0.15 260);
-  
   --radius: 0.75rem;
 }
 
@@ -142,10 +120,15 @@
   }
   body {
     @apply bg-background text-foreground font-['Nunito',sans-serif];
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
   }
   h1, h2, h3, h4, h5, h6 {
     @apply font-['Nunito',sans-serif] font-bold;
   }
+  /* All interactive elements get pointer cursor */
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]),
   [type="button"]:not(:disabled),
@@ -160,13 +143,13 @@
 }
 
 @layer components {
+  /* Container: auto-center with responsive padding */
   .container {
     width: 100%;
     margin-left: auto;
     margin-right: auto;
     padding-left: 1rem;
     padding-right: 1rem;
-
   }
 
   .flex {
@@ -189,36 +172,66 @@
     }
   }
 
-  /* Mobile-First Responsive Utilities */
+  /* =============================================
+     MOBILE-FIRST TOUCH TARGETS & INPUTS
+     iOS/Android minimum 44px touch targets
+     ============================================= */
   @media (max-width: 640px) {
-    button {
-      @apply min-h-12 min-w-12 text-base;
+    /* Buttons: minimum 44px touch target */
+    button,
+    [role="button"] {
+      min-height: 44px;
     }
-    input, textarea, select {
-      @apply text-base min-h-12;
-    }
-    .touch-target {
-      @apply min-h-10 min-w-10;
+
+    /* Form inputs: comfortable mobile sizing */
+    input,
+    textarea,
+    select {
+      font-size: 16px !important; /* Prevents iOS zoom on focus */
+      min-height: 48px;
     }
   }
 
-  /* Tablet Optimizations */
-  @media (min-width: 641px) and (max-width: 1024px) {
-    .container {
-      max-width: 100%;
+  /* =============================================
+     SAFE AREA INSETS (notch phones)
+     ============================================= */
+  @supports (padding-bottom: env(safe-area-inset-bottom)) {
+    .safe-bottom {
+      padding-bottom: env(safe-area-inset-bottom);
     }
   }
 
-  /* Responsive Typography */
+  /* =============================================
+     SCROLL BEHAVIOR
+     ============================================= */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Hide scrollbar but keep scrollable on mobile */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* =============================================
+     RESPONSIVE TYPOGRAPHY
+     ============================================= */
   @media (max-width: 640px) {
     h1 {
-      @apply text-2xl;
+      font-size: 1.5rem !important;
+      line-height: 1.3 !important;
     }
     h2 {
-      @apply text-xl;
+      font-size: 1.25rem !important;
+      line-height: 1.35 !important;
     }
     h3 {
-      @apply text-lg;
+      font-size: 1.1rem !important;
+      line-height: 1.4 !important;
     }
   }
 }

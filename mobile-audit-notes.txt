@@ -1,0 +1,20 @@
+Mobile Audit Notes - MathFuel
+=============================
+
+Current viewport: 1280x1100 (desktop)
+Need to audit at mobile widths via code review.
+
+Issues visible at desktop that will be worse on mobile:
+1. Home page: 3-column feature cards will need to stack
+2. Home page: Nav buttons "Log In" and "Get Started Free" need mobile treatment
+3. Stats row (200+, 7, 5) needs to stack or shrink
+4. Hero text is very large - needs mobile scaling
+5. CTA buttons side-by-side may overflow on small screens
+
+Need to read each page component and check:
+- Responsive breakpoints (sm:, md:, lg:)
+- Text sizing at mobile
+- Grid/flex layouts stacking behavior
+- Touch target sizes
+- Padding/margin on mobile
+- Overflow handling
