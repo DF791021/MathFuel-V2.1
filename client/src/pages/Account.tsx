@@ -3,7 +3,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Link, useLocation, useSearch } from "wouter";
+import { Link, useLocation } from "wouter";
 import { motion } from "framer-motion";
 import {
   ArrowLeft, Crown, CreditCard, Settings, User, Mail,
@@ -25,8 +25,6 @@ const fadeUp = {
 export default function Account() {
   const { user, isAuthenticated, loading, logout } = useAuth();
   const [, navigate] = useLocation();
-  const searchString = useSearch();
-
   const { data: subscription, isLoading: subLoading } = trpc.payment.getSubscription.useQuery(
     undefined,
     { enabled: isAuthenticated }
@@ -47,13 +45,6 @@ export default function Account() {
   useEffect(() => {
     document.title = "Account - MathFuel";
   }, []);
-
-  // Show success toast after checkout
-  useEffect(() => {
-    if (searchString?.includes("success=true")) {
-      toast.success("Welcome to MathFuel Family! Your subscription is now active.");
-    }
-  }, [searchString]);
 
   // Redirect if not authenticated
   useEffect(() => {

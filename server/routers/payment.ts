@@ -222,7 +222,7 @@ export const paymentRouter = router({
         payment_method_types: ["card"],
         line_items: lineItems,
         success_url:
-          input.successUrl || `${origin}/account?session_id={CHECKOUT_SESSION_ID}&success=true`,
+          input.successUrl || `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: input.cancelUrl || `${origin}/pricing?canceled=true`,
         metadata: {
           mathfuel_user_id: String(ctx.user.id),

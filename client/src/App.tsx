@@ -18,6 +18,7 @@ const ForgotPassword = React.lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = React.lazy(() => import("./pages/ResetPassword"));
 const Pricing = React.lazy(() => import("./pages/Pricing"));
 const Account = React.lazy(() => import("./pages/Account"));
+const PaymentSuccess = React.lazy(() => import("./pages/PaymentSuccess"));
 
 function Router() {
   return (
@@ -35,6 +36,7 @@ function Router() {
         <Route path="/parent" component={ParentDashboard} />
         <Route path="/pricing" component={Pricing} />
         <Route path="/account" component={Account} />
+        <Route path="/payment-success" component={PaymentSuccess} />
         <Route path="/404" component={NotFound} />
         <Route component={NotFound} />
       </Switch>

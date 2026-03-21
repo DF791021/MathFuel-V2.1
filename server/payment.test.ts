@@ -325,8 +325,48 @@ describe("Payment Router", () => {
         expect.objectContaining({
           mode: "subscription",
           allow_promotion_codes: true,
+          success_url: expect.stringContaining("/payment-success"),
         })
       );
+    });
+
+    it("should redirect to /payment-success (not /account) on successful checkout", async () => {
+      const mockDbSelect = vi.fn().mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue([]),
+          }),
+        }),
+      });
+      mockGetDb.mockResolvedValue({ select: mockDbSelect });
+      mockGetUserById.mockResolvedValue({
+        id: 1,
+        email: "test@example.com",
+        name: "Test User",
+        openId: "test-open-id",
+      });
+
+      mockCustomersCreate.mockResolvedValue({ id: "cus_test_789" });
+      mockCheckoutCreate.mockResolvedValue({
+        url: "https://checkout.stripe.com/redirect-test",
+      });
+
+      const { paymentRouter } = await import("./routers/payment");
+      const createCheckout = paymentRouter.createCheckout as any;
+
+      await createCheckout({
+        ctx: {
+          user: { id: 1 },
+          req: { headers: { origin: "https://mathfuel.org" } },
+        },
+        input: { interval: "monthly" },
+      });
+
+      const callArgs = mockCheckoutCreate.mock.calls[0][0];
+      expect(callArgs.success_url).toContain("/payment-success");
+      expect(callArgs.success_url).toContain("session_id=");
+      expect(callArgs.success_url).not.toContain("/account?success=true");
+      expect(callArgs.cancel_url).toContain("/pricing?canceled=true");
     });
 
     it("should use yearly pricing when interval is yearly", async () => {

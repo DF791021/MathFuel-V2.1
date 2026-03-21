@@ -131,3 +131,10 @@
 - [x] Build Account/Billing page for managing subscription
 - [x] Write vitest tests for payment procedures (18 tests passing)
 - [x] Wire pricing page into navigation and Home page
+
+## Phase 14: Payment Success Confirmation Page
+- [x] Create PaymentSuccess page with confetti animation
+- [x] Add clear CTA to start practicing immediately
+- [x] Wire route in App.tsx and update Stripe checkout success_url
+- [x] Remove success toast from Account page (replaced by dedicated page)
+- [x] Write vitest tests for the new page (156 tests passing)
