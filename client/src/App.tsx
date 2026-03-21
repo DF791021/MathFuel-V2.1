@@ -8,6 +8,8 @@ import { Toaster } from "sonner";
 
 // Lazy load pages
 const Home = React.lazy(() => import("./pages/Home"));
+const Login = React.lazy(() => import("./pages/Login"));
+const Signup = React.lazy(() => import("./pages/Signup"));
 const StudentDashboard = React.lazy(() => import("./pages/StudentDashboard"));
 const PracticeSession = React.lazy(() => import("./pages/PracticeSession"));
 const ParentDashboard = React.lazy(() => import("./pages/ParentDashboard"));
@@ -18,6 +20,8 @@ function Router() {
     <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>}>
       <Switch>
         <Route path="/" component={Home} />
+        <Route path="/login" component={Login} />
+        <Route path="/signup" component={Signup} />
         <Route path="/dashboard" component={StudentDashboard} />
         <Route path="/practice" component={PracticeSession} />
         <Route path="/practice/:skillId" component={PracticeSession} />

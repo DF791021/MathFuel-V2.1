@@ -34,7 +34,7 @@
 - [x] Vitest tests for adaptive difficulty engine
 - [x] Vitest tests for streak logic
 - [x] Vitest tests for badge award logic
-- [x] All 93 tests passing
+- [x] All 112 tests passing
 
 ## Infrastructure (Existing - Keep)
 - [x] Admin settings panel
@@ -90,3 +90,18 @@
 - [x] Gentle encouragement copy between hints
 - [x] Disable hint button briefly after reveal to prevent spam-clicking
 - [x] Mobile-optimized hint panel with proper touch targets
+
+## Phase 10: Custom In-App Authentication (Replace Manus OAuth)
+- [x] Add password field to users table (hashed with bcrypt)
+- [x] Server-side register endpoint (email, password, name, role)
+- [x] Server-side login endpoint (email + password → JWT cookie)
+- [x] Server-side logout endpoint (clear JWT cookie)
+- [x] Password hashing with bcrypt
+- [x] JWT session creation and verification (no external OAuth)
+- [x] Login page with MathFuel branding (email + password)
+- [x] Signup page with role selection (Student / Parent / Teacher)
+- [x] Update useAuth hook to work with custom auth
+- [x] Remove all Manus OAuth redirects (getLoginUrl, OAuth portal)
+- [x] Protected route guards using custom JWT
+- [x] Update main.tsx to redirect to /login instead of OAuth
+- [x] Test registration, login, logout, protected routes (19 tests)

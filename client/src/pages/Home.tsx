@@ -8,7 +8,7 @@ import {
   Play, Brain, Target, BarChart3, Shield, Sparkles,
   ChevronRight, Flame, Star, Trophy, Zap, Heart, Menu, X,
 } from "lucide-react";
-import { getLoginUrl } from "@/const";
+// Auth links are now internal routes
 
 const LOGO_URL = "https://d2xsxph8kpxj0f.cloudfront.net/310519663117001051/BAbKuMSfjHaa9ao8qByqEp/mathfuel-logo-V7jjfN52dexxQobYgXDFCk.webp";
 
@@ -127,14 +127,14 @@ export default function Home() {
 
           {/* Desktop nav */}
           <div className="hidden sm:flex items-center gap-3">
-            <a href={getLoginUrl()} className="no-underline">
+            <Link href="/login" className="no-underline">
               <Button variant="outline" size="sm">Log In</Button>
-            </a>
-            <a href={getLoginUrl()} className="no-underline">
+            </Link>
+            <Link href="/signup" className="no-underline">
               <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90">
                 Get Started Free
               </Button>
-            </a>
+            </Link>
           </div>
 
           {/* Mobile hamburger */}
@@ -155,14 +155,14 @@ export default function Home() {
             exit={{ opacity: 0, y: -10 }}
             className="sm:hidden bg-white border-t border-border/50 px-4 py-4 space-y-3"
           >
-            <a href={getLoginUrl()} className="block no-underline">
+            <Link href="/login" className="block no-underline">
               <Button variant="outline" className="w-full justify-center">Log In</Button>
-            </a>
-            <a href={getLoginUrl()} className="block no-underline">
+            </Link>
+            <Link href="/signup" className="block no-underline">
               <Button className="w-full justify-center bg-accent text-accent-foreground hover:bg-accent/90">
                 Get Started Free
               </Button>
-            </a>
+            </Link>
           </motion.div>
         )}
       </nav>
@@ -197,12 +197,12 @@ export default function Home() {
             initial="hidden" animate="visible" variants={fadeUp} custom={3}
             className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4 sm:px-0"
           >
-            <a href={getLoginUrl()} className="no-underline">
+            <Link href="/signup" className="no-underline">
               <Button size="lg" className="w-full sm:w-auto bg-primary text-primary-foreground hover:bg-primary/90 text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 rounded-2xl shadow-lg shadow-primary/25">
                 <Play className="w-5 h-5 mr-2" />
                 Start Practicing Free
               </Button>
-            </a>
+            </Link>
             <a href="#features" className="no-underline">
               <Button variant="outline" size="lg" className="w-full sm:w-auto text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 rounded-2xl">
                 See How It Works
@@ -364,12 +364,12 @@ export default function Home() {
             <p className="text-sm sm:text-lg text-muted-foreground mb-6 sm:mb-8 max-w-xl mx-auto px-2">
               Free to start. No credit card required. See real progress in the first week.
             </p>
-            <a href={getLoginUrl()} className="no-underline">
+            <Link href="/signup" className="no-underline">
               <Button size="lg" className="w-full sm:w-auto bg-accent text-accent-foreground hover:bg-accent/90 text-base sm:text-lg px-8 sm:px-10 py-5 sm:py-6 rounded-2xl shadow-lg shadow-accent/25">
                 <Zap className="w-5 h-5 mr-2" />
                 Start Free Today
               </Button>
-            </a>
+            </Link>
           </motion.div>
         </div>
       </section>
