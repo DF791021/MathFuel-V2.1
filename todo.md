@@ -61,3 +61,13 @@
 - [x] Child-friendly feedback interaction (simple, non-disruptive)
 - [x] Admin view of AI feedback quality metrics (getFeedbackStats procedure available)
 - [x] Vitest tests for feedback procedures (15 tests passing)
+
+## Phase 7: Rebrand to MathFuel
+- [x] Rename all "Wisconsin Food Explorer" references to "MathFuel"
+- [x] Rename all "wisconsin-food-explorer" references to "mathfuel"
+- [x] Update package.json name
+- [x] Update HTML title and meta tags
+- [x] Update VITE_APP_TITLE (user needs to update in Settings > General)
+- [x] Generate MathFuel logo (math + jet fuel concept)
+- [x] Integrate logo into app header, favicon, and landing page
+- [x] Verify all pages render correctly after rename

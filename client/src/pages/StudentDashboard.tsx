@@ -253,7 +253,11 @@ export default function StudentDashboard() {
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
         <div className="container flex items-center justify-between h-14">
           <Link href="/" className="flex items-center gap-2 font-bold text-lg">
-            <Sparkles className="w-6 h-6 text-primary" />
+            <img
+              src="https://d2xsxph8kpxj0f.cloudfront.net/310519663117001051/BAbKuMSfjHaa9ao8qByqEp/mathfuel-logo-V7jjfN52dexxQobYgXDFCk.webp"
+              alt="MathFuel"
+              className="w-8 h-8"
+            />
             <span className="text-primary">Math</span>
             <span className="text-accent">Fuel</span>
           </Link>
