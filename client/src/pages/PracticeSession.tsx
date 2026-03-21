@@ -9,10 +9,12 @@ import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, CheckCircle2, XCircle, Lightbulb, ChevronRight,
   Play, Trophy, Sparkles, Clock, Zap, RotateCcw, Home, Bot,
+  ThumbsUp, ThumbsDown,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -60,6 +62,9 @@ export default function PracticeSession() {
   const [aiExplanation, setAiExplanation] = useState<string | null>(null);
   const [isLoadingExplanation, setIsLoadingExplanation] = useState(false);
   const [aiSessionSummary, setAiSessionSummary] = useState<string | null>(null);
+  const [hintRatings, setHintRatings] = useState<Record<number, "up" | "down">>({});
+  const [explanationRating, setExplanationRating] = useState<"up" | "down" | null>(null);
+  const [summaryRating, setSummaryRating] = useState<"up" | "down" | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const utils = trpc.useUtils();
@@ -121,6 +126,33 @@ export default function PracticeSession() {
   // AI session summary mutation
   const aiSessionSummaryMutation = trpc.aiTutor.getSessionSummary.useMutation();
 
+  // AI feedback mutation
+  const submitFeedbackMutation = trpc.aiTutor.submitFeedback.useMutation();
+
+  // Handle rating an AI response
+  const handleRateAI = useCallback((params: {
+    responseType: "hint" | "explanation" | "session_summary";
+    rating: "up" | "down";
+    aiResponseText?: string;
+    hintIndex?: number;
+  }) => {
+    submitFeedbackMutation.mutate({
+      sessionId: sessionId ?? undefined,
+      problemId: currentProblem?.id ?? undefined,
+      responseType: params.responseType,
+      rating: params.rating,
+      aiResponseText: params.aiResponseText,
+    });
+    // Update local state to show the selection
+    if (params.responseType === "hint" && params.hintIndex !== undefined) {
+      setHintRatings(prev => ({ ...prev, [params.hintIndex!]: params.rating }));
+    } else if (params.responseType === "explanation") {
+      setExplanationRating(params.rating);
+    } else if (params.responseType === "session_summary") {
+      setSummaryRating(params.rating);
+    }
+  }, [submitFeedbackMutation, sessionId, currentProblem]);
+
   // Fetch AI explanation after answer submission
   const fetchAIExplanation = useCallback(async (problemId: number, studentAnswer: string, isCorrect: boolean) => {
     setIsLoadingExplanation(true);
@@ -172,6 +204,8 @@ export default function PracticeSession() {
         setState("playing");
         setAiExplanation(null);
         setIsLoadingExplanation(false);
+        setHintRatings({});
+        setExplanationRating(null);
         setTimeout(() => inputRef.current?.focus(), 100);
       } else {
         completeSessionMutation.mutate({ sessionId });
@@ -313,6 +347,8 @@ export default function PracticeSession() {
               isSubmitting={isSubmitting}
               isLoadingHint={aiHintMutation.isPending}
               inputRef={inputRef}
+              hintRatings={hintRatings}
+              onRateHint={(index, rating, text) => handleRateAI({ responseType: "hint", rating, aiResponseText: text, hintIndex: index })}
             />
           )}
           {state === "playing" && !currentProblem && (
@@ -339,6 +375,8 @@ export default function PracticeSession() {
               isLast={problemCount >= PROBLEMS_PER_SESSION}
               aiExplanation={aiExplanation}
               isLoadingExplanation={isLoadingExplanation}
+              explanationRating={explanationRating}
+              onRateExplanation={(rating, text) => handleRateAI({ responseType: "explanation", rating, aiResponseText: text })}
             />
           )}
           {state === "complete" && sessionResults && (
@@ -346,6 +384,8 @@ export default function PracticeSession() {
               key="complete"
               results={sessionResults}
               aiSummary={aiSessionSummary}
+              summaryRating={summaryRating}
+              onRateSummary={(rating, text) => handleRateAI({ responseType: "session_summary", rating, aiResponseText: text })}
               onPlayAgain={() => {
                 setState("setup");
                 setSessionId(null);
@@ -354,6 +394,7 @@ export default function PracticeSession() {
                 setSessionResults(null);
                 setAiExplanation(null);
                 setAiSessionSummary(null);
+                setSummaryRating(null);
               }}
             />
           )}
@@ -438,7 +479,65 @@ function SetupScreen({ onStart, isLoading, skillId }: {
   );
 }
 
-function ProblemScreen({ problem, answer, setAnswer, onSubmit, onGetHint, visibleHints, hintsViewed, isSubmitting, isLoadingHint, inputRef }: {
+/** Reusable thumbs up/down rating buttons for AI responses */
+function RatingButtons({ currentRating, onRate, size = "sm" }: {
+  currentRating: "up" | "down" | null;
+  onRate: (rating: "up" | "down") => void;
+  size?: "sm" | "md";
+}) {
+  const iconSize = size === "sm" ? "w-3.5 h-3.5" : "w-4 h-4";
+  const btnSize = size === "sm" ? "w-7 h-7" : "w-8 h-8";
+
+  return (
+    <TooltipProvider delayDuration={300}>
+      <div className="flex items-center gap-1">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              onClick={() => onRate("up")}
+              className={`${btnSize} rounded-full flex items-center justify-center transition-all duration-200 ${
+                currentRating === "up"
+                  ? "bg-green-100 text-green-600 scale-110 ring-2 ring-green-300"
+                  : "hover:bg-green-50 text-muted-foreground hover:text-green-500"
+              }`}
+              aria-label="Helpful"
+            >
+              <ThumbsUp className={iconSize} />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="text-xs">Helpful!</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              onClick={() => onRate("down")}
+              className={`${btnSize} rounded-full flex items-center justify-center transition-all duration-200 ${
+                currentRating === "down"
+                  ? "bg-red-100 text-red-500 scale-110 ring-2 ring-red-300"
+                  : "hover:bg-red-50 text-muted-foreground hover:text-red-400"
+              }`}
+              aria-label="Not helpful"
+            >
+              <ThumbsDown className={iconSize} />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="text-xs">Not helpful</TooltipContent>
+        </Tooltip>
+        {currentRating && (
+          <motion.span
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-[10px] text-muted-foreground ml-0.5"
+          >
+            Thanks!
+          </motion.span>
+        )}
+      </div>
+    </TooltipProvider>
+  );
+}
+
+function ProblemScreen({ problem, answer, setAnswer, onSubmit, onGetHint, visibleHints, hintsViewed, isSubmitting, isLoadingHint, inputRef, hintRatings, onRateHint }: {
   problem: Problem;
   answer: string;
   setAnswer: (v: string) => void;
@@ -449,6 +548,8 @@ function ProblemScreen({ problem, answer, setAnswer, onSubmit, onGetHint, visibl
   isSubmitting: boolean;
   isLoadingHint: boolean;
   inputRef: React.RefObject<HTMLInputElement | null>;
+  hintRatings: Record<number, "up" | "down">;
+  onRateHint: (index: number, rating: "up" | "down", text: string) => void;
 }) {
   const choices = problem.choices ? (typeof problem.choices === "string" ? JSON.parse(problem.choices) : problem.choices) : null;
 
@@ -572,9 +673,15 @@ function ProblemScreen({ problem, answer, setAnswer, onSubmit, onGetHint, visibl
                     <Bot className="w-3.5 h-3.5 text-yellow-700" />
                   </div>
                 </div>
-                <div>
+                <div className="flex-1">
                   <p className="text-xs font-medium text-yellow-600 mb-0.5">MathBuddy Hint {i + 1}</p>
                   <p className="text-sm text-yellow-800">{hint}</p>
+                </div>
+                <div className="flex-shrink-0 self-center">
+                  <RatingButtons
+                    currentRating={hintRatings[i] ?? null}
+                    onRate={(rating) => onRateHint(i, rating, hint)}
+                  />
                 </div>
               </motion.div>
             ))}
@@ -585,7 +692,7 @@ function ProblemScreen({ problem, answer, setAnswer, onSubmit, onGetHint, visibl
   );
 }
 
-function FeedbackScreen({ feedback, problem, answer, onNext, isLast, aiExplanation, isLoadingExplanation }: {
+function FeedbackScreen({ feedback, problem, answer, onNext, isLast, aiExplanation, isLoadingExplanation, explanationRating, onRateExplanation }: {
   feedback: FeedbackData;
   problem: Problem;
   answer: string;
@@ -593,6 +700,8 @@ function FeedbackScreen({ feedback, problem, answer, onNext, isLast, aiExplanati
   isLast: boolean;
   aiExplanation: string | null;
   isLoadingExplanation: boolean;
+  explanationRating: "up" | "down" | null;
+  onRateExplanation: (rating: "up" | "down", text: string) => void;
 }) {
   // Use AI explanation if available, otherwise fall back to static
   const displayExplanation = aiExplanation || feedback.explanation;
@@ -680,7 +789,16 @@ function FeedbackScreen({ feedback, problem, answer, onNext, isLast, aiExplanati
                   <span>MathBuddy is thinking...</span>
                 </div>
               ) : (
-                <p className="text-sm text-blue-700 leading-relaxed">{displayExplanation}</p>
+                <>
+                  <p className="text-sm text-blue-700 leading-relaxed">{displayExplanation}</p>
+                  <div className="mt-2 flex items-center gap-2">
+                    <span className="text-[10px] text-blue-400">Was this helpful?</span>
+                    <RatingButtons
+                      currentRating={explanationRating}
+                      onRate={(rating) => onRateExplanation(rating, displayExplanation)}
+                    />
+                  </div>
+                </>
               )}
             </div>
           </div>
@@ -714,7 +832,13 @@ function FeedbackScreen({ feedback, problem, answer, onNext, isLast, aiExplanati
   );
 }
 
-function CompleteScreen({ results, aiSummary, onPlayAgain }: { results: any; aiSummary: string | null; onPlayAgain: () => void }) {
+function CompleteScreen({ results, aiSummary, summaryRating, onRateSummary, onPlayAgain }: {
+  results: any;
+  aiSummary: string | null;
+  summaryRating: "up" | "down" | null;
+  onRateSummary: (rating: "up" | "down", text: string) => void;
+  onPlayAgain: () => void;
+}) {
   const [, navigate] = useLocation();
   const accuracy = results.accuracy ?? 0;
 
@@ -818,6 +942,13 @@ function CompleteScreen({ results, aiSummary, onPlayAgain }: { results: any; aiS
                   )}
                 </div>
                 <p className="text-sm leading-relaxed">{displaySummary}</p>
+                <div className="mt-2 flex items-center gap-2">
+                  <span className="text-[10px] text-muted-foreground">Was this helpful?</span>
+                  <RatingButtons
+                    currentRating={summaryRating}
+                    onRate={(rating) => onRateSummary(rating, displaySummary)}
+                  />
+                </div>
               </div>
             </div>
           </CardContent>

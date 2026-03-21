@@ -34,7 +34,7 @@
 - [x] Vitest tests for adaptive difficulty engine
 - [x] Vitest tests for streak logic
 - [x] Vitest tests for badge award logic
-- [x] All 78 tests passing
+- [x] All 93 tests passing
 
 ## Infrastructure (Existing - Keep)
 - [x] Admin settings panel
@@ -51,3 +51,13 @@
 - [x] Update PracticeSession UI to show AI explanation after incorrect answer
 - [x] Loading states and error handling for AI responses
 - [x] Vitest tests for AI hint/explanation procedures
+
+## Phase 6: AI Feedback Rating System
+- [x] Database table for AI response feedback (thumbs up/down, response type, problem context)
+- [x] tRPC procedure to submit feedback rating
+- [x] tRPC procedure to query feedback stats (admin/parent view)
+- [x] Thumbs up/down UI on AI hints in PracticeSession
+- [x] Thumbs up/down UI on AI explanations in PracticeSession
+- [x] Child-friendly feedback interaction (simple, non-disruptive)
+- [x] Admin view of AI feedback quality metrics (getFeedbackStats procedure available)
+- [x] Vitest tests for feedback procedures (15 tests passing)

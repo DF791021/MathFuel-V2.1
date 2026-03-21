@@ -8,6 +8,13 @@
       "when": 1774076552738,
       "tag": "0000_greedy_pepper_potts",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1774117435963,
+      "tag": "0001_smooth_stranger",
+      "breakpoints": true
     }
   ]
 }

@@ -251,6 +251,49 @@ Return ONLY the message text.`;
         return { summary: getDefaultSummary(accuracy), isAI: false };
       }
     }),
+
+  /**
+   * Submit feedback (thumbs up/down) on an AI response.
+   * Simple, child-friendly — just a tap.
+   */
+  submitFeedback: protectedProcedure
+    .input(z.object({
+      sessionId: z.number().int().optional(),
+      problemId: z.number().int().optional(),
+      responseType: z.enum(["hint", "explanation", "session_summary"]),
+      rating: z.enum(["up", "down"]),
+      aiResponseText: z.string().optional(),
+      comment: z.string().max(500).optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const result = await db.submitAIFeedback({
+        studentId: ctx.user.id,
+        sessionId: input.sessionId ?? null,
+        problemId: input.problemId ?? null,
+        responseType: input.responseType,
+        rating: input.rating,
+        aiResponseText: input.aiResponseText ?? null,
+        comment: input.comment ?? null,
+      });
+      return { success: true, id: result?.id ?? null };
+    }),
+
+  /**
+   * Get AI feedback quality stats (admin/parent view).
+   */
+  getFeedbackStats: protectedProcedure
+    .query(async ({ ctx }) => {
+      return db.getAIFeedbackStats();
+    }),
+
+  /**
+   * Get feedback for a specific session.
+   */
+  getSessionFeedback: protectedProcedure
+    .input(z.object({ sessionId: z.number().int() }))
+    .query(async ({ ctx, input }) => {
+      return db.getAIFeedbackForSession(input.sessionId);
+    }),
 });
 
 function getDefaultSummary(accuracy: number): string {

@@ -243,6 +243,29 @@ export type ParentStudentLink = typeof parentStudentLinks.$inferSelect;
 export type InsertParentStudentLink = typeof parentStudentLinks.$inferInsert;
 
 // ============================================================================
+// MATHFUEL: AI FEEDBACK RATINGS
+// ============================================================================
+
+/**
+ * AI feedback ratings - students rate MathBuddy's hints and explanations
+ * Used to measure AI quality and improve prompts over time.
+ */
+export const aiFeedback = mysqlTable("aiFeedback", {
+  id: int("id").autoincrement().primaryKey(),
+  studentId: int("studentId").notNull(),
+  sessionId: int("sessionId"), // practice session context
+  problemId: int("problemId"), // which problem the AI responded to
+  responseType: mysqlEnum("responseType", ["hint", "explanation", "session_summary"]).notNull(),
+  rating: mysqlEnum("rating", ["up", "down"]).notNull(), // thumbs up or down
+  aiResponseText: text("aiResponseText"), // the actual AI text that was rated
+  comment: text("comment"), // optional free-text comment from student
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type AIFeedback = typeof aiFeedback.$inferSelect;
+export type InsertAIFeedback = typeof aiFeedback.$inferInsert;
+
+// ============================================================================
 // REVENUE ENGINE TABLES (Existing - Kept)
 // ============================================================================
 

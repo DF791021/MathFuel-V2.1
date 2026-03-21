@@ -10,6 +10,7 @@ import {
   studentStreaks,
   studentBadges, InsertStudentBadge,
   parentStudentLinks,
+  aiFeedback, InsertAIFeedback,
   subscriptions,
   adminSettings,
   featureFlags,
@@ -536,6 +537,56 @@ export async function setFeatureFlag(name: string, enabled: boolean, owner: stri
   } else {
     await db.insert(featureFlags).values({ name, enabled, owner, description });
   }
+}
+
+// ============================================================================
+// AI FEEDBACK
+// ============================================================================
+
+export async function submitAIFeedback(data: InsertAIFeedback) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.insert(aiFeedback).values(data);
+  return { id: result[0].insertId };
+}
+
+export async function getAIFeedbackByStudent(studentId: number, limit: number = 50) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(aiFeedback)
+    .where(eq(aiFeedback.studentId, studentId))
+    .orderBy(desc(aiFeedback.createdAt))
+    .limit(limit);
+}
+
+export async function getAIFeedbackStats() {
+  const db = await getDb();
+  if (!db) return { total: 0, up: 0, down: 0, byType: {} };
+  
+  const allFeedback = await db.select().from(aiFeedback);
+  const total = allFeedback.length;
+  const up = allFeedback.filter(f => f.rating === "up").length;
+  const down = allFeedback.filter(f => f.rating === "down").length;
+  
+  const byType: Record<string, { total: number; up: number; down: number }> = {};
+  for (const f of allFeedback) {
+    if (!byType[f.responseType]) {
+      byType[f.responseType] = { total: 0, up: 0, down: 0 };
+    }
+    byType[f.responseType].total++;
+    if (f.rating === "up") byType[f.responseType].up++;
+    else byType[f.responseType].down++;
+  }
+  
+  return { total, up, down, byType };
+}
+
+export async function getAIFeedbackForSession(sessionId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(aiFeedback)
+    .where(eq(aiFeedback.sessionId, sessionId))
+    .orderBy(asc(aiFeedback.createdAt));
 }
 
 // ============================================================================
