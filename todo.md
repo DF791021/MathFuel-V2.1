@@ -113,3 +113,10 @@
 - [x] Build parent-child account linking system
 - [x] Parent-child linking UI in Parent Dashboard
 - [x] Vitest tests for forgot password and parent-child linking (25 tests)
+
+## Phase 12: Final Cleanup + Login Fix + GitHub Push
+- [x] Deep audit: find and remove ALL remaining Wisconsin Food Explorer / NutritionFun references
+- [x] Delete stale files (old user manuals, docs, etc.)
+- [x] Fix login for duncankfurrh@gmail.com (OAuth accounts can now set password via register or forgot password)
+- [x] Verify clean build with 0 errors (137 tests passing, 0 TS errors)
+- [ ] Push clean code to GitHub (DF791021/new-green) - in progress

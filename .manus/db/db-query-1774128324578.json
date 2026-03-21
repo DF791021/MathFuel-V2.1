@@ -1,0 +1,20 @@
+{
+  "query": "SELECT id, openId, name, email, loginMethod, role, userType, createdAt FROM users WHERE email = 'duncankfurrh@gmail.com'",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KTJMGanAQiuu2AH.d2e93e708435 --database BAbKuMSfjHaa9ao8qByqEp --execute SELECT id, openId, name, email, loginMethod, role, userType, createdAt FROM users WHERE email = 'duncankfurrh@gmail.com'",
+  "rows": [
+    {
+      "id": "1",
+      "openId": "SMH2Gj7hQcNeg4XQ7yRQiN",
+      "name": "Duncan Furrh",
+      "email": "duncankfurrh@gmail.com",
+      "loginMethod": "google",
+      "role": "admin",
+      "userType": "student",
+      "createdAt": "2025-12-07 15:02:04"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\topenId\tname\temail\tloginMethod\trole\tuserType\tcreatedAt\n1\tSMH2Gj7hQcNeg4XQ7yRQiN\tDuncan Furrh\tduncankfurrh@gmail.com\tgoogle\tadmin\tstudent\t2025-12-07 15:02:04\n",
+  "stderr": "",
+  "execution_time_ms": 124
+}

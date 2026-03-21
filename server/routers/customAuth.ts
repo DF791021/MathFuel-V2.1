@@ -51,7 +51,7 @@ function generateResetToken(): string {
 function buildResetEmailHtml(name: string, resetUrl: string): string {
   return `
     <div style="font-family: 'Nunito', Arial, sans-serif; max-width: 520px; margin: 0 auto; background: #f8fafc;">
-      <div style="background: linear-gradient(135deg, #3730A3 0%, #1E1B4B 100%); color: white; padding: 32px; text-align: center; border-radius: 12px 12px 0 0;">
+      <div style="background: linear-gradient(135deg, #4F46E5 0%, #3730A3 100%); color: white; padding: 32px; text-align: center; border-radius: 12px 12px 0 0;">
         <h1 style="margin: 0; font-size: 26px; font-weight: 800;">🚀 MathFuel</h1>
         <p style="margin: 8px 0 0; font-size: 15px; opacity: 0.9;">Password Reset Request</p>
       </div>
@@ -61,7 +61,7 @@ function buildResetEmailHtml(name: string, resetUrl: string): string {
           We received a request to reset your MathFuel password. Click the button below to create a new password. This link expires in <strong>1 hour</strong>.
         </p>
         <div style="text-align: center; margin: 28px 0;">
-          <a href="${resetUrl}" style="display: inline-block; background: #3730A3; color: white; padding: 14px 36px; border-radius: 8px; text-decoration: none; font-size: 16px; font-weight: 700; letter-spacing: 0.3px;">
+          <a href="${resetUrl}" style="display: inline-block; background: #4F46E5; color: white; padding: 14px 36px; border-radius: 8px; text-decoration: none; font-size: 16px; font-weight: 700; letter-spacing: 0.3px;">
             Reset My Password
           </a>
         </div>
@@ -91,6 +91,38 @@ export const customAuthRouter = router({
     .mutation(async ({ ctx, input }) => {
       const existing = await getUserByEmail(input.email);
       if (existing) {
+        // If account exists but has no password (OAuth-created), let them set one
+        if (!existing.passwordHash) {
+          const passwordHash = await bcrypt.hash(input.password, SALT_ROUNDS);
+          const dbConn = await db.getDb();
+          if (dbConn) {
+            await dbConn
+              .update(users)
+              .set({
+                passwordHash,
+                loginMethod: "email",
+                userType: input.userType,
+                ...(input.gradeLevel ? { gradeLevel: input.gradeLevel } : {}),
+              })
+              .where(eq(users.id, existing.id));
+          }
+
+          await db.upsertUser({
+            openId: existing.openId,
+            lastSignedIn: new Date(),
+          });
+
+          const token = await createJWT(existing.openId, existing.name || input.name);
+          const cookieOptions = getSessionCookieOptions(ctx.req);
+          ctx.res.cookie(COOKIE_NAME, token, {
+            ...cookieOptions,
+            maxAge: ONE_YEAR_MS,
+          });
+
+          const user = await db.getUserByOpenId(existing.openId);
+          return { success: true, user };
+        }
+
         throw new Error("An account with this email already exists. Please log in instead.");
       }
 
@@ -144,15 +176,26 @@ export const customAuthRouter = router({
         throw new Error("Invalid email or password.");
       }
 
+      // If account was created via OAuth and has no password yet,
+      // guide them to set one via the signup page or forgot password
       if (!user.passwordHash) {
         throw new Error(
-          "This account was created with a different login method. Please contact support."
+          "This account doesn't have a password yet. Please use 'Forgot Password' to set one, or sign up again with the same email to set a password."
         );
       }
 
       const valid = await bcrypt.compare(input.password, user.passwordHash);
       if (!valid) {
         throw new Error("Invalid email or password.");
+      }
+
+      // Update loginMethod to email if it was previously OAuth
+      const dbConn = await db.getDb();
+      if (dbConn && user.loginMethod !== "email") {
+        await dbConn
+          .update(users)
+          .set({ loginMethod: "email" })
+          .where(eq(users.id, user.id));
       }
 
       await db.upsertUser({
@@ -212,7 +255,7 @@ export const customAuthRouter = router({
       return { success: true, message: "If an account with that email exists, we've sent a reset link." };
     }),
 
-  // ── Verify Reset Token (check if token is valid before showing reset form) ──
+  // ── Verify Reset Token ──
   verifyResetToken: publicProcedure
     .input(z.object({ token: z.string().min(1) }))
     .query(async ({ input }) => {
@@ -273,10 +316,10 @@ export const customAuthRouter = router({
       // Hash new password
       const passwordHash = await bcrypt.hash(input.newPassword, SALT_ROUNDS);
 
-      // Update user's password
+      // Update user's password and set loginMethod to email
       await dbConn
         .update(users)
-        .set({ passwordHash })
+        .set({ passwordHash, loginMethod: "email" })
         .where(eq(users.id, resetToken.userId));
 
       // Mark token as used
