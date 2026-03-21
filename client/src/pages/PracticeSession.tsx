@@ -12,7 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, CheckCircle2, XCircle, Lightbulb, ChevronRight,
-  Play, Trophy, Sparkles, Clock, Zap, RotateCcw, Home,
+  Play, Trophy, Sparkles, Clock, Zap, RotateCcw, Home, Bot,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -57,6 +57,9 @@ export default function PracticeSession() {
   const [startTime, setStartTime] = useState(0);
   const [sessionResults, setSessionResults] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [aiExplanation, setAiExplanation] = useState<string | null>(null);
+  const [isLoadingExplanation, setIsLoadingExplanation] = useState(false);
+  const [aiSessionSummary, setAiSessionSummary] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const utils = trpc.useUtils();
@@ -88,6 +91,10 @@ export default function PracticeSession() {
       setState("feedback");
       if (data.isCorrect) setCorrectCount((c) => c + 1);
       setIsSubmitting(false);
+      // Trigger AI explanation generation
+      if (currentProblem) {
+        fetchAIExplanation(currentProblem.id, answer, data.isCorrect);
+      }
     },
     onError: (err) => {
       toast.error("Failed to submit answer: " + err.message);
@@ -99,9 +106,53 @@ export default function PracticeSession() {
     onSuccess: (data) => {
       setSessionResults(data);
       setState("complete");
+      // Trigger AI session summary
+      fetchAISessionSummary(data);
     },
     onError: (err) => toast.error("Failed to complete session: " + err.message),
   });
+
+  // AI hint mutation
+  const aiHintMutation = trpc.aiTutor.getAIHint.useMutation();
+
+  // AI explanation mutation
+  const aiExplanationMutation = trpc.aiTutor.getAIExplanation.useMutation();
+
+  // AI session summary mutation
+  const aiSessionSummaryMutation = trpc.aiTutor.getSessionSummary.useMutation();
+
+  // Fetch AI explanation after answer submission
+  const fetchAIExplanation = useCallback(async (problemId: number, studentAnswer: string, isCorrect: boolean) => {
+    setIsLoadingExplanation(true);
+    setAiExplanation(null);
+    try {
+      const result = await aiExplanationMutation.mutateAsync({
+        problemId,
+        studentAnswer,
+        isCorrect,
+      });
+      setAiExplanation(result.explanation);
+    } catch (err) {
+      console.error("AI explanation failed, using static fallback");
+    } finally {
+      setIsLoadingExplanation(false);
+    }
+  }, [aiExplanationMutation]);
+
+  // Fetch AI session summary
+  const fetchAISessionSummary = useCallback(async (results: any) => {
+    try {
+      const result = await aiSessionSummaryMutation.mutateAsync({
+        totalProblems: results.totalProblems ?? 0,
+        correctAnswers: results.correctAnswers ?? 0,
+        hintsUsed: 0,
+        streak: results.streak ?? 0,
+      });
+      setAiSessionSummary(result.summary);
+    } catch (err) {
+      console.error("AI session summary failed");
+    }
+  }, [aiSessionSummaryMutation]);
 
   // Fetch next problem
   const fetchNextProblem = useCallback(async () => {
@@ -119,9 +170,10 @@ export default function PracticeSession() {
         setStartTime(Date.now());
         setProblemCount((c) => c + 1);
         setState("playing");
+        setAiExplanation(null);
+        setIsLoadingExplanation(false);
         setTimeout(() => inputRef.current?.focus(), 100);
       } else {
-        // No more problems, complete session
         completeSessionMutation.mutate({ sessionId });
       }
     } catch (err: any) {
@@ -159,22 +211,37 @@ export default function PracticeSession() {
     });
   };
 
-  // Get hint
+  // Get AI hint (replaces static hint system)
   const handleGetHint = async () => {
     if (!currentProblem) return;
     try {
-      const result = await utils.client.practice.getHint.query({
+      const result = await aiHintMutation.mutateAsync({
         problemId: currentProblem.id,
-        hintIndex: hintsViewed,
+        hintsUsed: hintsViewed,
+        previousHints: visibleHints,
       });
       if (result.hint) {
-        setVisibleHints((prev) => [...prev, result.hint!]);
+        setVisibleHints((prev) => [...prev, result.hint]);
         setHintsViewed((h) => h + 1);
       } else {
         toast.info("No more hints available!");
       }
     } catch (err: any) {
-      toast.error("Failed to get hint");
+      // Fallback: try static hint
+      try {
+        const result = await utils.client.practice.getHint.query({
+          problemId: currentProblem.id,
+          hintIndex: hintsViewed,
+        });
+        if (result.hint) {
+          setVisibleHints((prev) => [...prev, result.hint!]);
+          setHintsViewed((h) => h + 1);
+        } else {
+          toast.info("No more hints available!");
+        }
+      } catch {
+        toast.error("Failed to get hint");
+      }
     }
   };
 
@@ -185,6 +252,7 @@ export default function PracticeSession() {
     } else {
       setCurrentProblem(null);
       setFeedback(null);
+      setAiExplanation(null);
       fetchNextProblem();
     }
   };
@@ -243,6 +311,7 @@ export default function PracticeSession() {
               visibleHints={visibleHints}
               hintsViewed={hintsViewed}
               isSubmitting={isSubmitting}
+              isLoadingHint={aiHintMutation.isPending}
               inputRef={inputRef}
             />
           )}
@@ -268,18 +337,23 @@ export default function PracticeSession() {
               answer={answer}
               onNext={handleNext}
               isLast={problemCount >= PROBLEMS_PER_SESSION}
+              aiExplanation={aiExplanation}
+              isLoadingExplanation={isLoadingExplanation}
             />
           )}
           {state === "complete" && sessionResults && (
             <CompleteScreen
               key="complete"
               results={sessionResults}
+              aiSummary={aiSessionSummary}
               onPlayAgain={() => {
                 setState("setup");
                 setSessionId(null);
                 setCurrentProblem(null);
                 setFeedback(null);
                 setSessionResults(null);
+                setAiExplanation(null);
+                setAiSessionSummary(null);
               }}
             />
           )}
@@ -305,38 +379,53 @@ function SetupScreen({ onStart, isLoading, skillId }: {
         <motion.div
           animate={{ scale: [1, 1.1, 1] }}
           transition={{ repeat: Infinity, duration: 2 }}
-          className="w-24 h-24 mx-auto rounded-3xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-xl mb-6"
+          className="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-primary to-blue-600 flex items-center justify-center shadow-lg mb-6"
         >
-          <Zap className="w-12 h-12 text-white" />
+          <Zap className="w-10 h-10 text-white" />
         </motion.div>
         <h1 className="text-3xl font-bold mb-2">Ready to Practice?</h1>
-        <p className="text-muted-foreground text-lg">
-          {skillId
-            ? "Practice this specific skill with adaptive problems."
-            : "Answer 10 questions at your level. Problems adapt to you!"}
+        <p className="text-muted-foreground max-w-md mx-auto">
+          You'll solve {PROBLEMS_PER_SESSION} problems. The difficulty adapts to you — 
+          and MathBuddy (your AI tutor) is here to help when you're stuck!
         </p>
       </div>
 
-      <div className="grid grid-cols-3 gap-4 max-w-sm mx-auto">
-        <div className="text-center p-3 rounded-xl bg-green-50 border border-green-200">
-          <p className="text-2xl font-bold text-green-700">10</p>
-          <p className="text-xs text-green-600">Questions</p>
+      {/* AI tutor badge */}
+      <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+        <Bot className="w-4 h-4 text-primary" />
+        <span>Powered by AI tutor — personalized hints & explanations</span>
+      </div>
+
+      {skillId && (
+        <Badge variant="secondary" className="text-sm py-1 px-3">
+          Focused practice: Skill #{skillId}
+        </Badge>
+      )}
+
+      <div className="grid grid-cols-3 gap-4 max-w-sm mx-auto text-center">
+        <div className="p-3 rounded-lg bg-muted/50">
+          <p className="text-2xl font-bold text-primary">{PROBLEMS_PER_SESSION}</p>
+          <p className="text-xs text-muted-foreground">Problems</p>
         </div>
-        <div className="text-center p-3 rounded-xl bg-blue-50 border border-blue-200">
-          <Lightbulb className="w-6 h-6 mx-auto text-blue-600" />
-          <p className="text-xs text-blue-600 mt-1">Hints</p>
+        <div className="p-3 rounded-lg bg-muted/50">
+          <p className="text-2xl font-bold text-primary">
+            <Lightbulb className="w-6 h-6 mx-auto text-yellow-500" />
+          </p>
+          <p className="text-xs text-muted-foreground">AI Hints</p>
         </div>
-        <div className="text-center p-3 rounded-xl bg-purple-50 border border-purple-200">
-          <Sparkles className="w-6 h-6 mx-auto text-purple-600" />
-          <p className="text-xs text-purple-600 mt-1">Adaptive</p>
+        <div className="p-3 rounded-lg bg-muted/50">
+          <p className="text-2xl font-bold text-primary">
+            <Clock className="w-6 h-6 mx-auto text-blue-500" />
+          </p>
+          <p className="text-xs text-muted-foreground">Your Pace</p>
         </div>
       </div>
 
       <Button
-        size="lg"
         onClick={onStart}
+        size="lg"
         disabled={isLoading}
-        className="text-lg px-10 py-6 shadow-lg gap-2"
+        className="h-14 px-10 text-lg gap-2 rounded-full shadow-lg"
       >
         {isLoading ? (
           <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
@@ -349,7 +438,7 @@ function SetupScreen({ onStart, isLoading, skillId }: {
   );
 }
 
-function ProblemScreen({ problem, answer, setAnswer, onSubmit, onGetHint, visibleHints, hintsViewed, isSubmitting, inputRef }: {
+function ProblemScreen({ problem, answer, setAnswer, onSubmit, onGetHint, visibleHints, hintsViewed, isSubmitting, isLoadingHint, inputRef }: {
   problem: Problem;
   answer: string;
   setAnswer: (v: string) => void;
@@ -358,6 +447,7 @@ function ProblemScreen({ problem, answer, setAnswer, onSubmit, onGetHint, visibl
   visibleHints: string[];
   hintsViewed: number;
   isSubmitting: boolean;
+  isLoadingHint: boolean;
   inputRef: React.RefObject<HTMLInputElement | null>;
 }) {
   const choices = problem.choices ? (typeof problem.choices === "string" ? JSON.parse(problem.choices) : problem.choices) : null;
@@ -448,15 +538,20 @@ function ProblemScreen({ problem, answer, setAnswer, onSubmit, onGetHint, visibl
           <Button
             variant="outline"
             onClick={onGetHint}
+            disabled={isLoadingHint}
             className="h-12 gap-2"
           >
-            <Lightbulb className="w-5 h-5 text-yellow-500" />
-            Hint
+            {isLoadingHint ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-yellow-500" />
+            ) : (
+              <Lightbulb className="w-5 h-5 text-yellow-500" />
+            )}
+            {isLoadingHint ? "Thinking..." : "Hint"}
           </Button>
         </div>
       </div>
 
-      {/* Hints */}
+      {/* AI Hints */}
       <AnimatePresence>
         {visibleHints.length > 0 && (
           <motion.div
@@ -472,8 +567,15 @@ function ProblemScreen({ problem, answer, setAnswer, onSubmit, onGetHint, visibl
                 transition={{ delay: 0.1 }}
                 className="flex gap-3 p-3 rounded-lg bg-yellow-50 border border-yellow-200"
               >
-                <Lightbulb className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-yellow-800">{hint}</p>
+                <div className="flex-shrink-0 mt-0.5">
+                  <div className="w-6 h-6 rounded-full bg-yellow-200 flex items-center justify-center">
+                    <Bot className="w-3.5 h-3.5 text-yellow-700" />
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-yellow-600 mb-0.5">MathBuddy Hint {i + 1}</p>
+                  <p className="text-sm text-yellow-800">{hint}</p>
+                </div>
               </motion.div>
             ))}
           </motion.div>
@@ -483,13 +585,18 @@ function ProblemScreen({ problem, answer, setAnswer, onSubmit, onGetHint, visibl
   );
 }
 
-function FeedbackScreen({ feedback, problem, answer, onNext, isLast }: {
+function FeedbackScreen({ feedback, problem, answer, onNext, isLast, aiExplanation, isLoadingExplanation }: {
   feedback: FeedbackData;
   problem: Problem;
   answer: string;
   onNext: () => void;
   isLast: boolean;
+  aiExplanation: string | null;
+  isLoadingExplanation: boolean;
 }) {
+  // Use AI explanation if available, otherwise fall back to static
+  const displayExplanation = aiExplanation || feedback.explanation;
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
@@ -549,14 +656,32 @@ function FeedbackScreen({ feedback, problem, answer, onNext, isLast }: {
         </Card>
       )}
 
-      {/* Explanation */}
+      {/* AI Explanation */}
       <Card className="bg-blue-50 border-blue-200">
         <CardContent className="p-4">
           <div className="flex gap-3">
-            <Sparkles className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="font-medium text-blue-800 mb-1">Explanation</p>
-              <p className="text-sm text-blue-700">{feedback.explanation}</p>
+            <div className="flex-shrink-0 mt-0.5">
+              <div className="w-8 h-8 rounded-full bg-blue-200 flex items-center justify-center">
+                <Bot className="w-4.5 h-4.5 text-blue-700" />
+              </div>
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <p className="font-medium text-blue-800">MathBuddy says:</p>
+                {aiExplanation && (
+                  <Badge variant="secondary" className="text-[10px] py-0 px-1.5 bg-blue-100 text-blue-600 border-blue-200">
+                    <Sparkles className="w-2.5 h-2.5 mr-0.5" />AI
+                  </Badge>
+                )}
+              </div>
+              {isLoadingExplanation ? (
+                <div className="flex items-center gap-2 text-sm text-blue-600">
+                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-500" />
+                  <span>MathBuddy is thinking...</span>
+                </div>
+              ) : (
+                <p className="text-sm text-blue-700 leading-relaxed">{displayExplanation}</p>
+              )}
             </div>
           </div>
         </CardContent>
@@ -589,9 +714,20 @@ function FeedbackScreen({ feedback, problem, answer, onNext, isLast }: {
   );
 }
 
-function CompleteScreen({ results, onPlayAgain }: { results: any; onPlayAgain: () => void }) {
+function CompleteScreen({ results, aiSummary, onPlayAgain }: { results: any; aiSummary: string | null; onPlayAgain: () => void }) {
   const [, navigate] = useLocation();
   const accuracy = results.accuracy ?? 0;
+
+  // Default summary if AI hasn't responded yet
+  const displaySummary = aiSummary || (
+    accuracy >= 90
+      ? "🌟 Outstanding! You're a math superstar!"
+      : accuracy >= 70
+      ? "💪 Great job! Keep practicing to master more skills!"
+      : accuracy >= 50
+      ? "👍 Good effort! Try using hints to learn tricky problems."
+      : "🤗 Don't worry! Every practice makes you stronger. Try again!"
+  );
 
   return (
     <motion.div
@@ -660,20 +796,33 @@ function CompleteScreen({ results, onPlayAgain }: { results: any; onPlayAgain: (
         </motion.div>
       )}
 
-      {/* Encouragement */}
-      <Card className="bg-gradient-to-r from-primary/5 to-accent/5 max-w-md mx-auto">
-        <CardContent className="p-4">
-          <p className="text-sm">
-            {accuracy >= 90
-              ? "🌟 Outstanding! You're a math superstar!"
-              : accuracy >= 70
-              ? "💪 Great job! Keep practicing to master more skills!"
-              : accuracy >= 50
-              ? "👍 Good effort! Try using hints to learn tricky problems."
-              : "🤗 Don't worry! Every practice makes you stronger. Try again!"}
-          </p>
-        </CardContent>
-      </Card>
+      {/* AI-powered encouragement */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+      >
+        <Card className="bg-gradient-to-r from-primary/5 to-accent/5 max-w-md mx-auto">
+          <CardContent className="p-4">
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <Bot className="w-4 h-4 text-primary" />
+              </div>
+              <div className="text-left">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <p className="text-xs font-medium text-primary">MathBuddy</p>
+                  {aiSummary && (
+                    <Badge variant="secondary" className="text-[10px] py-0 px-1.5">
+                      <Sparkles className="w-2.5 h-2.5 mr-0.5" />AI
+                    </Badge>
+                  )}
+                </div>
+                <p className="text-sm leading-relaxed">{displaySummary}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
 
       <div className="flex gap-3 justify-center">
         <Button onClick={onPlayAgain} size="lg" className="gap-2">

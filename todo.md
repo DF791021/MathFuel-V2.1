@@ -18,8 +18,8 @@
 - [x] Mastery reporting with visual skill map
 
 ## Phase 3: AI Enhancement
-- [ ] AI-generated explanations in age-appropriate language
-- [ ] AI-generated scaffolded hints
+- [x] AI-generated explanations in age-appropriate language
+- [x] AI-generated scaffolded hints
 - [ ] Error pattern identification
 - [ ] Adaptive sequencing recommendations
 
@@ -34,7 +34,7 @@
 - [x] Vitest tests for adaptive difficulty engine
 - [x] Vitest tests for streak logic
 - [x] Vitest tests for badge award logic
-- [x] All 44 tests passing
+- [x] All 78 tests passing
 
 ## Infrastructure (Existing - Keep)
 - [x] Admin settings panel
@@ -42,3 +42,12 @@
 - [x] RBAC with admin/user roles
 - [x] Stripe integration
 - [x] CDN asset infrastructure
+
+## Phase 5: AI-Powered Dynamic Hints & Explanations
+- [x] Server-side tRPC procedure for AI hint generation (invokeLLM)
+- [x] Server-side tRPC procedure for AI explanation generation after wrong answer
+- [x] Age-appropriate prompt engineering (Grade 1-2 language, scaffolded, conceptual)
+- [x] Update PracticeSession UI to call AI hints instead of static hints
+- [x] Update PracticeSession UI to show AI explanation after incorrect answer
+- [x] Loading states and error handling for AI responses
+- [x] Vitest tests for AI hint/explanation procedures

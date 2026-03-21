@@ -9,6 +9,7 @@ import { mathContentRouter } from "./routers/mathContent";
 import { practiceRouter } from "./routers/practice";
 import { studentRouter } from "./routers/student";
 import { parentRouter } from "./routers/parent";
+import { aiTutorRouter } from "./routers/aiTutor";
 
 export const appRouter = router({
   system: systemRouter,
@@ -17,6 +18,7 @@ export const appRouter = router({
   practice: practiceRouter,
   student: studentRouter,
   parent: parentRouter,
+  aiTutor: aiTutorRouter,
 
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
