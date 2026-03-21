@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
-import { getLoginUrl } from "@/const";
+
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -47,7 +47,7 @@ export default function SkillMap() {
 
   useEffect(() => { document.title = "Skill Map - MathFuel"; }, []);
   useEffect(() => {
-    if (!authLoading && !isAuthenticated) window.location.href = getLoginUrl();
+    if (!authLoading && !isAuthenticated) window.location.href = "/login";
   }, [authLoading, isAuthenticated]);
   useEffect(() => {
     if (user?.gradeLevel) setSelectedGrade(user.gradeLevel);

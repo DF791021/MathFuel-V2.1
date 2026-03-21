@@ -244,6 +244,39 @@ export type ParentStudentLink = typeof parentStudentLinks.$inferSelect;
 export type InsertParentStudentLink = typeof parentStudentLinks.$inferInsert;
 
 // ============================================================================
+// MATHFUEL: INVITE CODES (Parent-Child Linking)
+// ============================================================================
+
+export const inviteCodes = mysqlTable("inviteCodes", {
+  id: int("id").autoincrement().primaryKey(),
+  studentId: int("studentId").notNull(),
+  code: varchar("code", { length: 20 }).notNull().unique(),
+  expiresAt: timestamp("expiresAt").notNull(),
+  usedBy: int("usedBy"),
+  usedAt: timestamp("usedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type InviteCode = typeof inviteCodes.$inferSelect;
+export type InsertInviteCode = typeof inviteCodes.$inferInsert;
+
+// ============================================================================
+// MATHFUEL: PASSWORD RESET TOKENS
+// ============================================================================
+
+export const passwordResetTokens = mysqlTable("passwordResetTokens", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  token: varchar("token", { length: 255 }).notNull().unique(),
+  expiresAt: timestamp("expiresAt").notNull(),
+  usedAt: timestamp("usedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
+export type InsertPasswordResetToken = typeof passwordResetTokens.$inferInsert;
+
+// ============================================================================
 // MATHFUEL: AI FEEDBACK RATINGS
 // ============================================================================
 

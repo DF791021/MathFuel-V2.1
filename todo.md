@@ -34,7 +34,7 @@
 - [x] Vitest tests for adaptive difficulty engine
 - [x] Vitest tests for streak logic
 - [x] Vitest tests for badge award logic
-- [x] All 112 tests passing
+- [x] All 137 tests passing
 
 ## Infrastructure (Existing - Keep)
 - [x] Admin settings panel
@@ -105,3 +105,11 @@
 - [x] Protected route guards using custom JWT
 - [x] Update main.tsx to redirect to /login instead of OAuth
 - [x] Test registration, login, logout, protected routes (19 tests)
+
+## Phase 11: Database Fix + Forgot Password + Parent-Child Linking
+- [x] Fix missing columns in users table (avatarUrl added, userType enum fixed to include 'parent')
+- [x] Build Forgot Password flow (email-based password reset with token)
+- [x] Forgot Password UI page
+- [x] Build parent-child account linking system
+- [x] Parent-child linking UI in Parent Dashboard
+- [x] Vitest tests for forgot password and parent-child linking (25 tests)

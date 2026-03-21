@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
-import { getLoginUrl } from "@/const";
+
 import { Link, useLocation, useParams } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -61,7 +61,7 @@ export default function PracticeSession() {
 
   useEffect(() => { document.title = "Practice - MathFuel"; }, []);
   useEffect(() => {
-    if (!authLoading && !isAuthenticated) window.location.href = getLoginUrl();
+    if (!authLoading && !isAuthenticated) window.location.href = "/login";
   }, [authLoading, isAuthenticated]);
 
   const startSessionMutation = trpc.practice.startSession.useMutation({

@@ -1,7 +1,7 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
-import { getLoginUrl } from "@/const";
+
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
 import {
   Flame, Trophy, Play, Target, BarChart3,
-  BookOpen, LogOut, User, Map, Brain,
+  BookOpen, LogOut, User, Map, Brain, Copy, Check, UserPlus,
 } from "lucide-react";
 
 const LOGO_URL = "https://d2xsxph8kpxj0f.cloudfront.net/310519663117001051/BAbKuMSfjHaa9ao8qByqEp/mathfuel-logo-V7jjfN52dexxQobYgXDFCk.webp";
@@ -195,6 +195,78 @@ function RecentSessions({ sessions }: { sessions: any[] }) {
   );
 }
 
+/* ─── Invite Code Card ─── */
+
+function InviteCodeCard() {
+  const [copied, setCopied] = useState(false);
+  const generateCode = trpc.parent.generateInviteCode.useMutation();
+
+  const handleGenerate = () => {
+    generateCode.mutate(undefined, {
+      onSuccess: () => setCopied(false),
+    });
+  };
+
+  const handleCopy = (code: string) => {
+    navigator.clipboard.writeText(code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <Card className="bg-gradient-to-br from-indigo-50 to-purple-50 border-indigo-200">
+      <CardContent className="p-4 sm:p-6">
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-indigo-100 flex items-center justify-center flex-shrink-0">
+            <UserPlus className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-bold text-sm sm:text-base text-indigo-900">Connect a Parent</h3>
+            <p className="text-xs sm:text-sm text-indigo-600/70 mt-0.5">
+              Share this code with your parent so they can track your progress.
+            </p>
+
+            {generateCode.data ? (
+              <div className="mt-3">
+                <div className="flex items-center gap-2">
+                  <div className="bg-white rounded-lg px-4 py-2.5 font-mono text-lg sm:text-2xl font-bold tracking-[0.2em] text-indigo-700 border border-indigo-200 shadow-sm">
+                    {generateCode.data.code}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleCopy(generateCode.data!.code)}
+                    className="h-10 w-10 p-0 flex-shrink-0"
+                  >
+                    {copied ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
+                  </Button>
+                </div>
+                <p className="text-[10px] sm:text-xs text-indigo-500 mt-1.5">
+                  {generateCode.data.isExisting ? "Your existing code" : "New code generated"} — valid for 7 days
+                </p>
+              </div>
+            ) : (
+              <Button
+                onClick={handleGenerate}
+                disabled={generateCode.isPending}
+                size="sm"
+                className="mt-3 bg-indigo-600 hover:bg-indigo-700 text-white gap-1.5"
+              >
+                {generateCode.isPending ? (
+                  <div className="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-white" />
+                ) : (
+                  <UserPlus className="w-3.5 h-3.5" />
+                )}
+                Generate Invite Code
+              </Button>
+            )}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 /* ─── Main Page ─── */
 
 export default function StudentDashboard() {
@@ -207,7 +279,7 @@ export default function StudentDashboard() {
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
-      window.location.href = getLoginUrl();
+      window.location.href = "/login";
     }
   }, [authLoading, isAuthenticated]);
 
@@ -306,8 +378,13 @@ export default function StudentDashboard() {
           </motion.div>
         </div>
 
-        {/* Quick Links */}
+        {/* Invite Code for Parents */}
         <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={5}>
+          <InviteCodeCard />
+        </motion.div>
+
+        {/* Quick Links */}
+        <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={6}>
           <div className="grid grid-cols-4 gap-2 sm:gap-3">
             {[
               { href: "/practice", icon: Brain, label: "Practice", color: "bg-primary/10 text-primary" },

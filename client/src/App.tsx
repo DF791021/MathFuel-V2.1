@@ -14,6 +14,8 @@ const StudentDashboard = React.lazy(() => import("./pages/StudentDashboard"));
 const PracticeSession = React.lazy(() => import("./pages/PracticeSession"));
 const ParentDashboard = React.lazy(() => import("./pages/ParentDashboard"));
 const SkillMap = React.lazy(() => import("./pages/SkillMap"));
+const ForgotPassword = React.lazy(() => import("./pages/ForgotPassword"));
+const ResetPassword = React.lazy(() => import("./pages/ResetPassword"));
 
 function Router() {
   return (
@@ -22,6 +24,8 @@ function Router() {
         <Route path="/" component={Home} />
         <Route path="/login" component={Login} />
         <Route path="/signup" component={Signup} />
+        <Route path="/forgot-password" component={ForgotPassword} />
+        <Route path="/reset-password" component={ResetPassword} />
         <Route path="/dashboard" component={StudentDashboard} />
         <Route path="/practice" component={PracticeSession} />
         <Route path="/practice/:skillId" component={PracticeSession} />

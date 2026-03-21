@@ -1,17 +1,17 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
-import { getLoginUrl } from "@/const";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
 import { motion } from "framer-motion";
 import {
   ArrowLeft, Users, BarChart3, Flame, Target, Trophy,
-  BookOpen, Calendar, TrendingUp,
+  BookOpen, Calendar, TrendingUp, Link2, CheckCircle2, AlertCircle,
 } from "lucide-react";
 
 const fadeUp = {
@@ -29,7 +29,7 @@ export default function ParentDashboard() {
 
   useEffect(() => { document.title = "Parent Dashboard - MathFuel"; }, []);
   useEffect(() => {
-    if (!authLoading && !isAuthenticated) window.location.href = getLoginUrl();
+    if (!authLoading && !isAuthenticated) window.location.href = "/login";
   }, [authLoading, isAuthenticated]);
 
   const { data: children, isLoading: childrenLoading } = trpc.parent.getChildren.useQuery(undefined, {
@@ -120,9 +120,79 @@ function EmptyState() {
       <Users className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 text-muted-foreground/30" />
       <h2 className="!text-xl sm:!text-2xl font-bold mb-2">No Linked Students</h2>
       <p className="text-xs sm:text-base text-muted-foreground mb-4 sm:mb-6 max-w-md mx-auto px-4">
-        View your child's progress here. Link a student account to get started, or view your own progress below.
+        Enter your child's invite code below to start tracking their progress.
       </p>
+      <RedeemInviteCode />
     </div>
+  );
+}
+
+function RedeemInviteCode() {
+  const [code, setCode] = useState("");
+  const [success, setSuccess] = useState<string | null>(null);
+  const utils = trpc.useUtils();
+  const redeemCode = trpc.parent.redeemInviteCode.useMutation({
+    onSuccess: (data) => {
+      setSuccess(`Connected to ${data.studentName}!`);
+      setCode("");
+      utils.parent.getChildren.invalidate();
+    },
+  });
+
+  return (
+    <Card className="max-w-md mx-auto bg-gradient-to-br from-indigo-50 to-purple-50 border-indigo-200">
+      <CardContent className="p-4 sm:p-6">
+        <div className="flex items-center gap-2 mb-3">
+          <Link2 className="w-5 h-5 text-indigo-600" />
+          <h3 className="font-bold text-sm sm:text-base text-indigo-900">Enter Invite Code</h3>
+        </div>
+        <p className="text-xs sm:text-sm text-indigo-600/70 mb-3">
+          Ask your child to generate an invite code from their dashboard.
+        </p>
+
+        {success ? (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg"
+          >
+            <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0" />
+            <span className="text-sm font-medium text-green-800">{success}</span>
+          </motion.div>
+        ) : (
+          <div className="space-y-2">
+            <div className="flex gap-2">
+              <Input
+                placeholder="e.g. ABC123"
+                value={code}
+                onChange={(e) => setCode(e.target.value.toUpperCase())}
+                maxLength={6}
+                className="font-mono text-center text-lg tracking-[0.15em] uppercase h-11"
+              />
+              <Button
+                onClick={() => redeemCode.mutate({ code })}
+                disabled={code.length < 4 || redeemCode.isPending}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white h-11 px-5 flex-shrink-0"
+              >
+                {redeemCode.isPending ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                ) : "Link"}
+              </Button>
+            </div>
+            {redeemCode.error && (
+              <motion.div
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex items-center gap-1.5 text-xs text-red-600"
+              >
+                <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                {redeemCode.error.message}
+              </motion.div>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 

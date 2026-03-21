@@ -11,6 +11,7 @@ import {
   studentBadges, InsertStudentBadge,
   parentStudentLinks,
   aiFeedback, InsertAIFeedback,
+  inviteCodes, passwordResetTokens,
   subscriptions,
   adminSettings,
   featureFlags,
@@ -605,4 +606,85 @@ export async function getAuditLogs(limit: number = 100) {
   return db.select().from(auditLog)
     .orderBy(desc(auditLog.createdAt))
     .limit(limit);
+}
+
+// ============================================================================
+// INVITE CODES (Parent-Child Linking)
+// ============================================================================
+
+export async function createInviteCode(studentId: number, code: string, expiresAt: Date) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.insert(inviteCodes).values({
+    studentId,
+    code,
+    expiresAt,
+  });
+  return { id: result[0].insertId, code };
+}
+
+export async function getInviteCodeByCode(code: string) {
+  const db = await getDb();
+  if (!db) return null;
+  const rows = await db.select().from(inviteCodes)
+    .where(eq(inviteCodes.code, code));
+  return rows[0] ?? null;
+}
+
+export async function getStudentInviteCodes(studentId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(inviteCodes)
+    .where(eq(inviteCodes.studentId, studentId))
+    .orderBy(desc(inviteCodes.createdAt));
+}
+
+export async function markInviteCodeUsed(codeId: number, usedBy: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(inviteCodes).set({
+    usedBy,
+    usedAt: new Date(),
+  }).where(eq(inviteCodes.id, codeId));
+}
+
+// ============================================================================
+// PASSWORD RESET TOKENS
+// ============================================================================
+
+export async function createPasswordResetToken(userId: number, token: string, expiresAt: Date) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.insert(passwordResetTokens).values({
+    userId,
+    token,
+    expiresAt,
+  });
+  return { id: result[0].insertId };
+}
+
+export async function getPasswordResetToken(token: string) {
+  const db = await getDb();
+  if (!db) return null;
+  const rows = await db.select().from(passwordResetTokens)
+    .where(eq(passwordResetTokens.token, token));
+  return rows[0] ?? null;
+}
+
+export async function markPasswordResetTokenUsed(tokenId: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(passwordResetTokens).set({
+    usedAt: new Date(),
+  }).where(eq(passwordResetTokens.id, tokenId));
+}
+
+export async function unlinkParentStudent(parentId: number, studentId: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.delete(parentStudentLinks)
+    .where(and(
+      eq(parentStudentLinks.parentId, parentId),
+      eq(parentStudentLinks.studentId, studentId)
+    ));
 }
