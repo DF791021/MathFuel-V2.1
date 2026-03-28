@@ -301,3 +301,132 @@ Return ONLY the explanation text.`;
     expect(WRONG_TEMPLATE).toContain("under 70 words");
   });
 });
+
+// ============================================================================
+// Error Pattern Analysis Logic
+// Tests for the getErrorPatterns procedure helpers
+// ============================================================================
+
+describe("Error pattern JSON parsing", () => {
+  // Mirrors the JSON parsing logic in aiTutor.ts getErrorPatterns
+  function parseErrorPatternResponse(rawContent: string): any[] {
+    const jsonStr = rawContent
+      .replace(/^```(?:json)?\s*/m, "")
+      .replace(/\s*```$/m, "")
+      .trim();
+    try {
+      const parsed = JSON.parse(jsonStr);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+
+  it("parses a valid JSON array response", () => {
+    const response = `[{"skillName":"Addition","pattern":"Off-by-one","description":"Test","frequency":3,"recommendation":"Count on"}]`;
+    const result = parseErrorPatternResponse(response);
+    expect(result).toHaveLength(1);
+    expect(result[0].pattern).toBe("Off-by-one");
+  });
+
+  it("strips markdown code fences before parsing", () => {
+    const response = "```json\n[{\"skillName\":\"Subtraction\",\"pattern\":\"Sign confusion\",\"description\":\"Test\",\"frequency\":2,\"recommendation\":\"Use number line\"}]\n```";
+    const result = parseErrorPatternResponse(response);
+    expect(result).toHaveLength(1);
+    expect(result[0].skillName).toBe("Subtraction");
+  });
+
+  it("strips plain code fences before parsing", () => {
+    const response = "```\n[{\"skillName\":\"Place Value\",\"pattern\":\"Digit reversal\",\"description\":\"Test\",\"frequency\":4,\"recommendation\":\"Use base-10 blocks\"}]\n```";
+    const result = parseErrorPatternResponse(response);
+    expect(result).toHaveLength(1);
+    expect(result[0].frequency).toBe(4);
+  });
+
+  it("returns empty array for invalid JSON", () => {
+    expect(parseErrorPatternResponse("not valid json")).toEqual([]);
+    expect(parseErrorPatternResponse("")).toEqual([]);
+  });
+
+  it("returns empty array when response is not a JSON array", () => {
+    expect(parseErrorPatternResponse('{"patterns":[]}')).toEqual([]);
+    expect(parseErrorPatternResponse('"just a string"')).toEqual([]);
+  });
+
+  it("handles empty JSON array response", () => {
+    expect(parseErrorPatternResponse("[]")).toEqual([]);
+  });
+
+  it("handles multiple patterns in a single response", () => {
+    const response = JSON.stringify([
+      { skillName: "Addition", pattern: "Off-by-one", description: "A", frequency: 5, recommendation: "B" },
+      { skillName: "Subtraction", pattern: "Sign confusion", description: "C", frequency: 2, recommendation: "D" },
+    ]);
+    const result = parseErrorPatternResponse(response);
+    expect(result).toHaveLength(2);
+  });
+});
+
+describe("Error pattern prompt construction", () => {
+  function buildMistakeSections(
+    bySkill: Map<number, { problemText: string; studentAnswer: string; correctAnswer: string }[]>,
+    skillNames: Map<number, string>,
+  ): string {
+    return Array.from(bySkill.entries())
+      .map(([skillId, attempts]) => {
+        const skillName = skillNames.get(skillId) ?? `Skill #${skillId}`;
+        const examples = attempts
+          .slice(0, 5)
+          .map(a => `  - "${a.problemText}" → student: "${a.studentAnswer}", correct: "${a.correctAnswer}"`)
+          .join("\n");
+        return `Skill: "${skillName}" (${attempts.length} mistake${attempts.length !== 1 ? "s" : ""})\n${examples}`;
+      })
+      .join("\n\n");
+  }
+
+  it("builds correct section with skill name and error count", () => {
+    const bySkill = new Map([
+      [1, [{ problemText: "2+2?", studentAnswer: "5", correctAnswer: "4" }]],
+    ]);
+    const skillNames = new Map([[1, "Single-digit Addition"]]);
+    const result = buildMistakeSections(bySkill, skillNames);
+    expect(result).toContain("Single-digit Addition");
+    expect(result).toContain("1 mistake");
+    expect(result).toContain("2+2?");
+  });
+
+  it("pluralises mistake count correctly", () => {
+    const bySkill = new Map([
+      [1, [
+        { problemText: "3+3?", studentAnswer: "5", correctAnswer: "6" },
+        { problemText: "4+4?", studentAnswer: "7", correctAnswer: "8" },
+      ]],
+    ]);
+    const skillNames = new Map([[1, "Addition"]]);
+    const result = buildMistakeSections(bySkill, skillNames);
+    expect(result).toContain("2 mistakes");
+  });
+
+  it("limits examples to 5 per skill", () => {
+    const attempts = Array.from({ length: 8 }, (_, i) => ({
+      problemText: `${i}+${i}?`,
+      studentAnswer: "0",
+      correctAnswer: String(i * 2),
+    }));
+    const bySkill = new Map([[1, attempts]]);
+    const skillNames = new Map([[1, "Addition"]]);
+    const result = buildMistakeSections(bySkill, skillNames);
+    // 8 attempts listed but only 5 examples rendered; count occurrences of "→ student"
+    const exampleCount = (result.match(/→ student/g) ?? []).length;
+    expect(exampleCount).toBe(5);
+  });
+
+  it("falls back to Skill #N when skill name is not found", () => {
+    const bySkill = new Map([
+      [99, [{ problemText: "5-3?", studentAnswer: "1", correctAnswer: "2" }]],
+    ]);
+    const skillNames = new Map<number, string>();
+    const result = buildMistakeSections(bySkill, skillNames);
+    expect(result).toContain("Skill #99");
+  });
+});

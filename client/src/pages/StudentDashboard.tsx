@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
 import {
   Flame, Trophy, Play, Target, BarChart3,
-  BookOpen, LogOut, User, Map, Brain, Copy, Check, UserPlus, Settings, Gift,
+  BookOpen, LogOut, User, Map, Brain, Copy, Check, UserPlus, Settings, Gift, Lightbulb,
 } from "lucide-react";
 
 const LOGO_URL = "https://d2xsxph8kpxj0f.cloudfront.net/310519663117001051/BAbKuMSfjHaa9ao8qByqEp/mathfuel-logo-V7jjfN52dexxQobYgXDFCk.webp";
@@ -190,6 +190,53 @@ function RecentSessions({ sessions }: { sessions: any[] }) {
             })}
           </div>
         )}
+      </CardContent>
+    </Card>
+  );
+}
+
+/* ─── Recommended Skills ─── */
+
+function RecommendedSkills({ gradeLevel }: { gradeLevel: number }) {
+  const { data, isLoading } = trpc.practice.getRecommendedSkills.useQuery(
+    { gradeLevel },
+    { refetchOnWindowFocus: false },
+  );
+
+  if (isLoading) return <Skeleton className="h-28" />;
+  if (!data?.recommendations?.length) return null;
+
+  const masteryColor = (level: string) => {
+    if (level === "close") return "text-blue-600";
+    if (level === "practicing") return "text-yellow-600";
+    return "text-muted-foreground";
+  };
+
+  return (
+    <Card>
+      <CardHeader className="pb-2 sm:pb-3">
+        <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+          <Lightbulb className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500" />
+          Recommended for You
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-2 sm:space-y-3">
+        {data.recommendations.map((rec) => (
+          <div key={rec.skillId} className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-xl bg-muted/50">
+            <div className="flex-1 min-w-0">
+              <p className="text-xs sm:text-sm font-medium truncate">{rec.skillName}</p>
+              <p className={`text-[10px] sm:text-xs ${masteryColor(rec.masteryLevel)}`}>{rec.reason}</p>
+            </div>
+            <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+              <Progress value={rec.masteryScore} className="w-12 sm:w-20 h-1.5 sm:h-2" />
+              <Link href={`/practice?skillId=${rec.skillId}`}>
+                <Button size="sm" className="h-7 sm:h-8 px-2 sm:px-3 text-[10px] sm:text-xs">
+                  Go
+                </Button>
+              </Link>
+            </div>
+          </div>
+        ))}
       </CardContent>
     </Card>
   );
@@ -400,8 +447,13 @@ export default function StudentDashboard() {
           <InviteCodeCard />
         </motion.div>
 
-        {/* Quick Links */}
+        {/* Recommended Skills */}
         <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={6}>
+          <RecommendedSkills gradeLevel={(user as any)?.gradeLevel ?? 1} />
+        </motion.div>
+
+        {/* Quick Links */}
+        <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={7}>
           <div className="grid grid-cols-4 gap-2 sm:gap-3">
             {[
               { href: "/practice", icon: Brain, label: "Practice", color: "bg-primary/10 text-primary" },

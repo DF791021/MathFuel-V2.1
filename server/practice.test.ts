@@ -318,3 +318,171 @@ describe("badge award logic", () => {
     expect(badges).toHaveLength(0);
   });
 });
+
+// ============================================================================
+// Adaptive Sequencing Recommendation Logic
+// Mirrors the scoring algorithm in practice.ts getRecommendedSkills
+// ============================================================================
+
+type MasteryLevel = "not_started" | "practicing" | "close" | "mastered";
+
+interface SkillForTest {
+  id: number;
+  name: string;
+  prerequisiteSkillId: number | null;
+}
+
+interface MasteryRecord {
+  skillId: number;
+  masteryLevel: MasteryLevel;
+  masteryScore: number;
+}
+
+function scoreSkill(
+  skill: SkillForTest,
+  masteryMap: Map<number, MasteryRecord>,
+): { score: number; reason: string } {
+  const mastery = masteryMap.get(skill.id) ?? null;
+
+  if (mastery?.masteryLevel === "mastered") {
+    return { score: 0, reason: "Already mastered!" };
+  }
+
+  const prereqMastery = skill.prerequisiteSkillId
+    ? masteryMap.get(skill.prerequisiteSkillId)
+    : null;
+  const prereqMet = !skill.prerequisiteSkillId
+    || prereqMastery?.masteryLevel === "mastered";
+
+  if (!prereqMet) {
+    return { score: 0, reason: "Complete prerequisite first" };
+  }
+
+  if (mastery?.masteryLevel === "close") {
+    return { score: 90, reason: `Almost mastered! You're at ${mastery.masteryScore}% 🎯` };
+  }
+
+  if (mastery?.masteryLevel === "practicing") {
+    return {
+      score: Math.min(89, 40 + mastery.masteryScore * 0.5),
+      reason: `Keep going! You're at ${mastery.masteryScore}% 💪`,
+    };
+  }
+
+  return { score: 35, reason: "New skill to explore! ✨" };
+}
+
+describe("adaptive sequencing recommendation logic", () => {
+  it("should score mastered skills as 0", () => {
+    const skill: SkillForTest = { id: 1, name: "Addition", prerequisiteSkillId: null };
+    const masteryMap = new Map<number, MasteryRecord>([
+      [1, { skillId: 1, masteryLevel: "mastered", masteryScore: 95 }],
+    ]);
+    expect(scoreSkill(skill, masteryMap).score).toBe(0);
+  });
+
+  it("should score 'close' skills at 90 regardless of exact mastery score", () => {
+    const skill: SkillForTest = { id: 1, name: "Addition", prerequisiteSkillId: null };
+    const masteryMap = new Map<number, MasteryRecord>([
+      [1, { skillId: 1, masteryLevel: "close", masteryScore: 75 }],
+    ]);
+    expect(scoreSkill(skill, masteryMap).score).toBe(90);
+  });
+
+  it("should score 'practicing' skills between 40 and 74.5", () => {
+    const skill: SkillForTest = { id: 1, name: "Subtraction", prerequisiteSkillId: null };
+    const masteryMap = new Map<number, MasteryRecord>([
+      [1, { skillId: 1, masteryLevel: "practicing", masteryScore: 60 }],
+    ]);
+    const { score } = scoreSkill(skill, masteryMap);
+    expect(score).toBeGreaterThan(40);
+    expect(score).toBeLessThanOrEqual(89);
+  });
+
+  it("should score not_started skills (prereq met) at 35", () => {
+    const skill: SkillForTest = { id: 2, name: "Counting", prerequisiteSkillId: null };
+    const masteryMap = new Map<number, MasteryRecord>();
+    expect(scoreSkill(skill, masteryMap).score).toBe(35);
+  });
+
+  it("should score 0 when prerequisite is not mastered", () => {
+    const skill: SkillForTest = { id: 2, name: "Advanced Addition", prerequisiteSkillId: 1 };
+    const masteryMap = new Map<number, MasteryRecord>([
+      [1, { skillId: 1, masteryLevel: "practicing", masteryScore: 50 }],
+    ]);
+    expect(scoreSkill(skill, masteryMap).score).toBe(0);
+  });
+
+  it("should score 0 when prerequisite is not started", () => {
+    const skill: SkillForTest = { id: 2, name: "Advanced Addition", prerequisiteSkillId: 1 };
+    const masteryMap = new Map<number, MasteryRecord>();
+    expect(scoreSkill(skill, masteryMap).score).toBe(0);
+  });
+
+  it("should allow skill when prerequisite is mastered", () => {
+    const skill: SkillForTest = { id: 2, name: "Advanced Addition", prerequisiteSkillId: 1 };
+    const masteryMap = new Map<number, MasteryRecord>([
+      [1, { skillId: 1, masteryLevel: "mastered", masteryScore: 92 }],
+    ]);
+    expect(scoreSkill(skill, masteryMap).score).toBeGreaterThan(0);
+  });
+
+  it("should rank 'close' skills above 'practicing' skills", () => {
+    const closeSkill: SkillForTest = { id: 1, name: "Counting", prerequisiteSkillId: null };
+    const practicingSkill: SkillForTest = { id: 2, name: "Addition", prerequisiteSkillId: null };
+    const masteryMap = new Map<number, MasteryRecord>([
+      [1, { skillId: 1, masteryLevel: "close", masteryScore: 70 }],
+      [2, { skillId: 2, masteryLevel: "practicing", masteryScore: 65 }],
+    ]);
+    const closeScore = scoreSkill(closeSkill, masteryMap).score;
+    const practicingScore = scoreSkill(practicingSkill, masteryMap).score;
+    expect(closeScore).toBeGreaterThan(practicingScore);
+  });
+
+  it("should rank higher-mastery practicing skills above lower-mastery ones", () => {
+    const highSkill: SkillForTest = { id: 1, name: "Addition", prerequisiteSkillId: null };
+    const lowSkill: SkillForTest = { id: 2, name: "Subtraction", prerequisiteSkillId: null };
+    const masteryMap = new Map<number, MasteryRecord>([
+      [1, { skillId: 1, masteryLevel: "practicing", masteryScore: 60 }],
+      [2, { skillId: 2, masteryLevel: "practicing", masteryScore: 20 }],
+    ]);
+    expect(scoreSkill(highSkill, masteryMap).score).toBeGreaterThan(scoreSkill(lowSkill, masteryMap).score);
+  });
+
+  it("should include skill name and reason in output", () => {
+    const skill: SkillForTest = { id: 1, name: "Counting", prerequisiteSkillId: null };
+    const masteryMap = new Map<number, MasteryRecord>([
+      [1, { skillId: 1, masteryLevel: "close", masteryScore: 78 }],
+    ]);
+    const { reason } = scoreSkill(skill, masteryMap);
+    expect(reason).toBeTruthy();
+    expect(reason.length).toBeGreaterThan(0);
+  });
+
+  it("should return top 3 recommendations sorted by score", () => {
+    const skills: SkillForTest[] = [
+      { id: 1, name: "Skill A", prerequisiteSkillId: null },
+      { id: 2, name: "Skill B", prerequisiteSkillId: null },
+      { id: 3, name: "Skill C", prerequisiteSkillId: null },
+      { id: 4, name: "Skill D", prerequisiteSkillId: null },
+    ];
+    const masteryMap = new Map<number, MasteryRecord>([
+      [1, { skillId: 1, masteryLevel: "practicing", masteryScore: 20 }],
+      [2, { skillId: 2, masteryLevel: "close", masteryScore: 72 }],
+      [3, { skillId: 3, masteryLevel: "practicing", masteryScore: 50 }],
+      [4, { skillId: 4, masteryLevel: "mastered", masteryScore: 95 }],
+    ]);
+
+    const scored = skills
+      .map(s => ({ skillId: s.id, skillName: s.name, ...scoreSkill(s, masteryMap) }))
+      .filter(s => s.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 3);
+
+    expect(scored).toHaveLength(3);
+    // Mastered skill (id=4) should be excluded
+    expect(scored.find(s => s.skillId === 4)).toBeUndefined();
+    // "close" skill (id=2) should rank first
+    expect(scored[0].skillId).toBe(2);
+  });
+});
