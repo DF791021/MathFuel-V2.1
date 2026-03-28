@@ -364,7 +364,7 @@ function scoreSkill(
 
   if (mastery?.masteryLevel === "practicing") {
     return {
-      score: 40 + mastery.masteryScore * 0.5,
+      score: Math.min(89, 40 + mastery.masteryScore * 0.5),
       reason: `Keep going! You're at ${mastery.masteryScore}% 💪`,
     };
   }
@@ -396,7 +396,7 @@ describe("adaptive sequencing recommendation logic", () => {
     ]);
     const { score } = scoreSkill(skill, masteryMap);
     expect(score).toBeGreaterThan(40);
-    expect(score).toBeLessThanOrEqual(74.5);
+    expect(score).toBeLessThanOrEqual(89);
   });
 
   it("should score not_started skills (prereq met) at 35", () => {

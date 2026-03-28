@@ -365,11 +365,11 @@ export const practiceRouter = router({
           };
         }
 
-        // Actively practicing — higher mastery score = higher priority
+        // Actively practicing — higher mastery score = higher priority (cap at 89 to stay below "close")
         if (mastery?.masteryLevel === "practicing") {
           return {
             skill,
-            score: 40 + mastery.masteryScore * 0.5,
+            score: Math.min(89, 40 + mastery.masteryScore * 0.5),
             reason: `Keep going! You're at ${mastery.masteryScore}% 💪`,
           };
         }

@@ -311,8 +311,8 @@ describe("Error pattern JSON parsing", () => {
   // Mirrors the JSON parsing logic in aiTutor.ts getErrorPatterns
   function parseErrorPatternResponse(rawContent: string): any[] {
     const jsonStr = rawContent
-      .replace(/^```(?:json)?\n?/m, "")
-      .replace(/\n?```$/m, "")
+      .replace(/^```(?:json)?\s*/m, "")
+      .replace(/\s*```$/m, "")
       .trim();
     try {
       const parsed = JSON.parse(jsonStr);

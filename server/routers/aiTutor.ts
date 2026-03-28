@@ -385,8 +385,8 @@ If the array would be empty, return [].`;
         const rawContent = extractContent(result);
         // Strip markdown code fences if the model adds them
         const jsonStr = rawContent
-          .replace(/^```(?:json)?\n?/m, "")
-          .replace(/\n?```$/m, "")
+          .replace(/^```(?:json)?\s*/m, "")
+          .replace(/\s*```$/m, "")
           .trim();
 
         let patterns: any[] = [];
