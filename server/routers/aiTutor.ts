@@ -2,6 +2,15 @@ import { protectedProcedure, router } from "../_core/trpc";
 import { invokeLLM } from "../_core/llm";
 import { z } from "zod";
 import * as db from "../db";
+import { TRPCError } from "@trpc/server";
+
+interface ErrorPattern {
+  skillName: string;
+  pattern: string;
+  description: string;
+  frequency: number;
+  recommendation?: string;
+}
 
 /**
  * AI Tutor Router
@@ -308,6 +317,15 @@ Return ONLY the message text.`;
     .query(async ({ ctx, input }) => {
       const targetStudentId = input.studentId ?? ctx.user.id;
 
+      // If viewing another user's data, verify the caller is a linked parent
+      if (targetStudentId !== ctx.user.id) {
+        const links = await db.getParentStudents(ctx.user.id);
+        const isLinked = links.some((l) => l.studentId === targetStudentId);
+        if (!isLinked) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "Not authorized to view this student's data" });
+        }
+      }
+
       const incorrectAttempts = await db.getRecentIncorrectAttempts(targetStudentId, input.limitDays, 60);
 
       if (incorrectAttempts.length === 0) {
@@ -389,7 +407,7 @@ If the array would be empty, return [].`;
           .replace(/\s*```$/m, "")
           .trim();
 
-        let patterns: any[] = [];
+        let patterns: ErrorPattern[] = [];
         try {
           const parsed = JSON.parse(jsonStr);
           patterns = Array.isArray(parsed) ? parsed : [];
