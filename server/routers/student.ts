@@ -47,7 +47,7 @@ export const studentRouter = router({
 
   // Get streak info
   getStreak: protectedProcedure.query(async ({ ctx }) => {
-    return db.getStudentStreak(ctx.user.id) ?? {
+    return (await db.getStudentStreak(ctx.user.id)) ?? {
       currentStreak: 0,
       longestStreak: 0,
       totalActiveDays: 0,
