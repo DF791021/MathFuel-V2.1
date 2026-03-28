@@ -449,7 +449,7 @@ export default function StudentDashboard() {
 
         {/* Recommended Skills */}
         <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={6}>
-          <RecommendedSkills gradeLevel={(user as any)?.gradeLevel ?? 1} />
+          <RecommendedSkills gradeLevel={user?.gradeLevel ?? 1} />
         </motion.div>
 
         {/* Quick Links */}
