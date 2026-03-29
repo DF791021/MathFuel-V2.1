@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { motion } from "framer-motion";
 import {
   ArrowLeft, Users, BarChart3, Flame, Target, Trophy,
-  BookOpen, Calendar, TrendingUp, Link2, CheckCircle2, AlertCircle, Brain,
+  BookOpen, Calendar, TrendingUp, Link2, CheckCircle2, AlertCircle,
 } from "lucide-react";
 
 const fadeUp = {
@@ -295,11 +295,6 @@ function ChildOverview({ child, progress, isLoading }: { child: any; progress: a
         </div>
       </motion.div>
 
-      {/* AI Error Pattern Insights */}
-      <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={2}>
-        <ErrorPatternInsights studentId={child.id} />
-      </motion.div>
-
       {/* Detailed Progress */}
       {isLoading ? (
         <div className="space-y-3 sm:space-y-4">
@@ -309,7 +304,7 @@ function ChildOverview({ child, progress, isLoading }: { child: any; progress: a
       ) : progress ? (
         <>
           {/* Mastery Details */}
-          <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={3}>
+          <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={2}>
             <Card>
               <CardHeader className="pb-2 sm:pb-3 p-3 sm:p-6">
                 <CardTitle className="!text-base sm:!text-lg flex items-center gap-2">
@@ -339,7 +334,7 @@ function ChildOverview({ child, progress, isLoading }: { child: any; progress: a
           </motion.div>
 
           {/* Recent Sessions */}
-          <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={4}>
+          <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={3}>
             <Card>
               <CardHeader className="pb-2 sm:pb-3 p-3 sm:p-6">
                 <CardTitle className="!text-base sm:!text-lg flex items-center gap-2">
@@ -361,7 +356,7 @@ function ChildOverview({ child, progress, isLoading }: { child: any; progress: a
 
           {/* Badges */}
           {progress.badges?.length > 0 && (
-            <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={5}>
+            <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={4}>
               <Card>
                 <CardHeader className="pb-2 sm:pb-3 p-3 sm:p-6">
                   <CardTitle className="!text-base sm:!text-lg flex items-center gap-2">
@@ -385,59 +380,6 @@ function ChildOverview({ child, progress, isLoading }: { child: any; progress: a
         </>
       ) : null}
     </div>
-  );
-}
-
-function ErrorPatternInsights({ studentId }: { studentId: number }) {
-  const { data, isLoading } = trpc.aiTutor.getErrorPatterns.useQuery(
-    { studentId },
-    { refetchOnWindowFocus: false },
-  );
-
-  if (isLoading) return <Skeleton className="h-24" />;
-  if (!data) return null;
-  if (!data.patterns.length) {
-    if (!data.message) return null;
-    return (
-      <Card className="bg-emerald-50 border-emerald-200">
-        <CardContent className="p-3 sm:p-4 flex items-center gap-2">
-          <Brain className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 flex-shrink-0" />
-          <p className="text-xs sm:text-sm text-emerald-800">{data.message}</p>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  return (
-    <Card className="border-amber-200">
-      <CardHeader className="pb-2 sm:pb-3 p-3 sm:p-6">
-        <CardTitle className="!text-base sm:!text-lg flex items-center gap-2">
-          <Brain className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500" />
-          AI Insights — Error Patterns
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-2 sm:space-y-3 p-3 sm:p-6 pt-0 sm:pt-0">
-        {data.patterns.map((p: any, i: number) => (
-          <div key={i} className="p-2 sm:p-3 rounded-xl bg-amber-50 border border-amber-100">
-            <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0">
-                <p className="text-xs sm:text-sm font-semibold text-amber-900 truncate">{p.skillName}</p>
-                <p className="text-[10px] sm:text-xs text-amber-800 font-medium mt-0.5">{p.pattern}</p>
-                <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">{p.description}</p>
-              </div>
-              <Badge variant="outline" className="text-[10px] sm:text-xs flex-shrink-0 border-amber-300 text-amber-700">
-                ×{p.frequency}
-              </Badge>
-            </div>
-            {p.recommendation && (
-              <p className="text-[10px] sm:text-xs text-blue-700 mt-1.5 border-t border-amber-200 pt-1.5">
-                💡 {p.recommendation}
-              </p>
-            )}
-          </div>
-        ))}
-      </CardContent>
-    </Card>
   );
 }
 

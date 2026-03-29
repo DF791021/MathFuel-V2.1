@@ -294,20 +294,6 @@ export async function getStudentAttemptsBySkill(studentId: number, skillId: numb
     .orderBy(desc(problemAttempts.createdAt));
 }
 
-export async function getRecentIncorrectAttempts(studentId: number, limitDays: number = 30, maxAttempts: number = 50) {
-  const db = await getDb();
-  if (!db) return [];
-  const cutoff = new Date(Date.now() - limitDays * 24 * 60 * 60 * 1000);
-  return db.select().from(problemAttempts)
-    .where(and(
-      eq(problemAttempts.studentId, studentId),
-      eq(problemAttempts.isCorrect, false),
-      gte(problemAttempts.createdAt, cutoff),
-    ))
-    .orderBy(desc(problemAttempts.createdAt))
-    .limit(maxAttempts);
-}
-
 // ============================================================================
 // STUDENT SKILL MASTERY
 // ============================================================================

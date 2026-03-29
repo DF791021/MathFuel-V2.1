@@ -20,8 +20,8 @@
 ## Phase 3: AI Enhancement
 - [x] AI-generated explanations in age-appropriate language
 - [x] AI-generated scaffolded hints
-- [x] Error pattern identification
-- [x] Adaptive sequencing recommendations
+- [ ] Error pattern identification
+- [ ] Adaptive sequencing recommendations
 
 ## Phase 4: Homepage & Branding
 - [x] Redesign homepage as MathFuel landing page
