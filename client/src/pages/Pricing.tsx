@@ -491,6 +491,9 @@ export default function Pricing() {
             <Shield className="w-3 h-3" />
             <span>SSL encrypted</span>
           </div>
+          <p className="text-xs text-muted-foreground/70 text-center">
+            &copy; {new Date().getFullYear()} DBB Capital Ventures LLC. All rights reserved.
+          </p>
         </div>
       </footer>
     </div>

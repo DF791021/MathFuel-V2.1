@@ -4,10 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link, useLocation } from "wouter";
 import { motion } from "framer-motion";
-import {
-  Play, Brain, Target, BarChart3, Shield, Sparkles,
-  ChevronRight, Flame, Star, Trophy, Zap, Heart, Menu, X,
-} from "lucide-react";
+import { Play, Brain, Target, ChartBar as BarChart3, Shield, Sparkles, ChevronRight, Flame, Star, Trophy, Zap, Heart, Menu, X } from "lucide-react";
 // Auth links are now internal routes
 
 const LOGO_URL = "https://d2xsxph8kpxj0f.cloudfront.net/310519663117001051/BAbKuMSfjHaa9ao8qByqEp/mathfuel-logo-V7jjfN52dexxQobYgXDFCk.webp";
@@ -397,6 +394,9 @@ export default function Home() {
           </div>
           <p className="text-xs sm:text-sm text-muted-foreground text-center">
             Adaptive math practice for young learners.
+          </p>
+          <p className="text-xs text-muted-foreground/70 text-center">
+            &copy; {new Date().getFullYear()} DBB Capital Ventures LLC. All rights reserved.
           </p>
         </div>
       </footer>
