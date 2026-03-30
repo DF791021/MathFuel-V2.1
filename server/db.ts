@@ -321,6 +321,49 @@ export async function getStudentSkillMasteryRecord(studentId: number, skillId: n
   return rows[0] ?? null;
 }
 
+export async function getStudentMasteryWithSkills(studentId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select({
+    id: studentSkillMastery.id,
+    skillId: studentSkillMastery.skillId,
+    masteryLevel: studentSkillMastery.masteryLevel,
+    masteryScore: studentSkillMastery.masteryScore,
+    totalAttempts: studentSkillMastery.totalAttempts,
+    correctAttempts: studentSkillMastery.correctAttempts,
+    lastPracticedAt: studentSkillMastery.lastPracticedAt,
+    skillName: mathSkills.name,
+    skillSlug: mathSkills.slug,
+  })
+    .from(studentSkillMastery)
+    .leftJoin(mathSkills, eq(studentSkillMastery.skillId, mathSkills.id))
+    .where(eq(studentSkillMastery.studentId, studentId));
+}
+
+export async function getRecentIncorrectAttempts(studentId: number, limit: number = 50) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select({
+    id: problemAttempts.id,
+    skillId: problemAttempts.skillId,
+    problemId: problemAttempts.problemId,
+    studentAnswer: problemAttempts.studentAnswer,
+    createdAt: problemAttempts.createdAt,
+    skillName: mathSkills.name,
+    questionText: mathProblems.questionText,
+    problemType: mathProblems.problemType,
+  })
+    .from(problemAttempts)
+    .leftJoin(mathSkills, eq(problemAttempts.skillId, mathSkills.id))
+    .leftJoin(mathProblems, eq(problemAttempts.problemId, mathProblems.id))
+    .where(and(
+      eq(problemAttempts.studentId, studentId),
+      eq(problemAttempts.isCorrect, false),
+    ))
+    .orderBy(desc(problemAttempts.createdAt))
+    .limit(limit);
+}
+
 export async function upsertStudentSkillMastery(
   studentId: number,
   skillId: number,

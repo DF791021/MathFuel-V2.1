@@ -60,6 +60,63 @@ export const studentRouter = router({
     return db.getStudentBadges(ctx.user.id);
   }),
 
+  // Adaptive recommendations: which skills to work on next
+  getRecommendations: protectedProcedure.query(async ({ ctx }) => {
+    const mastery = await db.getStudentMasteryWithSkills(ctx.user.id);
+
+    const now = new Date();
+    const threeDaysAgo = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
+
+    type Rec = {
+      skillId: number;
+      skillName: string;
+      reason: string;
+      reasonType: "close" | "stale" | "struggling";
+      masteryScore: number;
+      masteryLevel: string;
+    };
+
+    const recommendations: Rec[] = [];
+
+    for (const m of mastery) {
+      const skillName = m.skillName ?? "Unknown Skill";
+
+      if (m.masteryLevel === "close") {
+        recommendations.push({
+          skillId: m.skillId, skillName,
+          reason: "Almost mastered — one more push!",
+          reasonType: "close",
+          masteryScore: m.masteryScore, masteryLevel: m.masteryLevel,
+        });
+      } else if (
+        m.masteryLevel === "practicing" &&
+        m.lastPracticedAt &&
+        new Date(m.lastPracticedAt) < threeDaysAgo
+      ) {
+        recommendations.push({
+          skillId: m.skillId, skillName,
+          reason: "You haven't practiced this in a while!",
+          reasonType: "stale",
+          masteryScore: m.masteryScore, masteryLevel: m.masteryLevel,
+        });
+      } else if (m.masteryLevel === "practicing" && m.masteryScore < 50) {
+        recommendations.push({
+          skillId: m.skillId, skillName,
+          reason: "Keep practicing to build your skills!",
+          reasonType: "struggling",
+          masteryScore: m.masteryScore, masteryLevel: m.masteryLevel,
+        });
+      }
+    }
+
+    recommendations.sort((a, b) => {
+      const order: Record<string, number> = { close: 0, stale: 1, struggling: 2 };
+      return order[a.reasonType] - order[b.reasonType];
+    });
+
+    return recommendations.slice(0, 3);
+  }),
+
   // Get daily stats for a date range
   getStatsRange: protectedProcedure
     .input(z.object({

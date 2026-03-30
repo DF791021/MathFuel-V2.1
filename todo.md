@@ -20,13 +20,13 @@
 ## Phase 3: AI Enhancement
 - [x] AI-generated explanations in age-appropriate language
 - [x] AI-generated scaffolded hints
-- [ ] Error pattern identification
-- [ ] Adaptive sequencing recommendations
+- [x] Error pattern identification
+- [x] Adaptive sequencing recommendations
 
 ## Phase 4: Homepage & Branding
 - [x] Redesign homepage as MathFuel landing page
 - [x] Update branding from MathMastery to MathFuel
-- [ ] Pricing page update for family subscription model
+- [x] Pricing page update for family subscription model
 
 ## Testing
 - [x] Vitest tests for answer checking (number, boolean, text, choice)

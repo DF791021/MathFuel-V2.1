@@ -253,6 +253,70 @@ Return ONLY the message text.`;
     }),
 
   /**
+   * Identify error patterns from recent incorrect attempts.
+   * Groups mistakes by skill and uses AI to name the underlying pattern.
+   */
+  getErrorPatterns: protectedProcedure
+    .input(z.object({ limit: z.number().int().min(1).max(100).default(50) }).optional())
+    .query(async ({ ctx, input }) => {
+      const incorrectAttempts = await db.getRecentIncorrectAttempts(ctx.user.id, input?.limit ?? 50);
+
+      const bySkill = new Map<number, { skillName: string; attempts: typeof incorrectAttempts }>();
+      for (const attempt of incorrectAttempts) {
+        if (!attempt.skillId) continue;
+        if (!bySkill.has(attempt.skillId)) {
+          bySkill.set(attempt.skillId, { skillName: attempt.skillName ?? "Unknown Skill", attempts: [] });
+        }
+        bySkill.get(attempt.skillId)!.attempts.push(attempt);
+      }
+
+      const skillsWithErrors = Array.from(bySkill.entries())
+        .filter(([, data]) => data.attempts.length >= 2)
+        .sort((a, b) => b[1].attempts.length - a[1].attempts.length)
+        .slice(0, 5);
+
+      if (skillsWithErrors.length === 0) return { patterns: [] };
+
+      const patterns = await Promise.all(
+        skillsWithErrors.map(async ([skillId, data]) => {
+          const examples = data.attempts
+            .slice(0, 4)
+            .map(a => `"${a.questionText}" (student wrote: "${a.studentAnswer ?? "blank"}")`)
+            .join("; ");
+
+          try {
+            const result = await invokeLLM({
+              messages: [
+                { role: "system", content: SYSTEM_PROMPT },
+                {
+                  role: "user",
+                  content: `A student got these problems wrong: ${examples}\n\nIn 1 short sentence, say what kind of mistake this is and give one friendly tip. Keep it simple for a 6-year-old. Return ONLY the text.`,
+                },
+              ],
+              maxTokens: 80,
+            });
+            const pattern = extractContent(result);
+            return {
+              skillId,
+              skillName: data.skillName,
+              errorCount: data.attempts.length,
+              pattern: pattern || "Keep practicing this skill!",
+            };
+          } catch {
+            return {
+              skillId,
+              skillName: data.skillName,
+              errorCount: data.attempts.length,
+              pattern: "Keep practicing this skill!",
+            };
+          }
+        }),
+      );
+
+      return { patterns };
+    }),
+
+  /**
    * Submit feedback (thumbs up/down) on an AI response.
    * Simple, child-friendly — just a tap.
    */

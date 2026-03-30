@@ -9,10 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
-import {
-  Flame, Trophy, Play, Target, BarChart3,
-  BookOpen, LogOut, User, Map, Brain, Copy, Check, UserPlus, Settings, Gift,
-} from "lucide-react";
+import { Flame, Trophy, Play, Target, ChartBar as BarChart3, BookOpen, LogOut, User, Map, Brain, Copy, Check, UserPlus, Settings, Gift, TrendingUp, Lightbulb, ChevronRight, CircleAlert as AlertCircle } from "lucide-react";
 
 const LOGO_URL = "https://d2xsxph8kpxj0f.cloudfront.net/310519663117001051/BAbKuMSfjHaa9ao8qByqEp/mathfuel-logo-V7jjfN52dexxQobYgXDFCk.webp";
 
@@ -81,9 +78,9 @@ function MasteryOverview({ mastery }: { mastery: any }) {
             <p className="text-lg sm:text-2xl font-bold text-blue-700">{mastery.practicing}</p>
             <p className="text-[10px] sm:text-xs text-blue-600">Practicing</p>
           </div>
-          <div className="p-2 sm:p-3 rounded-xl bg-purple-50 border border-purple-200">
-            <p className="text-lg sm:text-2xl font-bold text-purple-700">{mastery.overallAccuracy}%</p>
-            <p className="text-[10px] sm:text-xs text-purple-600">Accuracy</p>
+          <div className="p-2 sm:p-3 rounded-xl bg-amber-50 border border-amber-200">
+            <p className="text-lg sm:text-2xl font-bold text-amber-700">{mastery.overallAccuracy}%</p>
+            <p className="text-[10px] sm:text-xs text-amber-600">Accuracy</p>
           </div>
         </div>
         <div className="space-y-1.5">
@@ -195,6 +192,183 @@ function RecentSessions({ sessions }: { sessions: any[] }) {
   );
 }
 
+function RecommendedSkills({ isAuthenticated }: { isAuthenticated: boolean }) {
+  const { data, isLoading } = trpc.student.getRecommendations.useQuery(undefined, {
+    enabled: isAuthenticated,
+    refetchOnWindowFocus: false,
+  });
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader className="pb-2 sm:pb-3">
+          <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+            <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+            What to Work On Next
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {[0, 1, 2].map(i => <Skeleton key={i} className="h-14" />)}
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const recommendations = data ?? [];
+
+  if (recommendations.length === 0) {
+    return (
+      <Card>
+        <CardHeader className="pb-2 sm:pb-3">
+          <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+            <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+            What to Work On Next
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-4 sm:py-6 text-muted-foreground">
+            <TrendingUp className="w-8 h-8 sm:w-10 sm:h-10 mx-auto mb-2 opacity-30" />
+            <p className="text-xs sm:text-sm">Complete some sessions to get personalized recommendations!</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const reasonColors: Record<string, string> = {
+    close: "bg-green-100 text-green-700 border-green-200",
+    stale: "bg-amber-100 text-amber-700 border-amber-200",
+    struggling: "bg-blue-100 text-blue-700 border-blue-200",
+  };
+
+  const reasonIcons: Record<string, string> = {
+    close: "⭐",
+    stale: "🔄",
+    struggling: "💪",
+  };
+
+  return (
+    <Card>
+      <CardHeader className="pb-2 sm:pb-3">
+        <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+          <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+          What to Work On Next
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-2 sm:space-y-3">
+        {recommendations.map((rec, i) => (
+          <motion.div
+            key={rec.skillId}
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: i * 0.1 }}
+            className="flex items-center justify-between p-3 rounded-lg border bg-background hover:bg-muted/30 transition-colors gap-3"
+          >
+            <div className="flex items-center gap-2.5 min-w-0 flex-1">
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-base flex-shrink-0 border ${reasonColors[rec.reasonType] ?? "bg-muted text-muted-foreground"}`}>
+                {reasonIcons[rec.reasonType] ?? "📚"}
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold truncate">{rec.skillName}</p>
+                <p className="text-[11px] text-muted-foreground truncate">{rec.reason}</p>
+              </div>
+            </div>
+            <Link href={`/practice/${rec.skillId}`} className="no-underline flex-shrink-0">
+              <Button size="sm" variant="outline" className="gap-1 h-8 text-xs px-2.5">
+                Practice
+                <ChevronRight className="w-3 h-3" />
+              </Button>
+            </Link>
+          </motion.div>
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
+
+function ErrorPatterns({ isAuthenticated }: { isAuthenticated: boolean }) {
+  const { data, isLoading } = trpc.aiTutor.getErrorPatterns.useQuery(undefined, {
+    enabled: isAuthenticated,
+    refetchOnWindowFocus: false,
+  });
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader className="pb-2 sm:pb-3">
+          <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+            <Lightbulb className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500" />
+            Learning Insights
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {[0, 1].map(i => <Skeleton key={i} className="h-14" />)}
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const patterns = data?.patterns ?? [];
+
+  if (patterns.length === 0) {
+    return (
+      <Card>
+        <CardHeader className="pb-2 sm:pb-3">
+          <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+            <Lightbulb className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500" />
+            Learning Insights
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-4 sm:py-6 text-muted-foreground">
+            <Lightbulb className="w-8 h-8 sm:w-10 sm:h-10 mx-auto mb-2 opacity-30" />
+            <p className="text-xs sm:text-sm">Keep practicing and I'll spot any tricky patterns for you!</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader className="pb-2 sm:pb-3">
+        <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+          <Lightbulb className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500" />
+          Learning Insights
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-2 sm:space-y-3">
+        {patterns.map((p, i) => (
+          <motion.div
+            key={p.skillId}
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: i * 0.1 }}
+            className="p-3 rounded-lg border border-amber-200 bg-amber-50/50 space-y-2"
+          >
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <AlertCircle className="w-4 h-4 text-amber-500 flex-shrink-0" />
+                <p className="text-sm font-semibold truncate">{p.skillName}</p>
+              </div>
+              <Badge variant="outline" className="text-[10px] border-amber-300 text-amber-700 flex-shrink-0">
+                {p.errorCount} mistake{p.errorCount !== 1 ? "s" : ""}
+              </Badge>
+            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed">{p.pattern}</p>
+            <Link href={`/practice/${p.skillId}`} className="no-underline">
+              <Button size="sm" variant="outline" className="h-7 text-xs px-2.5 gap-1 border-amber-300 text-amber-700 hover:bg-amber-100">
+                Practice this skill
+                <ChevronRight className="w-3 h-3" />
+              </Button>
+            </Link>
+          </motion.div>
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
+
 /* ─── Invite Code Card ─── */
 
 function InviteCodeCard() {
@@ -214,22 +388,22 @@ function InviteCodeCard() {
   };
 
   return (
-    <Card className="bg-gradient-to-br from-indigo-50 to-purple-50 border-indigo-200">
+    <Card className="bg-gradient-to-br from-sky-50 to-blue-50 border-sky-200">
       <CardContent className="p-4 sm:p-6">
         <div className="flex items-start gap-3">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-indigo-100 flex items-center justify-center flex-shrink-0">
-            <UserPlus className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600" />
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-sky-100 flex items-center justify-center flex-shrink-0">
+            <UserPlus className="w-5 h-5 sm:w-6 sm:h-6 text-sky-600" />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="font-bold text-sm sm:text-base text-indigo-900">Connect a Parent</h3>
-            <p className="text-xs sm:text-sm text-indigo-600/70 mt-0.5">
+            <h3 className="font-bold text-sm sm:text-base text-sky-900">Connect a Parent</h3>
+            <p className="text-xs sm:text-sm text-sky-600/70 mt-0.5">
               Share this code with your parent so they can track your progress.
             </p>
 
             {generateCode.data ? (
               <div className="mt-3">
                 <div className="flex items-center gap-2">
-                  <div className="bg-white rounded-lg px-4 py-2.5 font-mono text-lg sm:text-2xl font-bold tracking-[0.2em] text-indigo-700 border border-indigo-200 shadow-sm">
+                  <div className="bg-white rounded-lg px-4 py-2.5 font-mono text-lg sm:text-2xl font-bold tracking-[0.2em] text-sky-700 border border-sky-200 shadow-sm">
                     {generateCode.data.code}
                   </div>
                   <Button
@@ -241,7 +415,7 @@ function InviteCodeCard() {
                     {copied ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
                   </Button>
                 </div>
-                <p className="text-[10px] sm:text-xs text-indigo-500 mt-1.5">
+                <p className="text-[10px] sm:text-xs text-sky-500 mt-1.5">
                   {generateCode.data.isExisting ? "Your existing code" : "New code generated"} — valid for 7 days
                 </p>
               </div>
@@ -250,7 +424,7 @@ function InviteCodeCard() {
                 onClick={handleGenerate}
                 disabled={generateCode.isPending}
                 size="sm"
-                className="mt-3 bg-indigo-600 hover:bg-indigo-700 text-white gap-1.5"
+                className="mt-3 bg-sky-600 hover:bg-sky-700 text-white gap-1.5"
               >
                 {generateCode.isPending ? (
                   <div className="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-white" />
@@ -305,7 +479,7 @@ export default function StudentDashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Top Nav — compact on mobile */}
+      {/* Top Nav */}
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
         <div className="max-w-4xl mx-auto px-4 flex items-center justify-between h-12 sm:h-14">
           <Link href="/" className="flex items-center gap-1.5 sm:gap-2 font-bold text-base sm:text-lg no-underline">
@@ -385,28 +559,38 @@ export default function StudentDashboard() {
           </motion.div>
         </div>
 
+        {/* Adaptive Recommendations */}
+        <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={3}>
+          <RecommendedSkills isAuthenticated={isAuthenticated} />
+        </motion.div>
+
         {/* Badges + Sessions */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6">
-          <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={3}>
+          <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={4}>
             <BadgeShowcase badges={dashboard?.badges ?? []} />
           </motion.div>
-          <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={4}>
+          <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={5}>
             <RecentSessions sessions={dashboard?.recentSessions ?? []} />
           </motion.div>
         </div>
 
+        {/* Error Pattern Insights */}
+        <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={6}>
+          <ErrorPatterns isAuthenticated={isAuthenticated} />
+        </motion.div>
+
         {/* Invite Code for Parents */}
-        <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={5}>
+        <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={7}>
           <InviteCodeCard />
         </motion.div>
 
         {/* Quick Links */}
-        <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={6}>
+        <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={8}>
           <div className="grid grid-cols-4 gap-2 sm:gap-3">
             {[
               { href: "/practice", icon: Brain, label: "Practice", color: "bg-primary/10 text-primary" },
               { href: "/skills", icon: Map, label: "Skill Map", color: "bg-green-100 text-green-700" },
-              { href: "/practice?type=review", icon: BookOpen, label: "Review", color: "bg-purple-100 text-purple-700" },
+              { href: "/practice?type=review", icon: BookOpen, label: "Review", color: "bg-sky-100 text-sky-700" },
               { href: "/parent", icon: BarChart3, label: "Progress", color: "bg-orange-100 text-orange-700" },
             ].map((item) => (
               <Link key={item.href} href={item.href}>
