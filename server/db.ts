@@ -1,5 +1,6 @@
 import { eq, desc, and, sql, asc, gte, lte, inArray } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/mysql2";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
 import {
   InsertUser, users,
   mathDomains, mathSkills, mathProblems,
@@ -25,11 +26,12 @@ import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
-// Lazily create the drizzle instance so local tooling can run without a DB.
 export async function getDb() {
-  if (!_db && process.env.DATABASE_URL) {
+  const connectionString = process.env.DATABASE_URL || process.env.SUPABASE_DB_URL;
+  if (!_db && connectionString) {
     try {
-      _db = drizzle(process.env.DATABASE_URL);
+      const client = postgres(connectionString, { prepare: false });
+      _db = drizzle(client);
     } catch (error) {
       console.warn("[Database] Failed to connect:", error);
       _db = null;
@@ -39,7 +41,7 @@ export async function getDb() {
 }
 
 // ============================================================================
-// USER HELPERS (preserved from auth system)
+// USER HELPERS
 // ============================================================================
 
 export async function upsertUser(user: InsertUser): Promise<void> {
@@ -85,7 +87,10 @@ export async function upsertUser(user: InsertUser): Promise<void> {
     if (Object.keys(updateSet).length === 0) {
       updateSet.lastSignedIn = new Date();
     }
-    await db.insert(users).values(values).onDuplicateKeyUpdate({ set: updateSet });
+    await db.insert(users).values(values).onConflictDoUpdate({
+      target: users.openId,
+      set: updateSet as any,
+    });
   } catch (error) {
     console.error("[Database] Failed to upsert user:", error);
     throw error;
@@ -202,7 +207,7 @@ export async function getProblemsForSession(skillIds: number[], difficulty: numb
       lte(mathProblems.difficulty, maxDiff),
       eq(mathProblems.isActive, true),
     ))
-    .orderBy(sql`RAND()`)
+    .orderBy(sql`RANDOM()`)
     .limit(limit);
 }
 
@@ -228,8 +233,8 @@ export async function incrementProblemStats(problemId: number, isCorrect: boolea
 export async function createPracticeSession(data: InsertPracticeSession) {
   const db = await getDb();
   if (!db) return null;
-  const result = await db.insert(practiceSessions).values(data);
-  return { id: result[0].insertId };
+  const result = await db.insert(practiceSessions).values(data).returning({ id: practiceSessions.id });
+  return { id: result[0].id };
 }
 
 export async function updatePracticeSession(sessionId: number, data: Partial<typeof practiceSessions.$inferSelect>) {
@@ -271,8 +276,8 @@ export async function getStudentSessionsForDate(studentId: number, date: string)
 export async function createProblemAttempt(data: InsertProblemAttempt) {
   const db = await getDb();
   if (!db) return null;
-  const result = await db.insert(problemAttempts).values(data);
-  return { id: result[0].insertId };
+  const result = await db.insert(problemAttempts).values(data).returning({ id: problemAttempts.id });
+  return { id: result[0].id };
 }
 
 export async function getSessionAttempts(sessionId: number) {
@@ -338,6 +343,7 @@ export async function upsertStudentSkillMastery(
     await db.update(studentSkillMastery).set({
       ...data,
       masteredAt: data.masteredAt ?? existing.masteredAt,
+      updatedAt: new Date(),
     } as any).where(eq(studentSkillMastery.id, existing.id));
   } else {
     await db.insert(studentSkillMastery).values({
@@ -370,7 +376,7 @@ export async function upsertStudentStreak(studentId: number, data: {
   if (!db) return;
   const existing = await getStudentStreak(studentId);
   if (existing) {
-    await db.update(studentStreaks).set(data).where(eq(studentStreaks.id, existing.id));
+    await db.update(studentStreaks).set({ ...data, updatedAt: new Date() }).where(eq(studentStreaks.id, existing.id));
   } else {
     await db.insert(studentStreaks).values({ studentId, ...data });
   }
@@ -415,7 +421,7 @@ export async function upsertStudentDailyStats(studentId: number, date: string, d
   if (!db) return;
   const existing = await getStudentDailyStats(studentId, date);
   if (existing) {
-    await db.update(studentDailyStats).set(data).where(eq(studentDailyStats.id, existing.id));
+    await db.update(studentDailyStats).set({ ...data, updatedAt: new Date() }).where(eq(studentDailyStats.id, existing.id));
   } else {
     await db.insert(studentDailyStats).values({ studentId, date, ...data });
   }
@@ -499,7 +505,7 @@ export async function setAdminSetting(key: string, value: any, type: "boolean" |
   if (!db) return;
   const existing = await getAdminSetting(key);
   if (existing) {
-    await db.update(adminSettings).set({ value, type, description, updatedBy }).where(eq(adminSettings.id, existing.id));
+    await db.update(adminSettings).set({ value, type, description, updatedBy, updatedAt: new Date() }).where(eq(adminSettings.id, existing.id));
   } else {
     await db.insert(adminSettings).values({ key, value, type, description, updatedBy });
   }
@@ -534,7 +540,7 @@ export async function setFeatureFlag(name: string, enabled: boolean, owner: stri
   if (!db) return;
   const existing = await getFeatureFlag(name);
   if (existing) {
-    await db.update(featureFlags).set({ enabled, owner, description }).where(eq(featureFlags.id, existing.id));
+    await db.update(featureFlags).set({ enabled, owner, description, updatedAt: new Date() }).where(eq(featureFlags.id, existing.id));
   } else {
     await db.insert(featureFlags).values({ name, enabled, owner, description });
   }
@@ -547,8 +553,8 @@ export async function setFeatureFlag(name: string, enabled: boolean, owner: stri
 export async function submitAIFeedback(data: InsertAIFeedback) {
   const db = await getDb();
   if (!db) return null;
-  const result = await db.insert(aiFeedback).values(data);
-  return { id: result[0].insertId };
+  const result = await db.insert(aiFeedback).values(data).returning({ id: aiFeedback.id });
+  return { id: result[0].id };
 }
 
 export async function getAIFeedbackByStudent(studentId: number, limit: number = 50) {
@@ -563,12 +569,12 @@ export async function getAIFeedbackByStudent(studentId: number, limit: number = 
 export async function getAIFeedbackStats() {
   const db = await getDb();
   if (!db) return { total: 0, up: 0, down: 0, byType: {} };
-  
+
   const allFeedback = await db.select().from(aiFeedback);
   const total = allFeedback.length;
   const up = allFeedback.filter(f => f.rating === "up").length;
   const down = allFeedback.filter(f => f.rating === "down").length;
-  
+
   const byType: Record<string, { total: number; up: number; down: number }> = {};
   for (const f of allFeedback) {
     if (!byType[f.responseType]) {
@@ -578,7 +584,7 @@ export async function getAIFeedbackStats() {
     if (f.rating === "up") byType[f.responseType].up++;
     else byType[f.responseType].down++;
   }
-  
+
   return { total, up, down, byType };
 }
 
@@ -619,8 +625,8 @@ export async function createInviteCode(studentId: number, code: string, expiresA
     studentId,
     code,
     expiresAt,
-  });
-  return { id: result[0].insertId, code };
+  }).returning({ id: inviteCodes.id });
+  return { id: result[0].id, code };
 }
 
 export async function getInviteCodeByCode(code: string) {
@@ -659,8 +665,8 @@ export async function createPasswordResetToken(userId: number, token: string, ex
     userId,
     token,
     expiresAt,
-  });
-  return { id: result[0].insertId };
+  }).returning({ id: passwordResetTokens.id });
+  return { id: result[0].id };
 }
 
 export async function getPasswordResetToken(token: string) {

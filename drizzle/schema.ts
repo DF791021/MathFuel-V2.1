@@ -1,23 +1,58 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, boolean, json } from "drizzle-orm/mysql-core";
+import {
+  pgTable, pgEnum,
+  serial, integer, text, varchar, boolean, timestamp, jsonb,
+} from "drizzle-orm/pg-core";
+
+// ============================================================================
+// ENUMS
+// ============================================================================
+
+export const userRoleEnum = pgEnum("user_role", ["user", "admin"]);
+export const userTypeEnum = pgEnum("user_type", ["student", "parent", "teacher", "admin"]);
+export const sessionTypeEnum = pgEnum("session_type", ["daily", "practice", "review", "assessment"]);
+export const sessionStatusEnum = pgEnum("session_status", ["in_progress", "completed", "abandoned"]);
+export const problemTypeEnum = pgEnum("problem_type", [
+  "multiple_choice", "numeric_input", "true_false",
+  "fill_blank", "comparison", "word_problem", "ordering",
+]);
+export const answerTypeEnum = pgEnum("answer_type", ["number", "text", "boolean", "choice"]);
+export const masteryLevelEnum = pgEnum("mastery_level", ["not_started", "practicing", "close", "mastered"]);
+export const subscriptionStatusEnum = pgEnum("subscription_status", [
+  "trialing", "active", "incomplete", "incomplete_expired",
+  "past_due", "canceled", "unpaid",
+]);
+export const paymentStatusEnum = pgEnum("payment_status", ["succeeded", "failed", "pending"]);
+export const settingTypeEnum = pgEnum("setting_type", ["boolean", "string", "number", "json"]);
+export const webhookStatusEnum = pgEnum("webhook_status", ["pending", "succeeded", "failed"]);
+export const emailStatusEnum = pgEnum("email_status", ["pending", "sent", "failed", "bounced"]);
+export const notificationTypeEnum = pgEnum("notification_type", [
+  "payment_received", "payment_failed", "subscription_change",
+  "new_signup", "system_alert", "content_update",
+]);
+export const aiResponseTypeEnum = pgEnum("ai_response_type", ["hint", "explanation", "session_summary"]);
+export const aiRatingEnum = pgEnum("ai_rating", ["up", "down"]);
+export const referralStatusEnum = pgEnum("referral_status", [
+  "signed_up", "subscribed", "rewarded", "expired",
+]);
 
 // ============================================================================
 // CORE USER TABLE
 // ============================================================================
 
-export const users = mysqlTable("users", {
-  id: int("id").autoincrement().primaryKey(),
+export const users = pgTable("users", {
+  id: serial("id").primaryKey(),
   openId: varchar("openId", { length: 64 }).notNull().unique(),
   name: text("name"),
   email: varchar("email", { length: 320 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
   passwordHash: varchar("passwordHash", { length: 255 }),
-  role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
-  userType: mysqlEnum("userType", ["student", "parent", "teacher", "admin"]).default("student").notNull(),
+  role: userRoleEnum("role").default("user").notNull(),
+  userType: userTypeEnum("userType").default("student").notNull(),
   avatarUrl: varchar("avatarUrl", { length: 500 }),
-  gradeLevel: int("gradeLevel"), // 1, 2, etc.
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-  lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
+  gradeLevel: integer("gradeLevel"),
+  createdAt: timestamp("createdAt", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt", { withTimezone: true }).defaultNow().notNull(),
+  lastSignedIn: timestamp("lastSignedIn", { withTimezone: true }).defaultNow().notNull(),
 });
 
 export type User = typeof users.$inferSelect;
@@ -27,75 +62,55 @@ export type InsertUser = typeof users.$inferInsert;
 // MATHFUEL CONTENT: SKILL TREE
 // ============================================================================
 
-/**
- * Math domains (top-level categories)
- * e.g., "Number Sense", "Operations", "Place Value"
- */
-export const mathDomains = mysqlTable("mathDomains", {
-  id: int("id").autoincrement().primaryKey(),
+export const mathDomains = pgTable("mathDomains", {
+  id: serial("id").primaryKey(),
   name: varchar("name", { length: 100 }).notNull(),
   slug: varchar("slug", { length: 100 }).notNull().unique(),
   description: text("description"),
-  icon: varchar("icon", { length: 50 }), // emoji or icon name
-  displayOrder: int("displayOrder").notNull().default(0),
-  gradeLevel: int("gradeLevel").notNull(), // 1, 2, etc.
+  icon: varchar("icon", { length: 50 }),
+  displayOrder: integer("displayOrder").notNull().default(0),
+  gradeLevel: integer("gradeLevel").notNull(),
   isActive: boolean("isActive").default(true).notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  createdAt: timestamp("createdAt", { withTimezone: true }).defaultNow().notNull(),
 });
 
 export type MathDomain = typeof mathDomains.$inferSelect;
 export type InsertMathDomain = typeof mathDomains.$inferInsert;
 
-/**
- * Skills within a domain
- * e.g., "Addition within 10", "Subtraction within 20"
- */
-export const mathSkills = mysqlTable("mathSkills", {
-  id: int("id").autoincrement().primaryKey(),
-  domainId: int("domainId").notNull(),
+export const mathSkills = pgTable("mathSkills", {
+  id: serial("id").primaryKey(),
+  domainId: integer("domainId").notNull(),
   name: varchar("name", { length: 200 }).notNull(),
   slug: varchar("slug", { length: 200 }).notNull().unique(),
   description: text("description"),
-  gradeLevel: int("gradeLevel").notNull(),
-  displayOrder: int("displayOrder").notNull().default(0),
-  prerequisiteSkillId: int("prerequisiteSkillId"), // skill that should be mastered first
+  gradeLevel: integer("gradeLevel").notNull(),
+  displayOrder: integer("displayOrder").notNull().default(0),
+  prerequisiteSkillId: integer("prerequisiteSkillId"),
   isActive: boolean("isActive").default(true).notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  createdAt: timestamp("createdAt", { withTimezone: true }).defaultNow().notNull(),
 });
 
 export type MathSkill = typeof mathSkills.$inferSelect;
 export type InsertMathSkill = typeof mathSkills.$inferInsert;
 
-/**
- * Problem templates for generating questions
- * Each template can produce many concrete problems
- */
-export const mathProblems = mysqlTable("mathProblems", {
-  id: int("id").autoincrement().primaryKey(),
-  skillId: int("skillId").notNull(),
-  problemType: mysqlEnum("problemType", [
-    "multiple_choice",
-    "numeric_input",
-    "true_false",
-    "fill_blank",
-    "comparison",
-    "word_problem",
-    "ordering",
-  ]).notNull(),
-  difficulty: int("difficulty").notNull().default(1), // 1-5 scale
+export const mathProblems = pgTable("mathProblems", {
+  id: serial("id").primaryKey(),
+  skillId: integer("skillId").notNull(),
+  problemType: problemTypeEnum("problemType").notNull(),
+  difficulty: integer("difficulty").notNull().default(1),
   questionText: text("questionText").notNull(),
-  questionImage: varchar("questionImage", { length: 500 }), // optional image URL
+  questionImage: varchar("questionImage", { length: 500 }),
   correctAnswer: varchar("correctAnswer", { length: 200 }).notNull(),
-  answerType: mysqlEnum("answerType", ["number", "text", "boolean", "choice"]).notNull(),
-  choices: json("choices"), // JSON array for multiple choice: ["3", "4", "5", "6"]
-  explanation: text("explanation").notNull(), // shown after answering
-  hintSteps: json("hintSteps").notNull(), // JSON array of progressive hints: ["Think about...", "Try counting...", "The answer is close to..."]
-  tags: varchar("tags", { length: 500 }), // comma-separated: "addition,single-digit,visual"
+  answerType: answerTypeEnum("answerType").notNull(),
+  choices: jsonb("choices"),
+  explanation: text("explanation").notNull(),
+  hintSteps: jsonb("hintSteps").notNull().default([]),
+  tags: varchar("tags", { length: 500 }),
   isActive: boolean("isActive").default(true).notNull(),
-  timesServed: int("timesServed").default(0).notNull(),
-  timesCorrect: int("timesCorrect").default(0).notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  timesServed: integer("timesServed").default(0).notNull(),
+  timesCorrect: integer("timesCorrect").default(0).notNull(),
+  createdAt: timestamp("createdAt", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt", { withTimezone: true }).defaultNow().notNull(),
 });
 
 export type MathProblem = typeof mathProblems.$inferSelect;
@@ -105,121 +120,103 @@ export type InsertMathProblem = typeof mathProblems.$inferInsert;
 // MATHFUEL: PRACTICE SESSIONS & STUDENT PERFORMANCE
 // ============================================================================
 
-/**
- * Practice sessions - a single sitting of math practice
- */
-export const practiceSessions = mysqlTable("practiceSessions", {
-  id: int("id").autoincrement().primaryKey(),
-  studentId: int("studentId").notNull(),
-  sessionType: mysqlEnum("sessionType", ["daily", "practice", "review", "assessment"]).default("daily").notNull(),
-  status: mysqlEnum("status", ["in_progress", "completed", "abandoned"]).default("in_progress").notNull(),
-  totalProblems: int("totalProblems").default(0).notNull(),
-  correctAnswers: int("correctAnswers").default(0).notNull(),
-  hintsUsed: int("hintsUsed").default(0).notNull(),
-  totalTimeSeconds: int("totalTimeSeconds").default(0).notNull(),
-  averageDifficulty: int("averageDifficulty").default(1).notNull(), // average difficulty served (1-5 * 100 for precision)
-  skillsFocused: json("skillsFocused"), // JSON array of skill IDs practiced
-  startedAt: timestamp("startedAt").defaultNow().notNull(),
-  completedAt: timestamp("completedAt"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
+export const practiceSessions = pgTable("practiceSessions", {
+  id: serial("id").primaryKey(),
+  studentId: integer("studentId").notNull(),
+  sessionType: sessionTypeEnum("sessionType").default("daily").notNull(),
+  status: sessionStatusEnum("status").default("in_progress").notNull(),
+  totalProblems: integer("totalProblems").default(0).notNull(),
+  correctAnswers: integer("correctAnswers").default(0).notNull(),
+  hintsUsed: integer("hintsUsed").default(0).notNull(),
+  totalTimeSeconds: integer("totalTimeSeconds").default(0).notNull(),
+  averageDifficulty: integer("averageDifficulty").default(1).notNull(),
+  skillsFocused: jsonb("skillsFocused"),
+  startedAt: timestamp("startedAt", { withTimezone: true }).defaultNow().notNull(),
+  completedAt: timestamp("completedAt", { withTimezone: true }),
+  createdAt: timestamp("createdAt", { withTimezone: true }).defaultNow().notNull(),
 });
 
 export type PracticeSession = typeof practiceSessions.$inferSelect;
 export type InsertPracticeSession = typeof practiceSessions.$inferInsert;
 
-/**
- * Individual problem attempts within a session
- */
-export const problemAttempts = mysqlTable("problemAttempts", {
-  id: int("id").autoincrement().primaryKey(),
-  sessionId: int("sessionId").notNull(),
-  studentId: int("studentId").notNull(),
-  problemId: int("problemId").notNull(),
-  skillId: int("skillId").notNull(),
+export const problemAttempts = pgTable("problemAttempts", {
+  id: serial("id").primaryKey(),
+  sessionId: integer("sessionId").notNull(),
+  studentId: integer("studentId").notNull(),
+  problemId: integer("problemId").notNull(),
+  skillId: integer("skillId").notNull(),
   studentAnswer: varchar("studentAnswer", { length: 200 }),
   isCorrect: boolean("isCorrect").notNull(),
   isFirstTry: boolean("isFirstTry").default(true).notNull(),
-  hintsViewed: int("hintsViewed").default(0).notNull(), // how many hint steps they saw
-  timeSpentSeconds: int("timeSpentSeconds").default(0).notNull(),
-  difficulty: int("difficulty").notNull(), // difficulty of the problem at time of serving
-  attemptNumber: int("attemptNumber").default(1).notNull(), // 1st, 2nd, 3rd try
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  hintsViewed: integer("hintsViewed").default(0).notNull(),
+  timeSpentSeconds: integer("timeSpentSeconds").default(0).notNull(),
+  difficulty: integer("difficulty").notNull(),
+  attemptNumber: integer("attemptNumber").default(1).notNull(),
+  createdAt: timestamp("createdAt", { withTimezone: true }).defaultNow().notNull(),
 });
 
 export type ProblemAttempt = typeof problemAttempts.$inferSelect;
 export type InsertProblemAttempt = typeof problemAttempts.$inferInsert;
 
-/**
- * Student skill mastery - tracks progress per skill per student
- */
-export const studentSkillMastery = mysqlTable("studentSkillMastery", {
-  id: int("id").autoincrement().primaryKey(),
-  studentId: int("studentId").notNull(),
-  skillId: int("skillId").notNull(),
-  masteryLevel: mysqlEnum("masteryLevel", ["not_started", "practicing", "close", "mastered"]).default("not_started").notNull(),
-  masteryScore: int("masteryScore").default(0).notNull(), // 0-100
-  totalAttempts: int("totalAttempts").default(0).notNull(),
-  correctAttempts: int("correctAttempts").default(0).notNull(),
-  currentStreak: int("currentStreak").default(0).notNull(), // consecutive correct
-  bestStreak: int("bestStreak").default(0).notNull(),
-  averageTimeSeconds: int("averageTimeSeconds").default(0).notNull(),
-  lastPracticedAt: timestamp("lastPracticedAt"),
-  masteredAt: timestamp("masteredAt"), // when they first hit "mastered"
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+export const studentSkillMastery = pgTable("studentSkillMastery", {
+  id: serial("id").primaryKey(),
+  studentId: integer("studentId").notNull(),
+  skillId: integer("skillId").notNull(),
+  masteryLevel: masteryLevelEnum("masteryLevel").default("not_started").notNull(),
+  masteryScore: integer("masteryScore").default(0).notNull(),
+  totalAttempts: integer("totalAttempts").default(0).notNull(),
+  correctAttempts: integer("correctAttempts").default(0).notNull(),
+  currentStreak: integer("currentStreak").default(0).notNull(),
+  bestStreak: integer("bestStreak").default(0).notNull(),
+  averageTimeSeconds: integer("averageTimeSeconds").default(0).notNull(),
+  lastPracticedAt: timestamp("lastPracticedAt", { withTimezone: true }),
+  masteredAt: timestamp("masteredAt", { withTimezone: true }),
+  createdAt: timestamp("createdAt", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt", { withTimezone: true }).defaultNow().notNull(),
 });
 
 export type StudentSkillMastery = typeof studentSkillMastery.$inferSelect;
 export type InsertStudentSkillMastery = typeof studentSkillMastery.$inferInsert;
 
-/**
- * Student daily stats - aggregated daily performance
- */
-export const studentDailyStats = mysqlTable("studentDailyStats", {
-  id: int("id").autoincrement().primaryKey(),
-  studentId: int("studentId").notNull(),
-  date: varchar("date", { length: 10 }).notNull(), // YYYY-MM-DD
-  sessionsCompleted: int("sessionsCompleted").default(0).notNull(),
-  problemsAttempted: int("problemsAttempted").default(0).notNull(),
-  problemsCorrect: int("problemsCorrect").default(0).notNull(),
-  hintsUsed: int("hintsUsed").default(0).notNull(),
-  totalTimeSeconds: int("totalTimeSeconds").default(0).notNull(),
-  skillsImproved: int("skillsImproved").default(0).notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+export const studentDailyStats = pgTable("studentDailyStats", {
+  id: serial("id").primaryKey(),
+  studentId: integer("studentId").notNull(),
+  date: varchar("date", { length: 10 }).notNull(),
+  sessionsCompleted: integer("sessionsCompleted").default(0).notNull(),
+  problemsAttempted: integer("problemsAttempted").default(0).notNull(),
+  problemsCorrect: integer("problemsCorrect").default(0).notNull(),
+  hintsUsed: integer("hintsUsed").default(0).notNull(),
+  totalTimeSeconds: integer("totalTimeSeconds").default(0).notNull(),
+  skillsImproved: integer("skillsImproved").default(0).notNull(),
+  createdAt: timestamp("createdAt", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt", { withTimezone: true }).defaultNow().notNull(),
 });
 
 export type StudentDailyStat = typeof studentDailyStats.$inferSelect;
 export type InsertStudentDailyStat = typeof studentDailyStats.$inferInsert;
 
-/**
- * Student streaks - track daily practice streaks
- */
-export const studentStreaks = mysqlTable("studentStreaks", {
-  id: int("id").autoincrement().primaryKey(),
-  studentId: int("studentId").notNull().unique(),
-  currentStreak: int("currentStreak").default(0).notNull(),
-  longestStreak: int("longestStreak").default(0).notNull(),
-  lastActiveDate: varchar("lastActiveDate", { length: 10 }), // YYYY-MM-DD
-  totalActiveDays: int("totalActiveDays").default(0).notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+export const studentStreaks = pgTable("studentStreaks", {
+  id: serial("id").primaryKey(),
+  studentId: integer("studentId").notNull().unique(),
+  currentStreak: integer("currentStreak").default(0).notNull(),
+  longestStreak: integer("longestStreak").default(0).notNull(),
+  lastActiveDate: varchar("lastActiveDate", { length: 10 }),
+  totalActiveDays: integer("totalActiveDays").default(0).notNull(),
+  createdAt: timestamp("createdAt", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt", { withTimezone: true }).defaultNow().notNull(),
 });
 
 export type StudentStreak = typeof studentStreaks.$inferSelect;
 export type InsertStudentStreak = typeof studentStreaks.$inferInsert;
 
-/**
- * Badges / achievements earned by students
- */
-export const studentBadges = mysqlTable("studentBadges", {
-  id: int("id").autoincrement().primaryKey(),
-  studentId: int("studentId").notNull(),
+export const studentBadges = pgTable("studentBadges", {
+  id: serial("id").primaryKey(),
+  studentId: integer("studentId").notNull(),
   badgeType: varchar("badgeType", { length: 100 }).notNull(),
   title: varchar("title", { length: 200 }).notNull(),
   description: text("description"),
-  icon: varchar("icon", { length: 50 }), // emoji
-  earnedAt: timestamp("earnedAt").defaultNow().notNull(),
+  icon: varchar("icon", { length: 50 }),
+  earnedAt: timestamp("earnedAt", { withTimezone: true }).defaultNow().notNull(),
 });
 
 export type StudentBadge = typeof studentBadges.$inferSelect;
@@ -229,32 +226,29 @@ export type InsertStudentBadge = typeof studentBadges.$inferInsert;
 // MATHFUEL: PARENT-STUDENT LINKING
 // ============================================================================
 
-/**
- * Parent-child relationships
- */
-export const parentStudentLinks = mysqlTable("parentStudentLinks", {
-  id: int("id").autoincrement().primaryKey(),
-  parentId: int("parentId").notNull(),
-  studentId: int("studentId").notNull(),
+export const parentStudentLinks = pgTable("parentStudentLinks", {
+  id: serial("id").primaryKey(),
+  parentId: integer("parentId").notNull(),
+  studentId: integer("studentId").notNull(),
   relationship: varchar("relationship", { length: 50 }).default("parent").notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  createdAt: timestamp("createdAt", { withTimezone: true }).defaultNow().notNull(),
 });
 
 export type ParentStudentLink = typeof parentStudentLinks.$inferSelect;
 export type InsertParentStudentLink = typeof parentStudentLinks.$inferInsert;
 
 // ============================================================================
-// MATHFUEL: INVITE CODES (Parent-Child Linking)
+// MATHFUEL: INVITE CODES
 // ============================================================================
 
-export const inviteCodes = mysqlTable("inviteCodes", {
-  id: int("id").autoincrement().primaryKey(),
-  studentId: int("studentId").notNull(),
+export const inviteCodes = pgTable("inviteCodes", {
+  id: serial("id").primaryKey(),
+  studentId: integer("studentId").notNull(),
   code: varchar("code", { length: 20 }).notNull().unique(),
-  expiresAt: timestamp("expiresAt").notNull(),
-  usedBy: int("usedBy"),
-  usedAt: timestamp("usedAt"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  expiresAt: timestamp("expiresAt", { withTimezone: true }).notNull(),
+  usedBy: integer("usedBy"),
+  usedAt: timestamp("usedAt", { withTimezone: true }),
+  createdAt: timestamp("createdAt", { withTimezone: true }).defaultNow().notNull(),
 });
 
 export type InviteCode = typeof inviteCodes.$inferSelect;
@@ -264,13 +258,13 @@ export type InsertInviteCode = typeof inviteCodes.$inferInsert;
 // MATHFUEL: PASSWORD RESET TOKENS
 // ============================================================================
 
-export const passwordResetTokens = mysqlTable("passwordResetTokens", {
-  id: int("id").autoincrement().primaryKey(),
-  userId: int("userId").notNull(),
+export const passwordResetTokens = pgTable("passwordResetTokens", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull(),
   token: varchar("token", { length: 255 }).notNull().unique(),
-  expiresAt: timestamp("expiresAt").notNull(),
-  usedAt: timestamp("usedAt"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  expiresAt: timestamp("expiresAt", { withTimezone: true }).notNull(),
+  usedAt: timestamp("usedAt", { withTimezone: true }),
+  createdAt: timestamp("createdAt", { withTimezone: true }).defaultNow().notNull(),
 });
 
 export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
@@ -280,186 +274,151 @@ export type InsertPasswordResetToken = typeof passwordResetTokens.$inferInsert;
 // MATHFUEL: AI FEEDBACK RATINGS
 // ============================================================================
 
-/**
- * AI feedback ratings - students rate MathBuddy's hints and explanations
- * Used to measure AI quality and improve prompts over time.
- */
-export const aiFeedback = mysqlTable("aiFeedback", {
-  id: int("id").autoincrement().primaryKey(),
-  studentId: int("studentId").notNull(),
-  sessionId: int("sessionId"), // practice session context
-  problemId: int("problemId"), // which problem the AI responded to
-  responseType: mysqlEnum("responseType", ["hint", "explanation", "session_summary"]).notNull(),
-  rating: mysqlEnum("rating", ["up", "down"]).notNull(), // thumbs up or down
-  aiResponseText: text("aiResponseText"), // the actual AI text that was rated
-  comment: text("comment"), // optional free-text comment from student
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
+export const aiFeedback = pgTable("aiFeedback", {
+  id: serial("id").primaryKey(),
+  studentId: integer("studentId").notNull(),
+  sessionId: integer("sessionId"),
+  problemId: integer("problemId"),
+  responseType: aiResponseTypeEnum("responseType").notNull(),
+  rating: aiRatingEnum("rating").notNull(),
+  aiResponseText: text("aiResponseText"),
+  comment: text("comment"),
+  createdAt: timestamp("createdAt", { withTimezone: true }).defaultNow().notNull(),
 });
 
 export type AIFeedback = typeof aiFeedback.$inferSelect;
 export type InsertAIFeedback = typeof aiFeedback.$inferInsert;
 
 // ============================================================================
-// REVENUE ENGINE TABLES (Existing - Kept)
+// REVENUE ENGINE TABLES
 // ============================================================================
 
-/**
- * Subscriptions - Stripe ledger
- */
-export const subscriptions = mysqlTable("subscriptions", {
-  id: int("id").autoincrement().primaryKey(),
-  userId: int("userId").notNull(),
+export const subscriptions = pgTable("subscriptions", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull(),
   stripeCustomerId: varchar("stripeCustomerId", { length: 100 }).notNull().unique(),
   stripeSubscriptionId: varchar("stripeSubscriptionId", { length: 100 }).notNull().unique(),
-  status: mysqlEnum("status", ["trialing", "active", "incomplete", "incomplete_expired", "past_due", "canceled", "unpaid"]).notNull(),
+  status: subscriptionStatusEnum("status").notNull(),
   priceId: varchar("priceId", { length: 100 }).notNull(),
-  currentPeriodStart: timestamp("currentPeriodStart").notNull(),
-  currentPeriodEnd: timestamp("currentPeriodEnd").notNull(),
+  currentPeriodStart: timestamp("currentPeriodStart", { withTimezone: true }).notNull(),
+  currentPeriodEnd: timestamp("currentPeriodEnd", { withTimezone: true }).notNull(),
   cancelAtPeriodEnd: boolean("cancelAtPeriodEnd").default(false).notNull(),
-  canceledAt: timestamp("canceledAt"),
+  canceledAt: timestamp("canceledAt", { withTimezone: true }),
   latestInvoiceId: varchar("latestInvoiceId", { length: 100 }),
-  lastPaymentStatus: mysqlEnum("lastPaymentStatus", ["succeeded", "failed", "pending"]),
+  lastPaymentStatus: paymentStatusEnum("lastPaymentStatus"),
   lastWebhookEventId: varchar("lastWebhookEventId", { length: 100 }),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  createdAt: timestamp("createdAt", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt", { withTimezone: true }).defaultNow().notNull(),
 });
 
 export type Subscription = typeof subscriptions.$inferSelect;
 export type InsertSubscription = typeof subscriptions.$inferInsert;
 
-/**
- * Admin Settings
- */
-export const adminSettings = mysqlTable("adminSettings", {
-  id: int("id").autoincrement().primaryKey(),
+export const adminSettings = pgTable("adminSettings", {
+  id: serial("id").primaryKey(),
   key: varchar("key", { length: 100 }).notNull().unique(),
-  value: json("value").notNull(),
-  type: mysqlEnum("type", ["boolean", "string", "number", "json"]).notNull(),
+  value: jsonb("value").notNull(),
+  type: settingTypeEnum("type").notNull(),
   description: text("description"),
-  updatedBy: int("updatedBy").notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedBy: integer("updatedBy").notNull(),
+  updatedAt: timestamp("updatedAt", { withTimezone: true }).defaultNow().notNull(),
 });
 
 export type AdminSetting = typeof adminSettings.$inferSelect;
 export type InsertAdminSetting = typeof adminSettings.$inferInsert;
 
-/**
- * Feature Flags
- */
-export const featureFlags = mysqlTable("featureFlags", {
-  id: int("id").autoincrement().primaryKey(),
+export const featureFlags = pgTable("featureFlags", {
+  id: serial("id").primaryKey(),
   name: varchar("name", { length: 100 }).notNull().unique(),
   description: text("description"),
   enabled: boolean("enabled").default(false).notNull(),
   owner: varchar("owner", { length: 100 }).notNull(),
-  rolloutPercentage: int("rolloutPercentage").default(0).notNull(),
+  rolloutPercentage: integer("rolloutPercentage").default(0).notNull(),
   targetRoles: varchar("targetRoles", { length: 255 }),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  createdAt: timestamp("createdAt", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt", { withTimezone: true }).defaultNow().notNull(),
 });
 
 export type FeatureFlag = typeof featureFlags.$inferSelect;
 export type InsertFeatureFlag = typeof featureFlags.$inferInsert;
 
-/**
- * Audit Log
- */
-export const auditLog = mysqlTable("auditLog", {
-  id: int("id").autoincrement().primaryKey(),
-  adminId: int("adminId").notNull(),
+export const auditLog = pgTable("auditLog", {
+  id: serial("id").primaryKey(),
+  adminId: integer("adminId").notNull(),
   action: varchar("action", { length: 100 }).notNull(),
   resourceType: varchar("resourceType", { length: 50 }).notNull(),
   resourceId: varchar("resourceId", { length: 100 }),
-  changes: json("changes"),
-  metadata: json("metadata"),
+  changes: jsonb("changes"),
+  metadata: jsonb("metadata"),
   ipAddress: varchar("ipAddress", { length: 45 }),
   userAgent: text("userAgent"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  createdAt: timestamp("createdAt", { withTimezone: true }).defaultNow().notNull(),
 });
 
 export type AuditLogEntry = typeof auditLog.$inferSelect;
 export type InsertAuditLogEntry = typeof auditLog.$inferInsert;
 
-/**
- * Webhook Events
- */
-export const webhookEvents = mysqlTable("webhookEvents", {
-  id: int("id").autoincrement().primaryKey(),
+export const webhookEvents = pgTable("webhookEvents", {
+  id: serial("id").primaryKey(),
   externalId: varchar("externalId", { length: 100 }).notNull().unique(),
   type: varchar("type", { length: 100 }).notNull(),
-  status: mysqlEnum("status", ["pending", "succeeded", "failed"]).default("pending").notNull(),
-  payload: json("payload").notNull(),
+  status: webhookStatusEnum("status").default("pending").notNull(),
+  payload: jsonb("payload").notNull(),
   error: text("error"),
-  attempts: int("attempts").default(0).notNull(),
-  maxRetries: int("maxRetries").default(3).notNull(),
-  nextRetryAt: timestamp("nextRetryAt"),
-  lastAttemptAt: timestamp("lastAttemptAt"),
-  succeededAt: timestamp("succeededAt"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  attempts: integer("attempts").default(0).notNull(),
+  maxRetries: integer("maxRetries").default(3).notNull(),
+  nextRetryAt: timestamp("nextRetryAt", { withTimezone: true }),
+  lastAttemptAt: timestamp("lastAttemptAt", { withTimezone: true }),
+  succeededAt: timestamp("succeededAt", { withTimezone: true }),
+  createdAt: timestamp("createdAt", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt", { withTimezone: true }).defaultNow().notNull(),
 });
 
 export type WebhookEvent = typeof webhookEvents.$inferSelect;
 export type InsertWebhookEvent = typeof webhookEvents.$inferInsert;
 
-/**
- * Email Sends
- */
-export const emailSends = mysqlTable("emailSends", {
-  id: int("id").autoincrement().primaryKey(),
+export const emailSends = pgTable("emailSends", {
+  id: serial("id").primaryKey(),
   recipientEmail: varchar("recipientEmail", { length: 320 }).notNull(),
-  recipientUserId: int("recipientUserId"),
+  recipientUserId: integer("recipientUserId"),
   type: varchar("type", { length: 50 }).notNull(),
   subject: varchar("subject", { length: 255 }).notNull(),
-  status: mysqlEnum("status", ["pending", "sent", "failed", "bounced"]).default("pending").notNull(),
+  status: emailStatusEnum("status").default("pending").notNull(),
   externalId: varchar("externalId", { length: 100 }),
   error: text("error"),
-  sentAt: timestamp("sentAt"),
-  openedAt: timestamp("openedAt"),
-  clickedAt: timestamp("clickedAt"),
-  bouncedAt: timestamp("bouncedAt"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  sentAt: timestamp("sentAt", { withTimezone: true }),
+  openedAt: timestamp("openedAt", { withTimezone: true }),
+  clickedAt: timestamp("clickedAt", { withTimezone: true }),
+  bouncedAt: timestamp("bouncedAt", { withTimezone: true }),
+  createdAt: timestamp("createdAt", { withTimezone: true }).defaultNow().notNull(),
 });
 
 export type EmailSend = typeof emailSends.$inferSelect;
 export type InsertEmailSend = typeof emailSends.$inferInsert;
 
-/**
- * Notifications (admin-only)
- */
-export const notifications = mysqlTable("notifications", {
-  id: int("id").autoincrement().primaryKey(),
-  userId: int("userId").notNull(),
-  role: mysqlEnum("role", ["admin"]).notNull(),
-  type: mysqlEnum("type", [
-    "payment_received",
-    "payment_failed",
-    "subscription_change",
-    "new_signup",
-    "system_alert",
-    "content_update",
-  ]).notNull(),
+export const notifications = pgTable("notifications", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull(),
+  role: varchar("role", { length: 50 }).default("admin").notNull(),
+  type: notificationTypeEnum("type").notNull(),
   title: varchar("title", { length: 200 }).notNull(),
   body: text("body").notNull(),
   linkUrl: varchar("linkUrl", { length: 500 }),
-  metadata: json("metadata"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  readAt: timestamp("readAt"),
-  dismissedAt: timestamp("dismissedAt"),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("createdAt", { withTimezone: true }).defaultNow().notNull(),
+  readAt: timestamp("readAt", { withTimezone: true }),
+  dismissedAt: timestamp("dismissedAt", { withTimezone: true }),
 });
 
 export type Notification = typeof notifications.$inferSelect;
 export type InsertNotification = typeof notifications.$inferInsert;
 
-/**
- * RBAC Permissions
- */
-export const permissions = mysqlTable("permissions", {
-  id: int("id").autoincrement().primaryKey(),
+export const permissions = pgTable("permissions", {
+  id: serial("id").primaryKey(),
   role: varchar("role", { length: 50 }).notNull(),
   capability: varchar("capability", { length: 100 }).notNull(),
   description: text("description"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  createdAt: timestamp("createdAt", { withTimezone: true }).defaultNow().notNull(),
 });
 
 export type Permission = typeof permissions.$inferSelect;
@@ -469,42 +428,30 @@ export type InsertPermission = typeof permissions.$inferInsert;
 // MATHFUEL: REFERRAL PROGRAM
 // ============================================================================
 
-/**
- * Referral codes — each subscriber gets a unique, shareable code.
- * When a friend signs up with the code AND subscribes, the referrer earns a free month.
- */
-export const referralCodes = mysqlTable("referralCodes", {
-  id: int("id").autoincrement().primaryKey(),
-  userId: int("userId").notNull().unique(), // one code per user
-  code: varchar("code", { length: 20 }).notNull().unique(), // e.g. "DUNCAN-MF7X"
-  totalReferrals: int("totalReferrals").default(0).notNull(),
-  totalRewardMonths: int("totalRewardMonths").default(0).notNull(), // free months earned
+export const referralCodes = pgTable("referralCodes", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull().unique(),
+  code: varchar("code", { length: 20 }).notNull().unique(),
+  totalReferrals: integer("totalReferrals").default(0).notNull(),
+  totalRewardMonths: integer("totalRewardMonths").default(0).notNull(),
   isActive: boolean("isActive").default(true).notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  createdAt: timestamp("createdAt", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt", { withTimezone: true }).defaultNow().notNull(),
 });
 
 export type ReferralCode = typeof referralCodes.$inferSelect;
 export type InsertReferralCode = typeof referralCodes.$inferInsert;
 
-/**
- * Individual referral records — tracks each friend who signed up via a referral code.
- */
-export const referrals = mysqlTable("referrals", {
-  id: int("id").autoincrement().primaryKey(),
-  referrerUserId: int("referrerUserId").notNull(), // the person who shared the code
-  refereeUserId: int("refereeUserId").notNull(), // the friend who signed up
-  referralCodeId: int("referralCodeId").notNull(), // which code was used
-  status: mysqlEnum("status", [
-    "signed_up",    // friend created an account
-    "subscribed",   // friend became a paying subscriber → reward triggered
-    "rewarded",     // reward (free month) has been applied to referrer
-    "expired",      // friend never subscribed within the window
-  ]).default("signed_up").notNull(),
-  rewardAppliedAt: timestamp("rewardAppliedAt"), // when the free month was credited
-  stripeCouponId: varchar("stripeCouponId", { length: 100 }), // Stripe coupon used for reward
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+export const referrals = pgTable("referrals", {
+  id: serial("id").primaryKey(),
+  referrerUserId: integer("referrerUserId").notNull(),
+  refereeUserId: integer("refereeUserId").notNull(),
+  referralCodeId: integer("referralCodeId").notNull(),
+  status: referralStatusEnum("status").default("signed_up").notNull(),
+  rewardAppliedAt: timestamp("rewardAppliedAt", { withTimezone: true }),
+  stripeCouponId: varchar("stripeCouponId", { length: 100 }),
+  createdAt: timestamp("createdAt", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt", { withTimezone: true }).defaultNow().notNull(),
 });
 
 export type Referral = typeof referrals.$inferSelect;
