@@ -1,245 +1,672 @@
-1. Project Overview
+Absolutely. Here’s a **paste-ready Bolt.new Project Knowledge / Project Instructions document** for **MathFuel.org** that gives Bolt a strong operating brain instead of a bag of loose screws. 🧠🔥
 
-Project Name: MathFuel
-Category: Adaptive Learning Intelligence Platform (EdTech)
+---
 
-Mission:
-Transform math learning into a personalized, data-driven experience that adapts in real time to each student’s ability, behavior, and confidence level.
+# MathFuel.org — Project Knowledge / Project Instructions for Bolt.new
 
-Core Idea:
-MathFuel is not a “math app.”
-It is a learning engine that:
+## Project Identity
 
-Diagnoses skill gaps
-Adapts difficulty dynamically
-Tracks confidence + engagement
-Surfaces insights to parents, teachers, and admins
-2. Product Architecture (High-Level)
-Frontend
-React + Vite + Tailwind
-State-driven UI (student session = core unit)
-Toast notifications via Sonner
-Environment variable:
-VITE_API_BASE
-Backend
-FastAPI (primary API layer)
-tRPC-style structured procedures (admin + student ops)
-Database
-SQLite (early) → scalable to Postgres
-FTS enabled for content/search
-Observability
-Sentry (error tracking)
-Admin dashboards for:
-system health
-engagement metrics
-webhook retries
-Email System
-Resend (primary)
-Nodemailer (fallback)
-3. Core System Modules
-1. Student Learning Engine (CORE)
+**Project Name:** MathFuel
+**Website:** MathFuel.org
+**Category:** Adaptive Math Learning Platform / Learning Intelligence System
+**Primary Audience:** Students, then parents, teachers, and administrators
+**Core Mission:** Help students improve in math through adaptive practice, personalized progression, confidence-aware learning, and clear performance insights.
 
-This is the brain.
+MathFuel should be built as a **learning engine**, not just a worksheet app.
+The product must feel modern, intelligent, focused, and scalable.
 
-Handles:
+---
 
-Question delivery
-Difficulty adaptation
-Skill progression tracking
-Confidence scoring
+## Product Vision
 
-Key Inputs:
+MathFuel is an adaptive math platform that personalizes learning in real time based on:
 
-Accuracy
-Response time
-Attempt count
-Hint usage
+* accuracy
+* response speed
+* hint usage
+* recent streak
+* demonstrated mastery
+* confidence trend
 
-Key Outputs:
+The system should continuously adjust what a student sees next so that learning feels:
 
-Next question selection
-Skill mastery score
-Confidence level
-2. Problem Engine
-Structured problem bank (scalable to 300+ per grade)
-Tagged by:
-Grade
-Skill
-Difficulty
-Topic
+* challenging but achievable
+* motivating but not childish
+* rigorous but frictionless
 
-Supports:
+MathFuel should eventually support students, parents, teachers, schools, and districts, but the first build should prioritize the **student learning loop**.
 
-Dynamic selection
-Adaptive sequencing
-3. Session System
+---
 
-Each student interaction = a session
+## Core Product Principle
 
-Tracks:
+**The student session is the center of the product.**
 
-Questions answered
-Time spent
-Accuracy
-Streaks
+Everything should support this loop:
 
-Used for:
+1. student starts a session
+2. system selects an appropriate problem
+3. student answers
+4. system evaluates performance
+5. system updates mastery and confidence
+6. system selects the next best problem
+7. session ends with a meaningful summary
 
-Engagement scoring
-Progress tracking
-Parent reporting
-4. Admin System
+This loop must be implemented cleanly and reliably.
 
-Admin-only visibility (no student popups)
+---
 
-Includes:
+## User Roles
 
-User management
-Subscription monitoring
-System alerts
-KPI dashboards
+The platform must support the following roles:
 
-Admin Notifications:
+### 1. Student
 
-Account created
-Payment success/failure
-Subscription renewal
-System issues
-5. Parent / Teacher Layer (Phase Expansion)
-Weekly progress reports
-Skill breakdown
-Engagement insights
-Classroom aggregation (future)
-4. Data Model (Core Entities)
-Student
-id
-name
-grade
-current_skill_level
-confidence_score
-Session
-id
-student_id
-start_time
-end_time
-accuracy
-engagement_score
-Problem
-id
-question
-answer
-skill_tag
-difficulty_level
-Attempt
-id
-session_id
-problem_id
-correct (bool)
-response_time
-hints_used
-5. Learning Logic (Critical Rules)
-Adaptive Difficulty
-Increase difficulty after consecutive correct answers
-Decrease after repeated errors
-Stabilize when performance is inconsistent
-Confidence Score
+Can:
 
-Calculated from:
+* start learning sessions
+* answer problems
+* receive immediate feedback
+* view progress and streaks
+* see personal skill growth
 
-Accuracy trend
-Speed
-Retry behavior
+### 2. Parent
 
-Used to:
+Can:
 
-Adjust question difficulty
-Trigger encouragement logic (future UI)
-6. UX Principles
-Clean, distraction-free interface
-Fast feedback loops
-No admin noise shown to students
-Gamified but academically serious
+* view student progress summaries
+* view weekly performance snapshots
+* understand strengths, struggles, and improvement trends
 
-Design Goals:
+### 3. Teacher
 
-Feels like Duolingo 🎯
-Performs like a diagnostic tool 📊
-7. Event System
+Can:
 
-All key actions generate events:
+* view student mastery
+* view class-level performance
+* identify students who need support
+* review engagement and progress trends
 
-SESSION_STARTED
-QUESTION_ANSWERED
-LEVEL_UP
-STRUGGLE_DETECTED
-SESSION_COMPLETED
+### 4. Admin
 
-Used for:
+Can:
 
-Analytics
-Notifications
-Future ML models
-8. API Design Principles
-All endpoints structured and predictable
-Separation of:
-student actions
-admin actions
+* manage content
+* manage users
+* monitor system health
+* view platform metrics
+* review event logs and operational issues
 
-Example:
+Do not mix these experiences together.
+Student UI must stay clean and focused.
+Admin/teacher/parent layers should be separated.
 
-/api/student/start-session
-/api/student/submit-answer
-/api/admin/dashboard
-/api/admin/metrics
-9. Growth Engine (Built Into Product)
+---
 
-MathFuel grows through:
+## Product Priorities
 
-1. Engagement Loops
-Streaks
-Progress tracking
-Visible improvement
-2. Parent Visibility
-Weekly emails
-Clear performance insights
-3. Data Advantage
-Benchmarking vs peers (future)
-School/district analytics
-10. System Constraints & Rules
-Admin notifications ONLY (no student interruptions)
-All actions logged for observability
-Retry logic for failed webhooks
-Every critical flow must be traceable
-11. Future Expansion (Roadmap Awareness)
-Multi-grade expansion (K–8 → full pipeline)
-Classroom system
-District dashboards
-AI tutor layer
-Benchmarking vs state standards
-12. Bolt Behavior Instructions (IMPORTANT)
+Build in this order:
 
-When interacting with this project:
+### Priority 1: Core data structure
 
-Always prioritize:
-scalability
-clean data flow
-modular architecture
-Never:
-hardcode logic tied to one grade
-mix admin + student concerns
-introduce UI clutter
-Always think in systems:
-learning engine first
-UI second
-Optimize for:
-speed
-clarity
-extensibility
-⚡ One-Line Mental Model
+* authentication
+* users
+* roles
+* student profiles
+* skills
+* problems
 
-MathFuel = Adaptive learning engine + data intelligence layer + engagement system
+### Priority 2: Student learning engine
 
-If you want to take this from strong → category-defining, next move is:
+* session creation
+* next-problem selection
+* answer submission
+* attempt logging
+* mastery updates
+* confidence updates
+* session completion
 
-converting this into a Bolt-ready schema + endpoint scaffolding
-or building the actual adaptive algorithm logic (pseudo → production)
+### Priority 3: Reporting and observability
+
+* progress summaries
+* dashboards
+* event logs
+* health tracking
+* weekly summaries
+
+### Priority 4: Expansion readiness
+
+* teacher/classroom workflows
+* parent reporting
+* district analytics
+* benchmark layers
+* advanced adaptive logic
+
+---
+
+## Technical Stack Expectations
+
+Preferred build direction:
+
+### Frontend
+
+* React
+* Vite
+* Tailwind CSS
+
+### Backend
+
+* FastAPI or equivalent clean API structure
+
+### Database
+
+* Postgres-compatible relational schema
+* use JSON fields where flexibility is needed
+* design should be scalable, not toy-level
+
+### Observability
+
+* event logging for important actions
+* dashboard-ready metrics
+* traceable actions
+* error monitoring ready
+
+### Notifications / Emails
+
+* architecture should support transactional email later
+* no student pop-up noise for admin events
+
+---
+
+## Architectural Rules
+
+Bolt should follow these rules strictly:
+
+1. **Do not hardcode logic for only one grade**
+2. **Do not mix admin concerns into student screens**
+3. **Do not create UI clutter**
+4. **Do not treat MathFuel like a static quiz app**
+5. **Do not skip attempt-level logging**
+6. **Do not make adaptation depend only on correct/incorrect**
+
+Always optimize for:
+
+* modularity
+* clean data flow
+* scalability
+* maintainability
+* predictable API structure
+* fast student interactions
+
+---
+
+## Core Data Model
+
+The following entities must exist:
+
+### `users`
+
+Stores:
+
+* id
+* email
+* full_name
+* role
+* created_at
+
+### `student_profiles`
+
+Stores:
+
+* id
+* user_id
+* grade_level
+* display_name
+* confidence_baseline
+* created_at
+
+### `skills`
+
+Stores:
+
+* id
+* code
+* name
+* subject
+* grade_level
+* description
+
+### `problems`
+
+Stores:
+
+* id
+* skill_id
+* prompt
+* problem_type
+* difficulty
+* answer_key
+* explanation
+* metadata
+* is_active
+* created_at
+
+### `sessions`
+
+Stores:
+
+* id
+* student_id
+* status
+* started_at
+* ended_at
+* total_questions
+* correct_answers
+* avg_response_ms
+* engagement_score
+* confidence_score
+
+### `attempts`
+
+Stores:
+
+* id
+* session_id
+* student_id
+* problem_id
+* skill_id
+* submitted_answer
+* is_correct
+* response_time_ms
+* hints_used
+* attempt_index
+* created_at
+
+### `student_skill_mastery`
+
+Stores:
+
+* id
+* student_id
+* skill_id
+* mastery_score
+* confidence_score
+* last_practiced_at
+
+### `events`
+
+Stores:
+
+* id
+* student_id
+* session_id
+* event_type
+* payload
+* created_at
+
+### `weekly_reports`
+
+Stores:
+
+* id
+* student_id
+* week_start
+* summary
+* delivered_at
+
+These table names can remain as-is unless Bolt has a strong structural reason to rename them.
+
+---
+
+## Learning Engine Requirements
+
+The adaptive system must make decisions using multiple signals, not just correctness.
+
+### Inputs that matter
+
+* whether the answer was correct
+* how long the student took
+* how many hints were used
+* recent streak behavior
+* current mastery estimate
+* current confidence estimate
+* problem difficulty
+
+### Outputs the engine must control
+
+* next problem selection
+* difficulty adjustment
+* mastery score update
+* confidence score update
+* session summary
+
+### Adaptive behavior
+
+The system should generally:
+
+* increase difficulty after strong performance
+* reduce difficulty after repeated struggle
+* stabilize when performance is mixed
+* occasionally include review problems
+* occasionally include stretch problems
+
+### Recommended problem mix
+
+* 70% near current target level
+* 20% review / reinforcement
+* 10% stretch / challenge
+
+This should feel smooth to the student, not abrupt.
+
+---
+
+## Student Experience Rules
+
+The student experience should feel:
+
+* clean
+* focused
+* modern
+* motivating
+* academically serious
+
+It should **not** feel:
+
+* cluttered
+* noisy
+* childish
+* over-gamified
+* like school admin software
+
+### Student UI principles
+
+* one main action per screen
+* one problem at a time
+* visible progress
+* immediate clear feedback
+* minimal navigation friction
+* encouraging language tied to real performance
+
+### Student core screens
+
+1. Home / Continue Learning
+2. Session Screen
+3. Feedback State
+4. End-of-Session Summary
+5. Progress / Mastery View
+
+### On the home screen, show:
+
+* daily goal
+* current streak
+* skill focus
+* continue/start session CTA
+
+### On the session screen, show:
+
+* one problem only
+* progress indicator
+* answer input
+* hint option
+* submit / continue action
+* no distracting analytics
+
+### Feedback after each answer should include:
+
+* correct or not yet
+* a concise explanation
+* encouraging, performance-aware language
+
+### End-of-session summary should include:
+
+* accuracy
+* strongest area
+* area to revisit
+* streak result
+* confidence or growth trend
+
+---
+
+## Parent / Teacher / Admin Experience Rules
+
+These users need insight, not playfulness.
+
+### Parent view should emphasize:
+
+* weekly progress
+* confidence trend
+* skill strengths
+* skills needing support
+
+### Teacher view should emphasize:
+
+* student mastery
+* class trends
+* who needs intervention
+* engagement patterns
+
+### Admin view should emphasize:
+
+* content management
+* system health
+* user activity
+* event logging
+* top-level KPIs
+
+Keep these dashboards analytically useful and visually distinct from the student learning experience.
+
+---
+
+## Event Logging Requirements
+
+Important actions must generate events.
+
+Examples:
+
+* `SESSION_STARTED`
+* `QUESTION_SERVED`
+* `QUESTION_ANSWERED`
+* `HINT_USED`
+* `LEVEL_ADJUSTED`
+* `STRUGGLE_DETECTED`
+* `SESSION_COMPLETED`
+* `WEEKLY_REPORT_GENERATED`
+
+Event logging is important for:
+
+* observability
+* analytics
+* troubleshooting
+* future intelligence layers
+
+---
+
+## API Design Expectations
+
+API routes should be predictable and separated by role or domain.
+
+### Student routes
+
+* start session
+* fetch next problem
+* submit answer
+* end session
+* get progress
+* get mastery summary
+
+### Parent routes
+
+* get student summary
+* get weekly report
+
+### Teacher routes
+
+* get class dashboard
+* get student mastery
+* get engagement data
+
+### Admin routes
+
+* get dashboard
+* manage problems
+* manage skills
+* view system events
+* monitor health
+
+All endpoints should return clean, structured responses suitable for dashboards and UI rendering.
+
+---
+
+## Content / Problem System Requirements
+
+Problems should be organized by:
+
+* grade
+* skill
+* topic
+* difficulty
+* type
+
+The content engine must support:
+
+* dynamic problem selection
+* adaptive sequencing
+* future expansion to larger banks
+* explanations
+* metadata for flexible rendering
+
+The content design should allow MathFuel to scale across more grades and subjects later.
+
+---
+
+## UX Tone and Product Feel
+
+MathFuel should feel like:
+
+* a premium learning product
+* a focused personal coach
+* a modern learning engine
+* progress made visible
+
+It should combine:
+
+* the momentum of a strong consumer app
+* the seriousness of an academic tool
+* the clarity of a well-designed diagnostic system
+
+Avoid gimmicks.
+Reward must be tied to real progress.
+
+---
+
+## Design System Guidance
+
+Preferred visual characteristics:
+
+* clean layouts
+* generous spacing
+* large tap targets
+* strong hierarchy
+* modern typography
+* subtle but polished motion
+* focused interfaces
+
+Use gamification carefully:
+
+* streaks
+* visible progress
+* mastery progress
+* “one more problem” energy
+* earned advancement
+
+Avoid:
+
+* noisy animations
+* meaningless coins
+* random rewards
+* cluttered dashboards for students
+
+---
+
+## Build Sequence for Bolt
+
+Generate the app in this order:
+
+### Phase 1
+
+* auth
+* roles
+* core schema
+* student profile creation
+* skill and problem management
+
+### Phase 2
+
+* session engine
+* next-problem endpoint
+* answer submission
+* attempt logging
+* mastery/confidence updates
+
+### Phase 3
+
+* student progress screens
+* session summary
+* event logging
+* reporting endpoints
+
+### Phase 4
+
+* teacher dashboards
+* parent reporting
+* admin dashboard
+* observability and health layers
+
+### Phase 5
+
+* advanced adaptation improvements
+* classroom tools
+* district features
+* benchmark intelligence
+
+---
+
+## Non-Negotiables
+
+Bolt must preserve these principles:
+
+* The student session is the heart of the product
+* Every answer submission must create an attempt record
+* Every session must update mastery
+* Every meaningful action must be traceable
+* Student UI must remain simple and focused
+* Admin/reporting views must remain separate
+* The system must be built for future scale
+
+---
+
+## Short Internal Mental Model
+
+**MathFuel = adaptive learning engine + mastery system + confidence model + analytics layer**
+
+---
+
+## Direct Build Instruction for Bolt
+
+Use this as the implementation directive:
+
+Build MathFuel.org as a scalable adaptive math learning platform with role-based access for students, parents, teachers, and admins. Prioritize the student learning loop first. Implement a modular architecture with Postgres-compatible schema design, structured APIs, attempt logging, mastery tracking, confidence tracking, event logging, and reporting-ready data structures. Keep the student UX clean, motivating, and academically serious. Do not hardcode the product to a single grade, do not mix admin and student concerns, and do not treat the platform like a static quiz app.
+
+---
+
+## Final Instruction to Bolt
+
+When making design or architecture decisions, prefer:
+
+* scalability over shortcuts
+* modularity over cleverness
+* clarity over clutter
+* learning intelligence over static content
+* real progress signals over superficial gamification
+
+MathFuel should be built as a product that can eventually serve individual families, classrooms, schools, and districts without needing to be rebuilt from scratch.
