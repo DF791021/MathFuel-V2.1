@@ -1,0 +1,245 @@
+1. Project Overview
+
+Project Name: MathFuel
+Category: Adaptive Learning Intelligence Platform (EdTech)
+
+Mission:
+Transform math learning into a personalized, data-driven experience that adapts in real time to each student’s ability, behavior, and confidence level.
+
+Core Idea:
+MathFuel is not a “math app.”
+It is a learning engine that:
+
+Diagnoses skill gaps
+Adapts difficulty dynamically
+Tracks confidence + engagement
+Surfaces insights to parents, teachers, and admins
+2. Product Architecture (High-Level)
+Frontend
+React + Vite + Tailwind
+State-driven UI (student session = core unit)
+Toast notifications via Sonner
+Environment variable:
+VITE_API_BASE
+Backend
+FastAPI (primary API layer)
+tRPC-style structured procedures (admin + student ops)
+Database
+SQLite (early) → scalable to Postgres
+FTS enabled for content/search
+Observability
+Sentry (error tracking)
+Admin dashboards for:
+system health
+engagement metrics
+webhook retries
+Email System
+Resend (primary)
+Nodemailer (fallback)
+3. Core System Modules
+1. Student Learning Engine (CORE)
+
+This is the brain.
+
+Handles:
+
+Question delivery
+Difficulty adaptation
+Skill progression tracking
+Confidence scoring
+
+Key Inputs:
+
+Accuracy
+Response time
+Attempt count
+Hint usage
+
+Key Outputs:
+
+Next question selection
+Skill mastery score
+Confidence level
+2. Problem Engine
+Structured problem bank (scalable to 300+ per grade)
+Tagged by:
+Grade
+Skill
+Difficulty
+Topic
+
+Supports:
+
+Dynamic selection
+Adaptive sequencing
+3. Session System
+
+Each student interaction = a session
+
+Tracks:
+
+Questions answered
+Time spent
+Accuracy
+Streaks
+
+Used for:
+
+Engagement scoring
+Progress tracking
+Parent reporting
+4. Admin System
+
+Admin-only visibility (no student popups)
+
+Includes:
+
+User management
+Subscription monitoring
+System alerts
+KPI dashboards
+
+Admin Notifications:
+
+Account created
+Payment success/failure
+Subscription renewal
+System issues
+5. Parent / Teacher Layer (Phase Expansion)
+Weekly progress reports
+Skill breakdown
+Engagement insights
+Classroom aggregation (future)
+4. Data Model (Core Entities)
+Student
+id
+name
+grade
+current_skill_level
+confidence_score
+Session
+id
+student_id
+start_time
+end_time
+accuracy
+engagement_score
+Problem
+id
+question
+answer
+skill_tag
+difficulty_level
+Attempt
+id
+session_id
+problem_id
+correct (bool)
+response_time
+hints_used
+5. Learning Logic (Critical Rules)
+Adaptive Difficulty
+Increase difficulty after consecutive correct answers
+Decrease after repeated errors
+Stabilize when performance is inconsistent
+Confidence Score
+
+Calculated from:
+
+Accuracy trend
+Speed
+Retry behavior
+
+Used to:
+
+Adjust question difficulty
+Trigger encouragement logic (future UI)
+6. UX Principles
+Clean, distraction-free interface
+Fast feedback loops
+No admin noise shown to students
+Gamified but academically serious
+
+Design Goals:
+
+Feels like Duolingo 🎯
+Performs like a diagnostic tool 📊
+7. Event System
+
+All key actions generate events:
+
+SESSION_STARTED
+QUESTION_ANSWERED
+LEVEL_UP
+STRUGGLE_DETECTED
+SESSION_COMPLETED
+
+Used for:
+
+Analytics
+Notifications
+Future ML models
+8. API Design Principles
+All endpoints structured and predictable
+Separation of:
+student actions
+admin actions
+
+Example:
+
+/api/student/start-session
+/api/student/submit-answer
+/api/admin/dashboard
+/api/admin/metrics
+9. Growth Engine (Built Into Product)
+
+MathFuel grows through:
+
+1. Engagement Loops
+Streaks
+Progress tracking
+Visible improvement
+2. Parent Visibility
+Weekly emails
+Clear performance insights
+3. Data Advantage
+Benchmarking vs peers (future)
+School/district analytics
+10. System Constraints & Rules
+Admin notifications ONLY (no student interruptions)
+All actions logged for observability
+Retry logic for failed webhooks
+Every critical flow must be traceable
+11. Future Expansion (Roadmap Awareness)
+Multi-grade expansion (K–8 → full pipeline)
+Classroom system
+District dashboards
+AI tutor layer
+Benchmarking vs state standards
+12. Bolt Behavior Instructions (IMPORTANT)
+
+When interacting with this project:
+
+Always prioritize:
+scalability
+clean data flow
+modular architecture
+Never:
+hardcode logic tied to one grade
+mix admin + student concerns
+introduce UI clutter
+Always think in systems:
+learning engine first
+UI second
+Optimize for:
+speed
+clarity
+extensibility
+⚡ One-Line Mental Model
+
+MathFuel = Adaptive learning engine + data intelligence layer + engagement system
+
+If you want to take this from strong → category-defining, next move is:
+
+converting this into a Bolt-ready schema + endpoint scaffolding
+or building the actual adaptive algorithm logic (pseudo → production)
