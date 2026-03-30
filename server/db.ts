@@ -1,4 +1,4 @@
-import { eq, desc, and, sql, asc, gte, lte, inArray } from "drizzle-orm";
+import { eq, desc, and, sql, asc, gte, lte, inArray, count } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import {
@@ -21,6 +21,12 @@ import {
   webhookEvents,
   emailSends,
   permissions,
+  sessionQuestions, InsertSessionQuestion,
+  hintUsage, InsertHintUsage,
+  practiceEvents, InsertPracticeEvent,
+  weeklyReports,
+  classrooms, InsertClassroom,
+  classroomStudents,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -736,4 +742,385 @@ export async function unlinkParentStudent(parentId: number, studentId: number) {
       eq(parentStudentLinks.parentId, parentId),
       eq(parentStudentLinks.studentId, studentId)
     ));
+}
+
+// ============================================================================
+// SESSION QUESTIONS
+// ============================================================================
+
+export async function createSessionQuestion(data: InsertSessionQuestion) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.insert(sessionQuestions).values(data).returning({ id: sessionQuestions.id });
+  return { id: result[0].id };
+}
+
+export async function getSessionQuestions(sessionId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(sessionQuestions)
+    .where(eq(sessionQuestions.sessionId, sessionId))
+    .orderBy(asc(sessionQuestions.sequenceNumber));
+}
+
+export async function getSessionQuestionCount(sessionId: number) {
+  const db = await getDb();
+  if (!db) return 0;
+  const result = await db.select({ c: count() }).from(sessionQuestions)
+    .where(eq(sessionQuestions.sessionId, sessionId));
+  return result[0]?.c ?? 0;
+}
+
+// ============================================================================
+// HINT USAGE
+// ============================================================================
+
+export async function logHintUsage(data: InsertHintUsage) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.insert(hintUsage).values(data).returning({ id: hintUsage.id });
+  return { id: result[0].id };
+}
+
+export async function getHintUsageForSession(sessionId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(hintUsage)
+    .where(eq(hintUsage.sessionId, sessionId))
+    .orderBy(asc(hintUsage.createdAt));
+}
+
+// ============================================================================
+// PRACTICE EVENTS
+// ============================================================================
+
+export async function logPracticeEvent(data: InsertPracticeEvent) {
+  const db = await getDb();
+  if (!db) return;
+  await db.insert(practiceEvents).values(data);
+}
+
+export async function getPracticeEvents(limit: number = 100, studentId?: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const conditions = studentId ? [eq(practiceEvents.studentId, studentId)] : [];
+  return db.select().from(practiceEvents)
+    .where(conditions.length ? and(...conditions) : undefined)
+    .orderBy(desc(practiceEvents.createdAt))
+    .limit(limit);
+}
+
+export async function getPracticeEventsBySession(sessionId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(practiceEvents)
+    .where(eq(practiceEvents.sessionId, sessionId))
+    .orderBy(asc(practiceEvents.createdAt));
+}
+
+// ============================================================================
+// WEEKLY REPORTS
+// ============================================================================
+
+export async function upsertWeeklyReport(studentId: number, weekStart: string, summary: Record<string, unknown>) {
+  const db = await getDb();
+  if (!db) return null;
+  const existing = await db.select().from(weeklyReports)
+    .where(and(eq(weeklyReports.studentId, studentId), eq(weeklyReports.weekStart, weekStart)));
+  if (existing.length > 0) {
+    await db.update(weeklyReports).set({ summary, deliveredAt: new Date() }).where(eq(weeklyReports.id, existing[0].id));
+    return { id: existing[0].id };
+  }
+  const result = await db.insert(weeklyReports).values({
+    studentId,
+    weekStart,
+    summary,
+    deliveredAt: new Date(),
+  }).returning({ id: weeklyReports.id });
+  return { id: result[0].id };
+}
+
+export async function getWeeklyReport(studentId: number, weekStart: string) {
+  const db = await getDb();
+  if (!db) return null;
+  const rows = await db.select().from(weeklyReports)
+    .where(and(eq(weeklyReports.studentId, studentId), eq(weeklyReports.weekStart, weekStart)));
+  return rows[0] ?? null;
+}
+
+export async function getLatestWeeklyReport(studentId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const rows = await db.select().from(weeklyReports)
+    .where(eq(weeklyReports.studentId, studentId))
+    .orderBy(desc(weeklyReports.weekStart))
+    .limit(1);
+  return rows[0] ?? null;
+}
+
+// ============================================================================
+// CLASSROOMS
+// ============================================================================
+
+export async function createClassroom(data: InsertClassroom) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.insert(classrooms).values(data).returning({ id: classrooms.id });
+  return { id: result[0].id };
+}
+
+export async function getClassroomsByTeacher(teacherUserId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(classrooms)
+    .where(eq(classrooms.teacherUserId, teacherUserId))
+    .orderBy(asc(classrooms.name));
+}
+
+export async function getClassroomById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const rows = await db.select().from(classrooms).where(eq(classrooms.id, id));
+  return rows[0] ?? null;
+}
+
+export async function updateClassroom(id: number, data: Partial<typeof classrooms.$inferSelect>) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(classrooms).set({ ...data as any, updatedAt: new Date() }).where(eq(classrooms.id, id));
+}
+
+export async function addStudentToClassroom(classroomId: number, studentId: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.insert(classroomStudents).values({ classroomId, studentId })
+    .onConflictDoNothing();
+}
+
+export async function removeStudentFromClassroom(classroomId: number, studentId: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.delete(classroomStudents)
+    .where(and(eq(classroomStudents.classroomId, classroomId), eq(classroomStudents.studentId, studentId)));
+}
+
+export async function getClassroomStudentIds(classroomId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const rows = await db.select({ studentId: classroomStudents.studentId })
+    .from(classroomStudents)
+    .where(eq(classroomStudents.classroomId, classroomId));
+  return rows.map(r => r.studentId);
+}
+
+export async function getStudentClassrooms(studentId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select({
+    classroomId: classroomStudents.classroomId,
+    classroomName: classrooms.name,
+    gradeLevel: classrooms.gradeLevel,
+  })
+    .from(classroomStudents)
+    .leftJoin(classrooms, eq(classroomStudents.classroomId, classrooms.id))
+    .where(eq(classroomStudents.studentId, studentId));
+}
+
+// ============================================================================
+// ADMIN CONTENT MANAGEMENT
+// ============================================================================
+
+export async function createMathDomain(data: {
+  name: string;
+  slug: string;
+  description?: string;
+  icon?: string;
+  gradeLevel: number;
+  displayOrder?: number;
+}) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.insert(mathDomains).values({
+    ...data,
+    displayOrder: data.displayOrder ?? 0,
+    isActive: true,
+  }).returning({ id: mathDomains.id });
+  return { id: result[0].id };
+}
+
+export async function createMathSkill(data: {
+  domainId: number;
+  name: string;
+  slug: string;
+  description?: string;
+  gradeLevel: number;
+  displayOrder?: number;
+  prerequisiteSkillId?: number;
+}) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.insert(mathSkills).values({
+    ...data,
+    displayOrder: data.displayOrder ?? 0,
+    isActive: true,
+  }).returning({ id: mathSkills.id });
+  return { id: result[0].id };
+}
+
+export async function updateMathSkill(id: number, data: Partial<typeof mathSkills.$inferSelect>) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(mathSkills).set(data as any).where(eq(mathSkills.id, id));
+}
+
+export async function createMathProblem(data: {
+  skillId: number;
+  problemType: "multiple_choice" | "numeric_input" | "true_false" | "fill_blank" | "comparison" | "word_problem" | "ordering";
+  difficulty: number;
+  questionText: string;
+  correctAnswer: string;
+  answerType: "number" | "text" | "boolean" | "choice";
+  choices?: unknown;
+  explanation: string;
+  hintSteps?: unknown;
+  tags?: string;
+}) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.insert(mathProblems).values({
+    ...data,
+    hintSteps: data.hintSteps ?? [],
+    isActive: true,
+    timesServed: 0,
+    timesCorrect: 0,
+  }).returning({ id: mathProblems.id });
+  return { id: result[0].id };
+}
+
+export async function updateMathProblem(id: number, data: Partial<typeof mathProblems.$inferSelect>) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(mathProblems).set({ ...data as any, updatedAt: new Date() }).where(eq(mathProblems.id, id));
+}
+
+export async function deactivateMathProblem(id: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(mathProblems).set({ isActive: false, updatedAt: new Date() }).where(eq(mathProblems.id, id));
+}
+
+export async function getAdminDashboardKpis() {
+  const db = await getDb();
+  if (!db) return null;
+
+  const today = new Date().toISOString().split("T")[0];
+  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+
+  const [
+    totalStudents,
+    weeklyActiveSessions,
+    todaySessions,
+    todayAttempts,
+  ] = await Promise.all([
+    db.select({ c: count() }).from(users).where(eq(users.userType, "student")),
+    db.select({ c: count() }).from(practiceSessions)
+      .where(and(
+        eq(practiceSessions.status, "completed"),
+        gte(practiceSessions.startedAt, new Date(weekAgo)),
+      )),
+    db.select({ c: count() }).from(practiceSessions)
+      .where(sql`DATE("startedAt") = ${today}`),
+    db.select({ c: count() }).from(problemAttempts)
+      .where(sql`DATE("createdAt") = ${today}`),
+  ]);
+
+  return {
+    totalStudents: totalStudents[0]?.c ?? 0,
+    weeklyActiveSessions: weeklyActiveSessions[0]?.c ?? 0,
+    sessionsToday: todaySessions[0]?.c ?? 0,
+    attemptsToday: todayAttempts[0]?.c ?? 0,
+  };
+}
+
+// ============================================================================
+// TEACHER ANALYTICS
+// ============================================================================
+
+export async function getClassroomStudentsWithMastery(classroomId: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const studentIds = await getClassroomStudentIds(classroomId);
+  if (studentIds.length === 0) return [];
+
+  const students = await db.select({
+    id: users.id,
+    name: users.name,
+    email: users.email,
+    gradeLevel: users.gradeLevel,
+  })
+    .from(users)
+    .where(inArray(users.id, studentIds));
+
+  const masteryData = await db.select({
+    studentId: studentSkillMastery.studentId,
+    masteryScore: studentSkillMastery.masteryScore,
+    confidenceScore: studentSkillMastery.confidenceScore,
+  })
+    .from(studentSkillMastery)
+    .where(inArray(studentSkillMastery.studentId, studentIds));
+
+  return students.map(student => {
+    const studentMastery = masteryData.filter(m => m.studentId === student.id);
+    const avgMastery = studentMastery.length > 0
+      ? studentMastery.reduce((s, m) => s + m.masteryScore, 0) / studentMastery.length
+      : 0;
+    const avgConfidence = studentMastery.length > 0
+      ? studentMastery.reduce((s, m) => s + parseFloat(m.confidenceScore ?? "0.5"), 0) / studentMastery.length
+      : 0.5;
+    return { ...student, avgMastery: Math.round(avgMastery), avgConfidence: Math.round(avgConfidence * 100) / 100 };
+  });
+}
+
+export async function getClassroomEngagement(classroomId: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const studentIds = await getClassroomStudentIds(classroomId);
+  if (studentIds.length === 0) return [];
+
+  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+  const sessions = await db.select({
+    studentId: practiceSessions.studentId,
+    totalProblems: practiceSessions.totalProblems,
+    correctAnswers: practiceSessions.correctAnswers,
+    engagementScore: practiceSessions.engagementScore,
+  })
+    .from(practiceSessions)
+    .where(and(
+      inArray(practiceSessions.studentId, studentIds),
+      eq(practiceSessions.status, "completed"),
+      gte(practiceSessions.startedAt, weekAgo),
+    ));
+
+  const students = await db.select({ id: users.id, name: users.name })
+    .from(users)
+    .where(inArray(users.id, studentIds));
+
+  return students.map(student => {
+    const studentSessions = sessions.filter(s => s.studentId === student.id);
+    const totalAttempts = studentSessions.reduce((s, ss) => s + (ss.totalProblems ?? 0), 0);
+    const totalCorrect = studentSessions.reduce((s, ss) => s + (ss.correctAnswers ?? 0), 0);
+    const avgEngagement = studentSessions.length > 0
+      ? studentSessions.reduce((s, ss) => s + parseFloat(ss.engagementScore ?? "0"), 0) / studentSessions.length
+      : 0;
+    return {
+      studentId: student.id,
+      displayName: student.name ?? "Student",
+      sessionsThisWeek: studentSessions.length,
+      avgAccuracy: totalAttempts > 0 ? Math.round((totalCorrect / totalAttempts) * 100) / 100 : 0,
+      engagementScore: Math.round(avgEngagement * 100) / 100,
+    };
+  });
 }

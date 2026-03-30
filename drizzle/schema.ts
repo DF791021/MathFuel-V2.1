@@ -1,6 +1,6 @@
 import {
   pgTable, pgEnum,
-  serial, integer, text, varchar, boolean, timestamp, jsonb,
+  serial, integer, text, varchar, boolean, timestamp, jsonb, numeric, date,
 } from "drizzle-orm/pg-core";
 
 // ============================================================================
@@ -33,6 +33,11 @@ export const aiResponseTypeEnum = pgEnum("ai_response_type", ["hint", "explanati
 export const aiRatingEnum = pgEnum("ai_rating", ["up", "down"]);
 export const referralStatusEnum = pgEnum("referral_status", [
   "signed_up", "subscribed", "rewarded", "expired",
+]);
+export const practiceEventTypeEnum = pgEnum("practice_event_type", [
+  "SESSION_STARTED", "QUESTION_SERVED", "QUESTION_ANSWERED",
+  "HINT_USED", "LEVEL_ADJUSTED", "STRUGGLE_DETECTED",
+  "SESSION_COMPLETED", "WEEKLY_REPORT_GENERATED",
 ]);
 
 // ============================================================================
@@ -131,6 +136,10 @@ export const practiceSessions = pgTable("practiceSessions", {
   totalTimeSeconds: integer("totalTimeSeconds").default(0).notNull(),
   averageDifficulty: integer("averageDifficulty").default(1).notNull(),
   skillsFocused: jsonb("skillsFocused"),
+  targetSkillId: integer("targetSkillId"),
+  engagementScore: numeric("engagementScore", { precision: 5, scale: 4 }),
+  confidenceScore: numeric("confidenceScore", { precision: 5, scale: 4 }),
+  masterySnapshot: jsonb("masterySnapshot").default({}).notNull(),
   startedAt: timestamp("startedAt", { withTimezone: true }).defaultNow().notNull(),
   completedAt: timestamp("completedAt", { withTimezone: true }),
   createdAt: timestamp("createdAt", { withTimezone: true }).defaultNow().notNull(),
@@ -142,6 +151,7 @@ export type InsertPracticeSession = typeof practiceSessions.$inferInsert;
 export const problemAttempts = pgTable("problemAttempts", {
   id: serial("id").primaryKey(),
   sessionId: integer("sessionId").notNull(),
+  sessionQuestionId: integer("sessionQuestionId"),
   studentId: integer("studentId").notNull(),
   problemId: integer("problemId").notNull(),
   skillId: integer("skillId").notNull(),
@@ -152,6 +162,7 @@ export const problemAttempts = pgTable("problemAttempts", {
   timeSpentSeconds: integer("timeSpentSeconds").default(0).notNull(),
   difficulty: integer("difficulty").notNull(),
   attemptNumber: integer("attemptNumber").default(1).notNull(),
+  scoreQuality: numeric("scoreQuality", { precision: 5, scale: 4 }),
   createdAt: timestamp("createdAt", { withTimezone: true }).defaultNow().notNull(),
 });
 
@@ -164,6 +175,8 @@ export const studentSkillMastery = pgTable("studentSkillMastery", {
   skillId: integer("skillId").notNull(),
   masteryLevel: masteryLevelEnum("masteryLevel").default("not_started").notNull(),
   masteryScore: integer("masteryScore").default(0).notNull(),
+  confidenceScore: numeric("confidenceScore", { precision: 5, scale: 4 }).default("0.5000").notNull(),
+  masteryVersion: integer("masteryVersion").default(1).notNull(),
   totalAttempts: integer("totalAttempts").default(0).notNull(),
   correctAttempts: integer("correctAttempts").default(0).notNull(),
   currentStreak: integer("currentStreak").default(0).notNull(),
@@ -456,3 +469,100 @@ export const referrals = pgTable("referrals", {
 
 export type Referral = typeof referrals.$inferSelect;
 export type InsertReferral = typeof referrals.$inferInsert;
+
+// ============================================================================
+// SESSION INTELLIGENCE: QUESTION SERVING LOG
+// ============================================================================
+
+export const sessionQuestions = pgTable("sessionQuestions", {
+  id: serial("id").primaryKey(),
+  sessionId: integer("sessionId").notNull(),
+  studentId: integer("studentId").notNull(),
+  problemId: integer("problemId").notNull(),
+  skillId: integer("skillId").notNull(),
+  sequenceNumber: integer("sequenceNumber").notNull(),
+  servedDifficulty: integer("servedDifficulty").notNull(),
+  wasAnswered: boolean("wasAnswered").default(false).notNull(),
+  servedAt: timestamp("servedAt", { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp("createdAt", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export type SessionQuestion = typeof sessionQuestions.$inferSelect;
+export type InsertSessionQuestion = typeof sessionQuestions.$inferInsert;
+
+// ============================================================================
+// SESSION INTELLIGENCE: HINT USAGE LOG
+// ============================================================================
+
+export const hintUsage = pgTable("hintUsage", {
+  id: serial("id").primaryKey(),
+  sessionId: integer("sessionId").notNull(),
+  sessionQuestionId: integer("sessionQuestionId"),
+  studentId: integer("studentId").notNull(),
+  problemId: integer("problemId").notNull(),
+  hintIndex: integer("hintIndex").default(1).notNull(),
+  createdAt: timestamp("createdAt", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export type HintUsage = typeof hintUsage.$inferSelect;
+export type InsertHintUsage = typeof hintUsage.$inferInsert;
+
+// ============================================================================
+// SESSION INTELLIGENCE: EVENTS LOG
+// ============================================================================
+
+export const practiceEvents = pgTable("practiceEvents", {
+  id: serial("id").primaryKey(),
+  studentId: integer("studentId"),
+  sessionId: integer("sessionId"),
+  eventType: practiceEventTypeEnum("eventType").notNull(),
+  payload: jsonb("payload").default({}).notNull(),
+  createdAt: timestamp("createdAt", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export type PracticeEvent = typeof practiceEvents.$inferSelect;
+export type InsertPracticeEvent = typeof practiceEvents.$inferInsert;
+
+// ============================================================================
+// WEEKLY REPORTS
+// ============================================================================
+
+export const weeklyReports = pgTable("weeklyReports", {
+  id: serial("id").primaryKey(),
+  studentId: integer("studentId").notNull(),
+  weekStart: date("weekStart").notNull(),
+  summary: jsonb("summary").default({}).notNull(),
+  deliveredAt: timestamp("deliveredAt", { withTimezone: true }),
+  createdAt: timestamp("createdAt", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export type WeeklyReport = typeof weeklyReports.$inferSelect;
+export type InsertWeeklyReport = typeof weeklyReports.$inferInsert;
+
+// ============================================================================
+// CLASSROOMS
+// ============================================================================
+
+export const classrooms = pgTable("classrooms", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 200 }).notNull(),
+  gradeLevel: integer("gradeLevel"),
+  schoolName: text("schoolName"),
+  teacherUserId: integer("teacherUserId"),
+  settings: jsonb("settings").default({}).notNull(),
+  createdAt: timestamp("createdAt", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export type Classroom = typeof classrooms.$inferSelect;
+export type InsertClassroom = typeof classrooms.$inferInsert;
+
+export const classroomStudents = pgTable("classroomStudents", {
+  id: serial("id").primaryKey(),
+  classroomId: integer("classroomId").notNull(),
+  studentId: integer("studentId").notNull(),
+  joinedAt: timestamp("joinedAt", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export type ClassroomStudent = typeof classroomStudents.$inferSelect;
+export type InsertClassroomStudent = typeof classroomStudents.$inferInsert;
