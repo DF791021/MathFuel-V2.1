@@ -3,7 +3,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "wouter";
 import { motion } from "framer-motion";
-import { Brain, ChartBar as BarChart3, Sparkles, Flame, Star, Trophy, Zap, Menu, X, CheckCircle2 } from "lucide-react";
+import { Brain, ChartBar as BarChart3, Sparkles, Flame, Star, Trophy, Zap, Menu, X, CheckCircle2, GraduationCap, Sliders, School, Users, MapPin, ShieldCheck } from "lucide-react";
 
 const LOGO_URL = "https://d2xsxph8kpxj0f.cloudfront.net/310519663117001051/BAbKuMSfjHaa9ao8qByqEp/mathfuel-logo-V7jjfN52dexxQobYgXDFCk.webp";
 
@@ -293,6 +293,136 @@ export default function Home() {
               </motion.div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ── STATE STANDARDS + CUSTOMIZATION PROMO ── */}
+      <section className="relative px-4 py-16 sm:py-24 bg-gradient-to-b from-primary/[0.04] to-white/70 overflow-hidden">
+        {/* Decorative background elements */}
+        <div className="pointer-events-none absolute -left-20 top-1/2 -translate-y-1/2 w-72 h-72 rounded-full bg-secondary/8 blur-3xl" />
+        <div className="pointer-events-none absolute -right-20 top-1/4 w-60 h-60 rounded-full bg-accent/8 blur-3xl" />
+
+        <div className="relative max-w-5xl mx-auto">
+          {/* Section header */}
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0}
+            className="text-center mb-10 sm:mb-14">
+            <div className="inline-flex items-center gap-1.5 bg-secondary/15 text-secondary px-3 py-1.5 rounded-full text-xs font-bold mb-4 tracking-wide uppercase">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              Standards-Aligned &amp; Fully Customizable
+            </div>
+            <h2 className="!text-2xl sm:!text-4xl font-extrabold text-foreground mb-3">
+              Ready for <em className="not-italic text-primary">your</em> state test.{" "}
+              <span className="block sm:inline">Tailored to <em className="not-italic text-primary">your</em> family.</span>
+            </h2>
+            <p className="text-sm sm:text-base text-muted-foreground max-w-xl mx-auto leading-relaxed">
+              Every MathFuel account ships pre-loaded with your state's exact math standards — so your child is practicing the <strong>right skills</strong> from day one, not catching up after test day.
+            </p>
+          </motion.div>
+
+          {/* Two-column layout */}
+          <div className="grid md:grid-cols-2 gap-6 sm:gap-8">
+
+            {/* LEFT — Out of the Box */}
+            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={1}
+              className="relative bg-white rounded-2xl p-6 sm:p-8 border border-border/40 shadow-sm hover:shadow-md transition-shadow">
+              {/* Corner badge */}
+              <div className="absolute -top-3 left-6 bg-primary text-primary-foreground text-[10px] sm:text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full shadow-md">
+                Works instantly
+              </div>
+
+              <div className="flex items-center gap-3 mb-5 mt-1">
+                <div className="w-11 h-11 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                  <GraduationCap className="w-6 h-6" />
+                </div>
+                <h3 className="!text-lg sm:!text-xl font-bold text-foreground leading-snug">
+                  State test prep — built&nbsp;in, not&nbsp;bolted&nbsp;on
+                </h3>
+              </div>
+
+              <p className="text-sm text-muted-foreground leading-relaxed mb-5">
+                Most apps make you hunt for the right content. MathFuel <strong>auto-detects your state</strong> and loads every standard your child will be tested on — Common Core, TEKS, SOL, you name it. No setup, no guesswork, no wasted sessions.
+              </p>
+
+              <ul className="space-y-2.5">
+                {[
+                  "Pre-loaded with all 50 state math frameworks",
+                  "Problems mirror real standardized test formats",
+                  "Gaps flagged weeks before test day — not after",
+                  "Updated every school year automatically",
+                ].map((item, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm text-foreground">
+                    <CheckCircle2 className="w-4 h-4 text-secondary shrink-0 mt-0.5" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <div className="mt-6 flex items-center gap-2 bg-primary/[0.06] rounded-xl px-3.5 py-2.5">
+                <MapPin className="w-4 h-4 text-primary shrink-0" />
+                <p className="text-xs font-semibold text-foreground/80 leading-snug">
+                  <span className="text-primary font-bold">4 out of 5 parents</span> say they didn't know their child's math app wasn't aligned to their state test.
+                </p>
+              </div>
+            </motion.div>
+
+            {/* RIGHT — Customize Everything */}
+            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={2}
+              className="relative bg-white rounded-2xl p-6 sm:p-8 border border-border/40 shadow-sm hover:shadow-md transition-shadow">
+              {/* Corner badge */}
+              <div className="absolute -top-3 left-6 bg-accent text-accent-foreground text-[10px] sm:text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full shadow-md">
+                Make it yours
+              </div>
+
+              <div className="flex items-center gap-3 mb-5 mt-1">
+                <div className="w-11 h-11 rounded-xl bg-accent/15 text-accent-foreground flex items-center justify-center shrink-0">
+                  <Sliders className="w-6 h-6" />
+                </div>
+                <h3 className="!text-lg sm:!text-xl font-bold text-foreground leading-snug">
+                  Bend it, shape it, make it <em className="not-italic text-accent-foreground">yours</em>
+                </h3>
+              </div>
+
+              <p className="text-sm text-muted-foreground leading-relaxed mb-5">
+                Running a district-wide rollout? Homeschooling a crew of four? Teaching a gifted second-grader college-bound fractions? Customize <strong>literally everything</strong> — skill order, difficulty curve, session length, even which standards to focus on this&nbsp;week.
+              </p>
+
+              <div className="grid grid-cols-2 gap-2.5">
+                {[
+                  { icon: <School className="w-4 h-4" />, label: "District & school presets" },
+                  { icon: <Users className="w-4 h-4" />, label: "Multi-child profiles" },
+                  { icon: <Sliders className="w-4 h-4" />, label: "Custom skill sequences" },
+                  { icon: <Star className="w-4 h-4" />, label: "Pace & difficulty controls" },
+                ].map((item, i) => (
+                  <div key={i} className="flex items-center gap-2 bg-accent/[0.08] rounded-xl px-3 py-2.5">
+                    <span className="text-accent-foreground shrink-0">{item.icon}</span>
+                    <span className="text-xs font-semibold text-foreground/80">{item.label}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-6 flex items-center gap-2 bg-accent/[0.08] rounded-xl px-3.5 py-2.5">
+                <Sparkles className="w-4 h-4 text-accent-foreground shrink-0" />
+                <p className="text-xs font-semibold text-foreground/80 leading-snug">
+                  Whether you're a <span className="text-accent-foreground font-bold">superintendent overseeing 10,000 students</span> or a <span className="text-accent-foreground font-bold">mom of 4 juggling homework at the kitchen table</span> — MathFuel fits the way <em>you</em> teach.
+                </p>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Bottom CTA strip */}
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={3}
+            className="mt-8 sm:mt-10 text-center">
+            <Link href="/signup" className="no-underline">
+              <Button size="lg"
+                className="bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-sm sm:text-base px-8 py-5 sm:py-6 rounded-2xl shadow-lg shadow-primary/25">
+                <GraduationCap className="w-5 h-5 mr-2" />
+                See Your State's Standards — Free
+              </Button>
+            </Link>
+            <p className="mt-3 text-xs text-muted-foreground/70">
+              Takes 30 seconds. No card required. Your child starts on the right track&nbsp;today.
+            </p>
+          </motion.div>
         </div>
       </section>
 
