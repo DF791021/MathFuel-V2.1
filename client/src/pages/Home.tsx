@@ -1,27 +1,28 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Link, useLocation } from "wouter";
 import { motion } from "framer-motion";
-import { Play, Brain, Target, ChartBar as BarChart3, Shield, Sparkles, ChevronRight, Flame, Star, Trophy, Zap, Heart, Menu, X } from "lucide-react";
-// Auth links are now internal routes
+import { Brain, ChartBar as BarChart3, Sparkles, Flame, Star, Trophy, Zap, Menu, X, CheckCircle2 } from "lucide-react";
 
 const LOGO_URL = "https://d2xsxph8kpxj0f.cloudfront.net/310519663117001051/BAbKuMSfjHaa9ao8qByqEp/mathfuel-logo-V7jjfN52dexxQobYgXDFCk.webp";
 
 const fadeUp = {
-  hidden: { opacity: 0, y: 24 },
+  hidden: { opacity: 0, y: 20 },
   visible: (i: number) => ({
     opacity: 1,
     y: 0,
-    transition: { delay: i * 0.1, duration: 0.5, ease: "easeOut" as const },
+    transition: { delay: i * 0.08, duration: 0.5, ease: "easeOut" as const },
   }),
 };
+
+const ANSWERS = ["13", "15", "14", "16"];
 
 export default function Home() {
   const { user, isAuthenticated } = useAuth();
   const [, navigate] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [selected, setSelected] = useState<number | null>(null);
 
   useEffect(() => {
     document.title = "MathFuel - Adaptive Math Practice for Young Learners";
@@ -37,80 +38,16 @@ export default function Home() {
     }
   }, [isAuthenticated, user, navigate]);
 
-  const features = [
-    {
-      icon: <Brain className="w-6 h-6 sm:w-8 sm:h-8" />,
-      title: "Adaptive Difficulty",
-      description: "Problems get harder when your child is ready, and easier when they need support.",
-      color: "text-primary",
-      bg: "bg-primary/10",
-    },
-    {
-      icon: <Target className="w-6 h-6 sm:w-8 sm:h-8" />,
-      title: "Mastery-Based",
-      description: "Skills tracked from 'not started' to 'mastered'. Real understanding, not just speed.",
-      color: "text-secondary",
-      bg: "bg-secondary/10",
-    },
-    {
-      icon: <Sparkles className="w-6 h-6 sm:w-8 sm:h-8" />,
-      title: "Scaffolded Hints",
-      description: "Step-by-step hints that teach thinking — powered by an AI tutor.",
-      color: "text-accent",
-      bg: "bg-accent/10",
-    },
-    {
-      icon: <BarChart3 className="w-6 h-6 sm:w-8 sm:h-8" />,
-      title: "Parent Dashboard",
-      description: "See what your child practiced, where they struggled, and what to work on next.",
-      color: "text-chart-5",
-      bg: "bg-chart-5/10",
-    },
-    {
-      icon: <Flame className="w-6 h-6 sm:w-8 sm:h-8" />,
-      title: "Streaks & Rewards",
-      description: "Daily streaks, badges, and celebrations keep kids coming back.",
-      color: "text-destructive",
-      bg: "bg-destructive/10",
-    },
-    {
-      icon: <Shield className="w-6 h-6 sm:w-8 sm:h-8" />,
-      title: "Safe & Simple",
-      description: "No ads, no distractions. Big buttons and clear text for 6-8 year olds.",
-      color: "text-primary",
-      bg: "bg-primary/10",
-    },
-  ];
-
-  const skillAreas = [
-    { emoji: "🔢", name: "Counting", desc: "Count, compare, order" },
-    { emoji: "➕", name: "Addition", desc: "Add within 100" },
-    { emoji: "➖", name: "Subtraction", desc: "Subtract within 100" },
-    { emoji: "📏", name: "Place Value", desc: "Tens and ones" },
-    { emoji: "📐", name: "Measurement", desc: "Length, time, money" },
-    { emoji: "📖", name: "Word Problems", desc: "Real-world math" },
-  ];
+  // Auto-cycle the mockup selection to show interactivity
+  useEffect(() => {
+    const timers = [
+      setTimeout(() => setSelected(2), 1200),
+    ];
+    return () => timers.forEach(clearTimeout);
+  }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-indigo-50 via-white to-amber-50/30">
-      {/* Floating Math Symbols - hidden on small mobile to reduce clutter */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden hidden sm:block">
-        {["➕", "➖", "✕", "÷", "=", "🔢"].map((sym, i) => (
-          <motion.div
-            key={i}
-            animate={{ y: [0, -15 + i * 5, 0], rotate: [0, 5 - i * 2, 0] }}
-            transition={{ duration: 5 + i, repeat: Infinity, delay: i * 0.5 }}
-            className="absolute text-4xl opacity-10"
-            style={{
-              top: `${15 + i * 13}%`,
-              left: i % 2 === 0 ? `${5 + i * 3}%` : undefined,
-              right: i % 2 === 1 ? `${5 + i * 3}%` : undefined,
-            }}
-          >
-            {sym}
-          </motion.div>
-        ))}
-      </div>
+    <div className="min-h-screen bg-[oklch(0.99_0.01_95)]">
 
       {/* Navigation */}
       <nav className="relative z-20 bg-white/80 backdrop-blur-md border-b border-border/50 sticky top-0">
@@ -134,7 +71,7 @@ export default function Home() {
               <Button variant="outline" size="sm">Log In</Button>
             </Link>
             <Link href="/signup" className="no-underline">
-              <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90">
+              <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90 font-bold">
                 Get Started Free
               </Button>
             </Link>
@@ -155,7 +92,6 @@ export default function Home() {
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
             className="sm:hidden bg-white border-t border-border/50 px-4 py-4 space-y-3"
           >
             <Link href="/leaderboard" className="block no-underline">
@@ -168,7 +104,7 @@ export default function Home() {
               <Button variant="outline" className="w-full justify-center">Log In</Button>
             </Link>
             <Link href="/signup" className="block no-underline">
-              <Button className="w-full justify-center bg-accent text-accent-foreground hover:bg-accent/90">
+              <Button className="w-full justify-center bg-accent text-accent-foreground hover:bg-accent/90 font-bold">
                 Get Started Free
               </Button>
             </Link>
@@ -176,205 +112,239 @@ export default function Home() {
         )}
       </nav>
 
-      {/* Hero Section */}
-      <section className="relative z-10 pt-10 sm:pt-16 pb-14 sm:pb-20 px-4">
-        <div className="max-w-5xl mx-auto text-center">
-          <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0}>
-            <div className="inline-flex items-center gap-2 bg-accent/15 text-accent-foreground px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-semibold mb-4 sm:mb-6">
-              <Star className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-accent" />
-              Built for Grades 1 & 2
+      {/* ── HERO ── */}
+      <section className="relative overflow-hidden px-4 pt-14 pb-16 sm:pt-20 sm:pb-24">
+        {/* Subtle radial glow behind mockup */}
+        <div className="pointer-events-none absolute right-0 top-0 h-[600px] w-[600px] -translate-y-1/4 translate-x-1/4 rounded-full bg-primary/8 blur-3xl" />
+
+        <div className="relative max-w-6xl mx-auto grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+
+          {/* Left — copy */}
+          <div className="text-center lg:text-left">
+            <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0}
+              className="inline-flex items-center gap-1.5 bg-primary/10 text-primary px-3 py-1.5 rounded-full text-xs font-bold mb-5 tracking-wide uppercase">
+              <Star className="w-3 h-3 fill-primary" />
+              Grades 1 &amp; 2 · Adaptive Math
+            </motion.div>
+
+            <motion.h1 initial="hidden" animate="visible" variants={fadeUp} custom={1}
+              className="!text-4xl sm:!text-5xl lg:!text-6xl font-extrabold text-foreground !leading-[1.1] mb-5">
+              Math that builds<br />
+              <span className="text-primary">real confidence.</span>
+            </motion.h1>
+
+            <motion.p initial="hidden" animate="visible" variants={fadeUp} custom={2}
+              className="text-base sm:text-lg text-muted-foreground mb-8 max-w-md mx-auto lg:mx-0 leading-relaxed">
+              Adaptive problems, step-by-step hints, and mastery tracking — built for 6–8 year olds who are just finding their footing in math.
+            </motion.p>
+
+            <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={3}
+              className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
+              <Link href="/signup" className="no-underline">
+                <Button size="lg"
+                  className="w-full sm:w-auto bg-primary text-primary-foreground hover:bg-primary/90 text-base font-bold px-8 py-6 rounded-2xl shadow-lg shadow-primary/25">
+                  <Zap className="w-5 h-5 mr-2" />
+                  Start Free — No Card Needed
+                </Button>
+              </Link>
+              <a href="#how-it-works" className="no-underline">
+                <Button variant="ghost" size="lg"
+                  className="w-full sm:w-auto text-base px-6 py-6 rounded-2xl text-muted-foreground hover:text-foreground">
+                  See how it works →
+                </Button>
+              </a>
+            </motion.div>
+
+            <motion.p initial="hidden" animate="visible" variants={fadeUp} custom={4}
+              className="mt-5 text-sm text-muted-foreground/80 flex items-center gap-1.5 justify-center lg:justify-start">
+              <CheckCircle2 className="w-4 h-4 text-secondary shrink-0" />
+              Free forever plan · No ads · Trusted by families
+            </motion.p>
+          </div>
+
+          {/* Right — interactive product mockup */}
+          <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={2}
+            className="flex justify-center lg:justify-end">
+            <div className="relative w-72 sm:w-80">
+              {/* Glow ring */}
+              <div className="absolute inset-0 rounded-3xl bg-primary/15 blur-2xl scale-105" />
+
+              {/* Card */}
+              <div className="relative bg-white rounded-3xl shadow-2xl shadow-primary/15 p-6 border border-border/50">
+                {/* Header row */}
+                <div className="flex items-center justify-between mb-5">
+                  <div className="flex items-center gap-1.5">
+                    <Flame className="w-4 h-4 text-destructive" />
+                    <span className="text-sm font-bold text-foreground">5 day streak!</span>
+                  </div>
+                  <div className="flex items-center gap-0.5">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className={`w-3.5 h-3.5 ${i < 3 ? "fill-accent text-accent" : "text-muted"}`} />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Problem */}
+                <div className="text-center py-4">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-2">What is</p>
+                  <p className="text-5xl font-extrabold text-foreground tracking-tight">8 + 7 = ?</p>
+                </div>
+
+                {/* Answer grid */}
+                <div className="grid grid-cols-2 gap-2.5 mt-5">
+                  {ANSWERS.map((ans, i) => {
+                    const isSelected = selected === i;
+                    const rightAnswer = i === 1; // "15" is correct: 8+7=15
+                    return (
+                      <button
+                        key={i}
+                        onClick={() => setSelected(i)}
+                        className={[
+                          "py-3.5 rounded-xl font-extrabold text-xl border-2 transition-all duration-200",
+                          isSelected && rightAnswer
+                            ? "border-secondary bg-secondary text-secondary-foreground scale-[1.03]"
+                            : isSelected && !rightAnswer
+                              ? "border-destructive bg-destructive/10 text-destructive"
+                              : "border-border bg-muted/20 text-foreground hover:border-primary/40 hover:bg-primary/5",
+                        ].join(" ")}
+                      >
+                        {ans}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Hint nudge */}
+                {selected !== null && selected !== 1 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mt-4 flex items-start gap-2 bg-accent/15 rounded-xl px-3 py-2.5">
+                    <Sparkles className="w-4 h-4 text-accent shrink-0 mt-0.5" />
+                    <p className="text-xs font-semibold text-accent-foreground leading-snug">
+                      Not quite — try counting up from 8!
+                    </p>
+                  </motion.div>
+                )}
+                {selected === 1 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mt-4 flex items-center gap-2 bg-secondary/15 rounded-xl px-3 py-2.5">
+                    <Trophy className="w-4 h-4 text-secondary shrink-0" />
+                    <p className="text-xs font-bold text-secondary leading-snug">
+                      🎉 Correct! Great work!
+                    </p>
+                  </motion.div>
+                )}
+              </div>
             </div>
           </motion.div>
 
-          <motion.h1
-            initial="hidden" animate="visible" variants={fadeUp} custom={1}
-            className="!text-3xl sm:!text-5xl md:!text-6xl font-extrabold text-foreground !leading-tight mb-4 sm:mb-6"
-          >
-            Math practice that{" "}
-            <span className="text-primary">actually works</span>
-          </motion.h1>
-
-          <motion.p
-            initial="hidden" animate="visible" variants={fadeUp} custom={2}
-            className="text-base sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-8 sm:mb-10 leading-relaxed px-2"
-          >
-            Adaptive difficulty. Scaffolded hints. Real mastery tracking.
-            MathFuel builds confidence — not just correct answers.
-          </motion.p>
-
-          <motion.div
-            initial="hidden" animate="visible" variants={fadeUp} custom={3}
-            className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4 sm:px-0"
-          >
-            <Link href="/signup" className="no-underline">
-              <Button size="lg" className="w-full sm:w-auto bg-primary text-primary-foreground hover:bg-primary/90 text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 rounded-2xl shadow-lg shadow-primary/25">
-                <Play className="w-5 h-5 mr-2" />
-                Start Practicing Free
-              </Button>
-            </Link>
-            <a href="#features" className="no-underline">
-              <Button variant="outline" size="lg" className="w-full sm:w-auto text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 rounded-2xl">
-                See How It Works
-                <ChevronRight className="w-5 h-5 ml-1" />
-              </Button>
-            </a>
-          </motion.div>
-
-          {/* Quick Stats */}
-          <motion.div
-            initial="hidden" animate="visible" variants={fadeUp} custom={4}
-            className="grid grid-cols-3 gap-4 sm:gap-6 max-w-sm sm:max-w-lg mx-auto mt-10 sm:mt-14"
-          >
-            {[
-              { value: "200+", label: "Problems" },
-              { value: "7", label: "Skill Areas" },
-              { value: "5", label: "Difficulty Levels" },
-            ].map((stat, i) => (
-              <div key={i} className="text-center">
-                <div className="text-xl sm:text-3xl font-extrabold text-primary">{stat.value}</div>
-                <div className="text-xs sm:text-sm text-muted-foreground">{stat.label}</div>
-              </div>
-            ))}
-          </motion.div>
         </div>
       </section>
 
-      {/* Features Grid */}
-      <section id="features" className="relative z-10 py-14 sm:py-20 px-4 bg-white/60">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-8 sm:mb-14">
-            <h2 className="!text-2xl sm:!text-4xl font-extrabold text-foreground mb-3 sm:mb-4">
-              Why parents love MathFuel
-            </h2>
-            <p className="text-sm sm:text-lg text-muted-foreground max-w-xl mx-auto px-2">
-              Every feature is designed to build real understanding, not just speed.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            {features.map((feature, i) => (
-              <motion.div
-                key={i}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
-                variants={fadeUp}
-                custom={i}
-              >
-                <Card className="h-full border-0 shadow-sm hover:shadow-md transition-shadow bg-white">
-                  <CardContent className="p-4 sm:p-6">
-                    <div className={`w-11 h-11 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl ${feature.bg} flex items-center justify-center mb-3 sm:mb-4 ${feature.color}`}>
-                      {feature.icon}
-                    </div>
-                    <h3 className="text-base sm:text-lg font-bold text-foreground mb-1.5 sm:mb-2">{feature.title}</h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">{feature.description}</p>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Skill Areas */}
-      <section className="relative z-10 py-14 sm:py-20 px-4">
+      {/* ── FEATURES ── */}
+      <section id="features" className="px-4 py-16 sm:py-24 bg-white/70">
         <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-8 sm:mb-14">
-            <h2 className="!text-2xl sm:!text-4xl font-extrabold text-foreground mb-3 sm:mb-4">
-              What your child will practice
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0}
+            className="text-center mb-12 sm:mb-16">
+            <h2 className="!text-2xl sm:!text-4xl font-extrabold text-foreground mb-3">
+              Why MathFuel works when others don't
             </h2>
-            <p className="text-sm sm:text-lg text-muted-foreground max-w-xl mx-auto px-2">
-              Aligned with Grade 1-2 standards. Every skill builds on the last.
+            <p className="text-sm sm:text-base text-muted-foreground max-w-lg mx-auto">
+              Three things every child needs — and most apps forget.
             </p>
-          </div>
+          </motion.div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
-            {skillAreas.map((skill, i) => (
-              <motion.div
-                key={i}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
-                variants={fadeUp}
-                custom={i}
-              >
-                <Card className="border-0 shadow-sm hover:shadow-md transition-all hover:scale-[1.02] bg-white cursor-default">
-                  <CardContent className="p-3 sm:p-5 text-center">
-                    <div className="text-2xl sm:text-4xl mb-2 sm:mb-3">{skill.emoji}</div>
-                    <h3 className="font-bold text-foreground mb-0.5 sm:mb-1 text-xs sm:text-base">{skill.name}</h3>
-                    <p className="text-[10px] sm:text-sm text-muted-foreground">{skill.desc}</p>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* How It Works */}
-      <section className="relative z-10 py-14 sm:py-20 px-4 bg-primary/5">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-8 sm:mb-14">
-            <h2 className="!text-2xl sm:!text-4xl font-extrabold text-foreground mb-3 sm:mb-4">
-              How a session works
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8">
+          <div className="space-y-6 sm:space-y-8">
             {[
               {
-                step: "1",
-                icon: <Play className="w-5 h-5 sm:w-6 sm:h-6" />,
-                title: "Start a session",
-                desc: "Your child taps 'Practice' and gets 10 problems matched to their level.",
+                icon: <Brain className="w-7 h-7" />,
+                color: "text-primary",
+                bg: "bg-primary/10",
+                title: "Adapts to your child, in real time",
+                body: "Problems get harder when your child is on a roll, and gentler when they need support. No more frustration. No more boredom.",
               },
               {
-                step: "2",
-                icon: <Brain className="w-5 h-5 sm:w-6 sm:h-6" />,
-                title: "Solve with support",
-                desc: "If stuck, hints appear one at a time — teaching the thinking, not just the answer.",
+                icon: <Sparkles className="w-7 h-7" />,
+                color: "text-accent-foreground",
+                bg: "bg-accent/20",
+                title: "Hints that teach — not just reveal",
+                body: "When a child gets stuck, step-by-step hints guide their thinking. They arrive at the answer themselves, which is how real learning sticks.",
               },
               {
-                step: "3",
-                icon: <Trophy className="w-5 h-5 sm:w-6 sm:h-6" />,
-                title: "See progress",
-                desc: "After each session, see what improved. Parents get a full breakdown.",
+                icon: <BarChart3 className="w-7 h-7" />,
+                color: "text-chart-5",
+                bg: "bg-chart-5/10",
+                title: "Parents see everything",
+                body: "A clear dashboard shows exactly what was practiced, where gaps exist, and what to focus on next. You're always in the loop.",
               },
-            ].map((item, i) => (
-              <motion.div
-                key={i}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
-                variants={fadeUp}
-                custom={i}
-                className="text-center"
-              >
-                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-primary rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4 text-primary-foreground">
-                  {item.icon}
+            ].map((f, i) => (
+              <motion.div key={i} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={i}
+                className="flex gap-5 sm:gap-7 items-start bg-white rounded-2xl p-5 sm:p-7 shadow-sm border border-border/40 hover:shadow-md transition-shadow">
+                <div className={`shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-2xl ${f.bg} ${f.color} flex items-center justify-center`}>
+                  {f.icon}
                 </div>
-                <div className="text-xs sm:text-sm font-bold text-primary mb-1 sm:mb-2">Step {item.step}</div>
-                <h3 className="!text-base sm:!text-lg font-bold text-foreground mb-1 sm:mb-2">{item.title}</h3>
-                <p className="text-sm text-muted-foreground">{item.desc}</p>
+                <div>
+                  <h3 className="!text-base sm:!text-lg font-bold text-foreground mb-1.5">{f.title}</h3>
+                  <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">{f.body}</p>
+                </div>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="relative z-10 py-14 sm:py-20 px-4">
-        <div className="max-w-3xl mx-auto text-center">
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0}>
-            <Heart className="w-10 h-10 sm:w-12 sm:h-12 text-destructive mx-auto mb-4 sm:mb-6" />
-            <h2 className="!text-2xl sm:!text-4xl font-extrabold text-foreground mb-3 sm:mb-4">
-              Give your child the confidence to love math
+      {/* ── HOW IT WORKS ── */}
+      <section id="how-it-works" className="px-4 py-16 sm:py-24">
+        <div className="max-w-4xl mx-auto">
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0}
+            className="text-center mb-12 sm:mb-16">
+            <h2 className="!text-2xl sm:!text-4xl font-extrabold text-foreground mb-3">
+              Three minutes to mastery
             </h2>
-            <p className="text-sm sm:text-lg text-muted-foreground mb-6 sm:mb-8 max-w-xl mx-auto px-2">
-              Free to start. No credit card required. See real progress in the first week.
+            <p className="text-sm sm:text-base text-muted-foreground max-w-md mx-auto">
+              A typical session takes less time than a TV ad break.
+            </p>
+          </motion.div>
+
+          <div className="relative grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-6">
+            {/* Connector line on desktop */}
+            <div className="hidden sm:block absolute top-8 left-[calc(16.6%+1rem)] right-[calc(16.6%+1rem)] h-px bg-border" />
+
+            {[
+              { num: "1", icon: <Zap className="w-5 h-5" />, title: "Tap Practice", desc: "10 problems perfectly matched to where your child is today." },
+              { num: "2", icon: <Brain className="w-5 h-5" />, title: "Think it through", desc: "Hints guide, never give away. Each step builds the next." },
+              { num: "3", icon: <Trophy className="w-5 h-5" />, title: "Celebrate growth", desc: "A session summary shows what clicked. Parents see it too." },
+            ].map((step, i) => (
+              <motion.div key={i} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={i}
+                className="relative text-center flex flex-col items-center">
+                <div className="relative z-10 w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4 text-primary-foreground shadow-lg shadow-primary/25">
+                  {step.icon}
+                </div>
+                <div className="text-xs font-bold text-primary/60 uppercase tracking-widest mb-1">Step {step.num}</div>
+                <h3 className="!text-base sm:!text-lg font-bold text-foreground mb-2">{step.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed max-w-[200px]">{step.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── CTA ── */}
+      <section className="px-4 py-16 sm:py-24 bg-primary">
+        <div className="max-w-2xl mx-auto text-center">
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0}>
+            <h2 className="!text-2xl sm:!text-4xl font-extrabold text-primary-foreground mb-4">
+              Your child's math breakthrough starts today.
+            </h2>
+            <p className="text-primary-foreground/75 text-sm sm:text-base mb-8 max-w-md mx-auto leading-relaxed">
+              Free to start. No credit card. Real progress by the end of the first week.
             </p>
             <Link href="/signup" className="no-underline">
-              <Button size="lg" className="w-full sm:w-auto bg-accent text-accent-foreground hover:bg-accent/90 text-base sm:text-lg px-8 sm:px-10 py-5 sm:py-6 rounded-2xl shadow-lg shadow-accent/25">
+              <Button size="lg"
+                className="bg-accent text-accent-foreground hover:bg-accent/90 font-bold text-base px-10 py-6 rounded-2xl shadow-xl shadow-black/20">
                 <Zap className="w-5 h-5 mr-2" />
                 Start Free Today
               </Button>
