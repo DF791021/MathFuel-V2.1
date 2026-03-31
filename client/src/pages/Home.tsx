@@ -360,7 +360,7 @@ export default function Home() {
               <div className="mt-6 flex items-center gap-2 bg-primary/[0.06] rounded-xl px-3.5 py-2.5">
                 <MapPin className="w-4 h-4 text-primary shrink-0" />
                 <p className="text-xs font-semibold text-foreground/80 leading-snug">
-                  <span className="text-primary font-bold">4 out of 5 parents</span> say they didn't know their child's math app wasn't aligned to their state test.
+                  <span className="text-primary font-bold">Most parents don't realize</span> their child's math app isn't aligned to their state test — until scores come&nbsp;back.
                 </p>
               </div>
             </motion.div>
@@ -383,7 +383,7 @@ export default function Home() {
               </div>
 
               <p className="text-sm text-muted-foreground leading-relaxed mb-5">
-                Running a district-wide rollout? Homeschooling a crew of four? Teaching a gifted second-grader college-bound fractions? Customize <strong>literally everything</strong> — skill order, difficulty curve, session length, even which standards to focus on this&nbsp;week.
+                Running a district-wide rollout? Homeschooling a crew of four? Teaching a gifted second-grader college-bound fractions? Customize <strong>every learning parameter</strong> — skill order, difficulty curve, session length, even which standards to focus on this&nbsp;week.
               </p>
 
               <div className="grid grid-cols-2 gap-2.5">
@@ -420,7 +420,7 @@ export default function Home() {
               </Button>
             </Link>
             <p className="mt-3 text-xs text-muted-foreground/70">
-              Takes 30 seconds. No card required. Your child starts on the right track&nbsp;today.
+              Under a minute to set up. No card required. Your child starts on the right track&nbsp;today.
             </p>
           </motion.div>
         </div>
