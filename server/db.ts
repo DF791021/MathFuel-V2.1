@@ -335,6 +335,7 @@ export async function getStudentMasteryWithSkills(studentId: number) {
     skillId: studentSkillMastery.skillId,
     masteryLevel: studentSkillMastery.masteryLevel,
     masteryScore: studentSkillMastery.masteryScore,
+    confidenceScore: studentSkillMastery.confidenceScore,
     totalAttempts: studentSkillMastery.totalAttempts,
     correctAttempts: studentSkillMastery.correctAttempts,
     lastPracticedAt: studentSkillMastery.lastPracticedAt,
