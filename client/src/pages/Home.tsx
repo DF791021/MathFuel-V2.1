@@ -50,139 +50,181 @@ function Counter({ to, suffix = "" }: { to: number; suffix?: string }) {
 
 // ── Demo session cycling ─────────────────────────────────────────────────────
 const DEMO_ANSWERS = ["11", "13", "12", "14"];
-const DEMO_CORRECT = 1; // "13" = 6+7
+const DEMO_CORRECT = 1; // index 1 = "13"
 
 function SessionDemo() {
   const [phase, setPhase] = useState<"idle" | "wrong" | "correct">("idle");
   const [pick, setPick] = useState<number | null>(null);
+  const [tick, setTick] = useState(0);
 
   useEffect(() => {
-    const t1 = setTimeout(() => { setPick(0); setPhase("wrong"); }, 1800);
-    const t2 = setTimeout(() => { setPick(null); setPhase("idle"); }, 3600);
-    const t3 = setTimeout(() => { setPick(DEMO_CORRECT); setPhase("correct"); }, 4800);
-    return () => [t1, t2, t3].forEach(clearTimeout);
-  }, []);
+    setPick(null);
+    setPhase("idle");
+    const t1 = setTimeout(() => { setPick(0); setPhase("wrong"); }, 1600);
+    const t2 = setTimeout(() => { setPick(null); setPhase("idle"); }, 3200);
+    const t3 = setTimeout(() => { setPick(DEMO_CORRECT); setPhase("correct"); }, 4500);
+    const t4 = setTimeout(() => setTick((n) => n + 1), 7000);
+    return () => [t1, t2, t3, t4].forEach(clearTimeout);
+  }, [tick]);
+
+  const progress = phase === "correct" ? 50 : 40;
 
   return (
-    <div className="bg-white rounded-3xl shadow-2xl shadow-primary/10 border border-border/40 p-6 w-full max-w-[340px]">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-5">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
-            <img src={LOGO_URL} alt="" className="w-5 h-5" />
+    <div className="bg-white rounded-[28px] shadow-2xl shadow-primary/15 border border-border/30 overflow-hidden w-full max-w-[360px]">
+
+      {/* ── Colored header ─────────────────────────────────────────────── */}
+      <div
+        className="px-5 pt-5 pb-4"
+        style={{
+          background: "linear-gradient(135deg, oklch(0.44 0.20 222) 0%, oklch(0.52 0.18 235) 100%)",
+        }}
+      >
+        {/* Top row */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 bg-white/20 rounded-xl flex items-center justify-center">
+              <img src={LOGO_URL} alt="" className="w-4 h-4" />
+            </div>
+            <div>
+              <p className="text-[10px] text-white/60 font-semibold uppercase tracking-widest leading-none mb-0.5">
+                Addition
+              </p>
+              <p className="text-xs text-white font-bold leading-none">Level 2</p>
+            </div>
           </div>
-          <span className="text-sm font-bold text-foreground">Addition — Level 2</span>
+          <div className="flex items-center gap-1.5 bg-white/15 backdrop-blur-sm px-2.5 py-1.5 rounded-full border border-white/20">
+            <Flame className="w-3.5 h-3.5 text-orange-300" />
+            <span className="text-xs font-bold text-white">7 day streak</span>
+          </div>
         </div>
-        <div className="flex items-center gap-1.5 bg-orange-50 px-2.5 py-1 rounded-full">
-          <Flame className="w-3.5 h-3.5 text-orange-500" />
-          <span className="text-xs font-bold text-orange-600">7 streak</span>
+
+        {/* Progress row */}
+        <div className="flex items-center gap-3">
+          <div className="flex-1 h-2 bg-white/20 rounded-full overflow-hidden">
+            <motion.div
+              className="h-full bg-white rounded-full"
+              initial={{ width: "40%" }}
+              animate={{ width: `${progress}%` }}
+              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            />
+          </div>
+          <span className="text-xs font-bold text-white/80 tabular-nums shrink-0">4 / 10</span>
         </div>
       </div>
 
-      {/* Progress bar */}
-      <div className="w-full h-1.5 bg-muted rounded-full mb-5 overflow-hidden">
-        <motion.div
-          className="h-full bg-primary rounded-full"
-          initial={{ width: "40%" }}
-          animate={{ width: phase === "correct" ? "60%" : "40%" }}
-          transition={{ duration: 0.5 }}
-        />
+      {/* ── Problem area ───────────────────────────────────────────────── */}
+      <div className="px-5 pt-5 pb-2">
+        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.18em] mb-3 text-center">
+          What is the answer?
+        </p>
+
+        {/* Equation display */}
+        <div className="bg-gradient-to-br from-slate-50 to-blue-50/60 border border-border/50 rounded-2xl py-5 px-4 mb-5 text-center">
+          <div className="flex items-center justify-center gap-3">
+            <span className="text-[56px] font-black text-foreground leading-none tabular-nums">6</span>
+            <span className="text-[36px] font-black text-primary/60 leading-none">+</span>
+            <span className="text-[56px] font-black text-foreground leading-none tabular-nums">7</span>
+            <span className="text-[36px] font-black text-primary/60 leading-none">=</span>
+            <span className="text-[56px] font-black text-primary leading-none">?</span>
+          </div>
+        </div>
+
+        {/* Answer grid */}
+        <div className="grid grid-cols-2 gap-2.5">
+          {DEMO_ANSWERS.map((ans, i) => {
+            const isSelected = pick === i;
+            const isWrong = isSelected && i !== DEMO_CORRECT;
+            const isRight = isSelected && i === DEMO_CORRECT;
+            return (
+              <motion.div
+                key={i}
+                animate={
+                  isRight
+                    ? { scale: 1.04 }
+                    : isWrong
+                    ? { x: [0, -5, 5, -4, 4, 0] }
+                    : { scale: 1, x: 0 }
+                }
+                transition={isWrong ? { duration: 0.35 } : { duration: 0.2 }}
+                className={[
+                  "py-[18px] rounded-2xl font-extrabold text-[26px] border-2 text-center transition-all duration-200 select-none leading-none",
+                  isRight
+                    ? "border-emerald-400 bg-emerald-50 text-emerald-600 shadow-sm shadow-emerald-200"
+                    : isWrong
+                    ? "border-red-300 bg-red-50 text-red-500"
+                    : "border-border/60 bg-muted/20 text-foreground",
+                ].join(" ")}
+              >
+                {ans}
+              </motion.div>
+            );
+          })}
+        </div>
       </div>
 
-      {/* Problem */}
-      <div className="text-center py-5">
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-2">Solve</p>
-        <p className="text-6xl font-extrabold text-foreground tracking-tight tabular-nums">6 + 7 = ?</p>
-      </div>
-
-      {/* Choices */}
-      <div className="grid grid-cols-2 gap-2.5 mt-4">
-        {DEMO_ANSWERS.map((ans, i) => {
-          const isSelected = pick === i;
-          const isWrong = isSelected && i !== DEMO_CORRECT;
-          const isRight = isSelected && i === DEMO_CORRECT;
-          return (
-            <motion.button
-              key={i}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.97 }}
-              className={[
-                "py-4 rounded-2xl font-extrabold text-2xl border-2 transition-all duration-200 select-none",
-                isRight ? "border-secondary bg-secondary/10 text-secondary scale-[1.03]" :
-                  isWrong ? "border-destructive bg-destructive/8 text-destructive" :
-                    "border-border/60 bg-muted/30 text-foreground hover:border-primary/40 hover:bg-primary/5",
-              ].join(" ")}
-            >
-              {ans}
-            </motion.button>
-          );
-        })}
-      </div>
-
-      {/* Feedback */}
-      <div className="mt-4 min-h-[52px]">
+      {/* ── Feedback strip ─────────────────────────────────────────────── */}
+      <div className="px-5 pb-5 pt-3 min-h-[66px] flex items-center">
         <AnimatePresence mode="wait">
           {phase === "wrong" && (
             <motion.div
               key="wrong"
-              initial={{ opacity: 0, y: 6 }}
+              initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              className="flex items-start gap-2.5 bg-amber-50 border border-amber-200 rounded-2xl px-3.5 py-3"
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.25 }}
+              className="w-full flex items-start gap-3 bg-amber-50 border border-amber-200/80 rounded-2xl px-4 py-3"
             >
-              <Sparkles className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+              <div className="w-6 h-6 rounded-lg bg-amber-400 flex items-center justify-center shrink-0 mt-0.5">
+                <Sparkles className="w-3.5 h-3.5 text-white" />
+              </div>
               <p className="text-xs font-semibold text-amber-800 leading-snug">
-                Not quite — try counting on 7 more from 6!
+                Not quite! Try counting on 7 more from 6.
               </p>
             </motion.div>
           )}
           {phase === "correct" && (
             <motion.div
               key="correct"
-              initial={{ opacity: 0, scale: 0.95 }}
+              initial={{ opacity: 0, scale: 0.92 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex items-center gap-2.5 bg-emerald-50 border border-emerald-200 rounded-2xl px-3.5 py-3"
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+              className="w-full flex items-center gap-3 bg-emerald-50 border border-emerald-200/80 rounded-2xl px-4 py-3"
             >
-              <Trophy className="w-4 h-4 text-emerald-600 shrink-0" />
-              <p className="text-xs font-bold text-emerald-700">Correct! You're on a roll!</p>
+              <div className="w-6 h-6 rounded-lg bg-emerald-500 flex items-center justify-center shrink-0">
+                <Trophy className="w-3.5 h-3.5 text-white" />
+              </div>
+              <p className="text-xs font-bold text-emerald-700">Correct! 6 + 7 = 13. You're on a roll!</p>
             </motion.div>
+          )}
+          {phase === "idle" && (
+            <motion.p
+              key="idle"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="w-full text-center text-xs text-muted-foreground/60"
+            >
+              Choose an answer above
+            </motion.p>
           )}
         </AnimatePresence>
       </div>
-    </div>
-  );
-}
 
-// ── Floating badge component ─────────────────────────────────────────────────
-function FloatingBadge({
-  icon,
-  label,
-  value,
-  className,
-  delay = 0,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  className?: string;
-  delay?: number;
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.8 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ delay, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-      className={`absolute bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg shadow-black/8 border border-white/80 px-3.5 py-2.5 flex items-center gap-2.5 ${className}`}
-    >
-      <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-        {icon}
+      {/* ── Bottom stat strip ──────────────────────────────────────────── */}
+      <div className="border-t border-border/40 grid grid-cols-3 divide-x divide-border/40">
+        {[
+          { label: "Accuracy", value: "88%" },
+          { label: "This session", value: "3 / 4 ✓" },
+          { label: "Mastered", value: "8 skills" },
+        ].map((s, i) => (
+          <div key={i} className="py-3 text-center">
+            <p className="text-xs font-bold text-foreground">{s.value}</p>
+            <p className="text-[10px] text-muted-foreground/70 leading-none mt-0.5">{s.label}</p>
+          </div>
+        ))}
       </div>
-      <div>
-        <p className="text-xs text-muted-foreground leading-none mb-0.5">{label}</p>
-        <p className="text-sm font-bold text-foreground leading-none">{value}</p>
-      </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -287,14 +329,6 @@ export default function Home() {
         <div className="pointer-events-none absolute -top-40 -right-40 w-[700px] h-[700px] rounded-full bg-primary/6 blur-[120px]" />
         <div className="pointer-events-none absolute -bottom-20 -left-20 w-[500px] h-[500px] rounded-full bg-accent/10 blur-[100px]" />
 
-        {/* Grid texture */}
-        <div
-          className="pointer-events-none absolute inset-0 opacity-[0.025]"
-          style={{
-            backgroundImage: "linear-gradient(oklch(0.18 0.04 222) 1px, transparent 1px), linear-gradient(90deg, oklch(0.18 0.04 222) 1px, transparent 1px)",
-            backgroundSize: "40px 40px",
-          }}
-        />
 
         <div className="relative max-w-7xl mx-auto w-full">
           <div className="grid lg:grid-cols-2 gap-12 xl:gap-20 items-center">
@@ -380,34 +414,17 @@ export default function Home() {
               </motion.div>
             </div>
 
-            {/* Right — product mockup with floating badges */}
+            {/* Right — product mockup */}
             <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.35, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
               className="flex justify-center lg:justify-end"
             >
-              <div className="relative w-full max-w-[380px]">
-                {/* Soft glow */}
-                <div className="absolute inset-8 bg-primary/15 blur-3xl rounded-full" />
-
-                {/* Floating badges */}
-                <FloatingBadge
-                  icon={<TrendingUp className="w-4 h-4 text-primary" />}
-                  label="Accuracy this week"
-                  value="↑ 94%"
-                  className="-left-6 top-8"
-                  delay={0.8}
-                />
-                <FloatingBadge
-                  icon={<Target className="w-4 h-4 text-secondary" />}
-                  label="Skills mastered"
-                  value="8 skills"
-                  className="-right-4 bottom-16"
-                  delay={1.0}
-                />
-
-                {/* Session card */}
+              <div className="relative w-full max-w-[360px]">
+                {/* Layered glow rings */}
+                <div className="absolute inset-0 rounded-[32px] bg-primary/10 blur-2xl scale-110" />
+                <div className="absolute inset-0 rounded-[32px] bg-accent/8 blur-3xl scale-125" />
                 <div className="relative z-10">
                   <SessionDemo />
                 </div>
