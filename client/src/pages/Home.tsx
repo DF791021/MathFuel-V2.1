@@ -224,8 +224,17 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
 
+      {/* ── TOP ANNOUNCEMENT BAR ─────────────────────────────────────────── */}
+      <div
+        className="fixed top-0 left-0 right-0 w-full py-2.5 px-4 flex items-center justify-center gap-2 text-sm font-semibold text-white"
+        style={{ background: "oklch(0.38 0.14 163)", zIndex: 60 }}
+      >
+        <CheckCircle2 className="w-4 h-4 shrink-0" />
+        <span>&#169; Mike Approved</span>
+      </div>
+
       {/* ── NAV ──────────────────────────────────────────────────────────── */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-400 ${
+      <nav className={`fixed top-10 left-0 right-0 z-50 transition-all duration-400 ${
         scrolled
           ? "bg-white/95 backdrop-blur-xl shadow-sm shadow-black/5 border-b border-border/40"
           : "bg-transparent"
@@ -297,7 +306,7 @@ export default function Home() {
       </nav>
 
       {/* ── HERO ─────────────────────────────────────────────────────────── */}
-      <section className="relative min-h-screen flex items-center pt-20 pb-16 px-4 sm:px-6 overflow-hidden">
+      <section className="relative min-h-screen flex items-center pt-36 pb-16 px-4 sm:px-6 overflow-hidden">
         {/* Mesh gradient background */}
         <div className="absolute inset-0 mesh-gradient" />
 
@@ -341,30 +350,15 @@ export default function Home() {
             <div className="text-center lg:text-left">
               <motion.div
                 initial="hidden" animate="visible" variants={fadeUp} custom={0}
-                className="flex flex-col sm:flex-row items-center lg:items-start gap-3 mb-7"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold mb-7 tracking-widest uppercase border"
+                style={{
+                  background: "oklch(0.44 0.20 222 / 0.08)",
+                  borderColor: "oklch(0.44 0.20 222 / 0.2)",
+                  color: "oklch(0.44 0.20 222)",
+                }}
               >
-                <span
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold tracking-widest uppercase border"
-                  style={{
-                    background: "oklch(0.44 0.20 222 / 0.08)",
-                    borderColor: "oklch(0.44 0.20 222 / 0.2)",
-                    color: "oklch(0.44 0.20 222)",
-                  }}
-                >
-                  <Sparkles className="w-3.5 h-3.5" />
-                  Adaptive AI · Grades 1 &amp; 2 · Free to Start
-                </span>
-                <span
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold tracking-wide border"
-                  style={{
-                    background: "oklch(0.52 0.16 163 / 0.10)",
-                    borderColor: "oklch(0.52 0.16 163 / 0.30)",
-                    color: "oklch(0.38 0.14 163)",
-                  }}
-                >
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  &copy; Mike Approved
-                </span>
+                <Sparkles className="w-3.5 h-3.5" />
+                Adaptive AI · Grades 1 &amp; 2 · Free to Start
               </motion.div>
 
               <motion.h1
