@@ -54,7 +54,14 @@ function App() {
       <ThemeProvider defaultTheme="light">
         <TooltipProvider>
           <Toaster richColors position="top-center" />
-          <Router />
+          <div className="flex flex-col min-h-screen">
+            <div className="flex-1">
+              <Router />
+            </div>
+            <footer className="py-3 text-center text-xs text-muted-foreground border-t">
+              By Mike K
+            </footer>
+          </div>
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>
