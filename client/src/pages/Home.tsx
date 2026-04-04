@@ -341,15 +341,30 @@ export default function Home() {
             <div className="text-center lg:text-left">
               <motion.div
                 initial="hidden" animate="visible" variants={fadeUp} custom={0}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold mb-7 tracking-widest uppercase border"
-                style={{
-                  background: "oklch(0.44 0.20 222 / 0.08)",
-                  borderColor: "oklch(0.44 0.20 222 / 0.2)",
-                  color: "oklch(0.44 0.20 222)",
-                }}
+                className="flex flex-col sm:flex-row items-center lg:items-start gap-3 mb-7"
               >
-                <Sparkles className="w-3.5 h-3.5" />
-                Adaptive AI · Grades 1 &amp; 2 · Free to Start
+                <span
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold tracking-widest uppercase border"
+                  style={{
+                    background: "oklch(0.44 0.20 222 / 0.08)",
+                    borderColor: "oklch(0.44 0.20 222 / 0.2)",
+                    color: "oklch(0.44 0.20 222)",
+                  }}
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  Adaptive AI · Grades 1 &amp; 2 · Free to Start
+                </span>
+                <span
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold tracking-wide border"
+                  style={{
+                    background: "oklch(0.52 0.16 163 / 0.10)",
+                    borderColor: "oklch(0.52 0.16 163 / 0.30)",
+                    color: "oklch(0.38 0.14 163)",
+                  }}
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  &copy; Mike Approved
+                </span>
               </motion.div>
 
               <motion.h1
