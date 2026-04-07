@@ -234,72 +234,163 @@ export default function Home() {
       </div>
 
       {/* ── NAV ──────────────────────────────────────────────────────────── */}
-      <nav className={`fixed top-10 left-0 right-0 z-50 transition-all duration-400 ${
+      <nav className={`fixed top-10 left-0 right-0 z-50 transition-all duration-500 ${
         scrolled
-          ? "bg-white/95 backdrop-blur-xl shadow-sm shadow-black/5 border-b border-border/40"
+          ? "bg-white/96 backdrop-blur-2xl shadow-[0_1px_24px_rgba(0,0,0,0.07)] border-b border-black/[0.06]"
           : "bg-transparent"
       }`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5 no-underline group">
-            <div className="relative">
-              <img src={LOGO_URL} alt="MathFuel" className="w-9 h-9 relative z-10" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between">
+
+          {/* ── LOGO ── */}
+          <Link href="/" className="flex items-center gap-2.5 no-underline group select-none">
+            <motion.div
+              className="relative"
+              animate={{ y: [0, -4, 0], rotate: [0, -6, 0, 6, 0] }}
+              transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut", repeatDelay: 0.8 }}
+              whileHover={{ scale: 1.18, rotate: -10, transition: { type: "spring", stiffness: 340, damping: 18 } }}
+            >
+              <img src={LOGO_URL} alt="MathFuel" className="w-9 h-9 relative z-10 drop-shadow-md" />
+            </motion.div>
+            <div className="flex items-end leading-none" style={{ fontFamily: "'Chango', sans-serif" }}>
+              <motion.span
+                className="text-[1.3rem] font-extrabold tracking-tight"
+                style={{ color: "oklch(0.18 0.02 240)" }}
+                whileHover={{ letterSpacing: "0.03em", transition: { duration: 0.2 } }}
+              >
+                Math
+              </motion.span>
+              <motion.span
+                className="text-[1.3rem] font-extrabold tracking-tight"
+                style={{ color: "oklch(0.72 0.18 75)" }}
+                animate={{ opacity: [1, 0.75, 1] }}
+                transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut", repeatDelay: 1.2 }}
+                whileHover={{ scale: 1.08, transition: { type: "spring", stiffness: 400, damping: 20 } }}
+              >
+                Fuel
+              </motion.span>
             </div>
-            <span className="text-xl font-extrabold text-foreground tracking-tight" style={{ fontFamily: "'Chango', sans-serif" }}>
-              Math<span style={{ color: "oklch(0.72 0.18 75)" }}>Fuel</span>
-            </span>
           </Link>
 
-          <div className="hidden md:flex items-center gap-1">
+          {/* ── DESKTOP NAV ── */}
+          <div className="hidden md:flex items-center gap-0.5">
             {[
               { href: "/leaderboard", label: "Leaderboard" },
               { href: "/pricing", label: "Pricing" },
             ].map(item => (
               <Link key={item.href} href={item.href} className="no-underline">
-                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground font-semibold">
-                  {item.label}
-                </Button>
+                <div className="relative px-3.5 py-2 group/nav cursor-pointer">
+                  <span className="text-[0.83rem] font-semibold text-slate-500 group-hover/nav:text-slate-900 transition-colors duration-200 tracking-wide">
+                    {item.label}
+                  </span>
+                  <span className="absolute bottom-1 left-3.5 right-3.5 h-[1.5px] bg-slate-900 scale-x-0 group-hover/nav:scale-x-100 transition-transform duration-250 origin-left rounded-full" />
+                </div>
               </Link>
             ))}
-            <div className="w-px h-4 bg-border mx-2" />
+
+            <div className="w-px h-5 bg-black/10 mx-3" />
+
             <Link href="/login" className="no-underline">
-              <Button variant="ghost" size="sm" className="font-semibold">Log In</Button>
+              <div className="relative px-3.5 py-2 group/login cursor-pointer">
+                <span className="text-[0.83rem] font-semibold text-slate-600 group-hover/login:text-slate-900 transition-colors duration-200 tracking-wide">
+                  Log In
+                </span>
+                <span className="absolute bottom-1 left-3.5 right-3.5 h-[1.5px] bg-slate-900 scale-x-0 group-hover/login:scale-x-100 transition-transform duration-250 origin-left rounded-full" />
+              </div>
             </Link>
-            <Link href="/signup" className="no-underline">
-              <Button size="sm" className="font-bold px-5 rounded-xl shadow-md shadow-primary/20 transition-all hover:shadow-lg hover:shadow-primary/30 hover:-translate-y-0.5">
-                Get Started Free
-              </Button>
+
+            <Link href="/signup" className="no-underline ml-1">
+              <motion.div
+                whileHover={{ y: -1.5 }}
+                whileTap={{ scale: 0.97 }}
+                transition={{ type: "spring", stiffness: 400, damping: 22 }}
+              >
+                <button
+                  className="relative inline-flex items-center gap-1.5 px-5 py-2 text-[0.83rem] font-bold text-white rounded-xl overflow-hidden transition-shadow duration-300"
+                  style={{
+                    background: "linear-gradient(135deg, oklch(0.44 0.20 222) 0%, oklch(0.38 0.18 240) 100%)",
+                    boxShadow: "0 2px 12px oklch(0.44 0.20 222 / 0.35), inset 0 1px 0 rgba(255,255,255,0.12)",
+                  }}
+                  onMouseEnter={e => {
+                    (e.currentTarget as HTMLButtonElement).style.boxShadow =
+                      "0 6px 24px oklch(0.44 0.20 222 / 0.45), inset 0 1px 0 rgba(255,255,255,0.15)";
+                  }}
+                  onMouseLeave={e => {
+                    (e.currentTarget as HTMLButtonElement).style.boxShadow =
+                      "0 2px 12px oklch(0.44 0.20 222 / 0.35), inset 0 1px 0 rgba(255,255,255,0.12)";
+                  }}
+                >
+                  Get Started Free
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </motion.div>
             </Link>
           </div>
 
+          {/* ── MOBILE TOGGLE ── */}
           <button
-            className="md:hidden w-10 h-10 flex items-center justify-center rounded-xl hover:bg-muted/60 transition-colors"
+            className="md:hidden w-10 h-10 flex items-center justify-center rounded-xl hover:bg-black/5 transition-colors"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label="Toggle menu"
           >
-            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            <AnimatePresence mode="wait" initial={false}>
+              {mobileMenuOpen ? (
+                <motion.div key="x" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }} transition={{ duration: 0.18 }}>
+                  <X className="w-5 h-5" />
+                </motion.div>
+              ) : (
+                <motion.div key="menu" initial={{ rotate: 90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: -90, opacity: 0 }} transition={{ duration: 0.18 }}>
+                  <Menu className="w-5 h-5" />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </button>
         </div>
 
+        {/* ── MOBILE MENU ── */}
         <AnimatePresence>
           {mobileMenuOpen && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
-              className="md:hidden bg-white border-t border-border/50 px-4 pb-4 space-y-2 overflow-hidden"
+              transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+              className="md:hidden bg-white/98 backdrop-blur-xl border-t border-black/[0.06] overflow-hidden"
             >
-              {[
-                { href: "/leaderboard", label: "Leaderboard" },
-                { href: "/pricing", label: "Pricing" },
-                { href: "/login", label: "Log In" },
-              ].map(item => (
-                <Link key={item.href} href={item.href} className="block no-underline">
-                  <Button variant="ghost" className="w-full justify-center font-semibold">{item.label}</Button>
-                </Link>
-              ))}
-              <Link href="/signup" className="block no-underline">
-                <Button className="w-full font-bold">Get Started Free</Button>
-              </Link>
+              <div className="px-5 py-4 space-y-1">
+                {[
+                  { href: "/leaderboard", label: "Leaderboard" },
+                  { href: "/pricing", label: "Pricing" },
+                  { href: "/login", label: "Log In" },
+                ].map((item, i) => (
+                  <motion.div
+                    key={item.href}
+                    initial={{ opacity: 0, x: -12 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.06, duration: 0.22 }}
+                  >
+                    <Link href={item.href} className="block no-underline">
+                      <div className="px-3 py-2.5 text-sm font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-colors cursor-pointer">
+                        {item.label}
+                      </div>
+                    </Link>
+                  </motion.div>
+                ))}
+                <motion.div
+                  initial={{ opacity: 0, x: -12 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.18, duration: 0.22 }}
+                  className="pt-1"
+                >
+                  <Link href="/signup" className="block no-underline">
+                    <button
+                      className="w-full py-2.5 text-sm font-bold text-white rounded-xl"
+                      style={{ background: "linear-gradient(135deg, oklch(0.44 0.20 222) 0%, oklch(0.38 0.18 240) 100%)" }}
+                    >
+                      Get Started Free
+                    </button>
+                  </Link>
+                </motion.div>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
