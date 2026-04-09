@@ -194,7 +194,7 @@ export type InsertStudentSkillMastery = typeof studentSkillMastery.$inferInsert;
 export const studentDailyStats = pgTable("studentDailyStats", {
   id: serial("id").primaryKey(),
   studentId: integer("studentId").notNull(),
-  date: varchar("date", { length: 10 }).notNull(),
+  date: date("date").notNull(),
   sessionsCompleted: integer("sessionsCompleted").default(0).notNull(),
   problemsAttempted: integer("problemsAttempted").default(0).notNull(),
   problemsCorrect: integer("problemsCorrect").default(0).notNull(),
@@ -213,7 +213,7 @@ export const studentStreaks = pgTable("studentStreaks", {
   studentId: integer("studentId").notNull().unique(),
   currentStreak: integer("currentStreak").default(0).notNull(),
   longestStreak: integer("longestStreak").default(0).notNull(),
-  lastActiveDate: varchar("lastActiveDate", { length: 10 }),
+  lastActiveDate: date("lastActiveDate"),
   totalActiveDays: integer("totalActiveDays").default(0).notNull(),
   createdAt: timestamp("createdAt", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updatedAt", { withTimezone: true }).defaultNow().notNull(),
@@ -566,3 +566,52 @@ export const classroomStudents = pgTable("classroomStudents", {
 
 export type ClassroomStudent = typeof classroomStudents.$inferSelect;
 export type InsertClassroomStudent = typeof classroomStudents.$inferInsert;
+
+// ============================================================================
+// NORMALIZED TAGS (replaces mathProblems.tags comma-separated column)
+// ============================================================================
+
+export const tags = pgTable("tags", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  slug: varchar("slug", { length: 100 }).notNull().unique(),
+  createdAt: timestamp("createdAt", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export type Tag = typeof tags.$inferSelect;
+export type InsertTag = typeof tags.$inferInsert;
+
+export const problemTags = pgTable("problemTags", {
+  problemId: integer("problemId").notNull(),
+  tagId: integer("tagId").notNull(),
+});
+
+export type ProblemTag = typeof problemTags.$inferSelect;
+export type InsertProblemTag = typeof problemTags.$inferInsert;
+
+// ============================================================================
+// SESSION SKILLS (replaces practiceSessions.skillsFocused JSONB array)
+// ============================================================================
+
+export const sessionSkills = pgTable("sessionSkills", {
+  id: serial("id").primaryKey(),
+  sessionId: integer("sessionId").notNull(),
+  skillId: integer("skillId").notNull(),
+  createdAt: timestamp("createdAt", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export type SessionSkill = typeof sessionSkills.$inferSelect;
+export type InsertSessionSkill = typeof sessionSkills.$inferInsert;
+
+// ============================================================================
+// FEATURE FLAG ROLES (replaces featureFlags.targetRoles comma-separated column)
+// ============================================================================
+
+export const featureFlagRoles = pgTable("featureFlagRoles", {
+  id: serial("id").primaryKey(),
+  flagId: integer("flagId").notNull(),
+  role: userTypeEnum("role").notNull(),
+});
+
+export type FeatureFlagRole = typeof featureFlagRoles.$inferSelect;
+export type InsertFeatureFlagRole = typeof featureFlagRoles.$inferInsert;
