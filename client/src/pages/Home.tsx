@@ -150,7 +150,7 @@ function SessionDemo() {
               <div className="w-6 h-6 rounded-lg bg-amber-400 flex items-center justify-center shrink-0 mt-0.5">
                 <Sparkles className="w-3.5 h-3.5 text-white" />
               </div>
-              <p className="text-xs font-semibold text-amber-800 leading-snug">Not quite! Try counting on 7 more from 6.</p>
+              <p className="text-xs font-semibold text-amber-800 leading-snug">Close. Try counting on 7 more from 6.</p>
             </motion.div>
           )}
           {phase === "correct" && (
@@ -161,14 +161,14 @@ function SessionDemo() {
               <div className="w-6 h-6 rounded-lg bg-emerald-500 flex items-center justify-center shrink-0">
                 <Trophy className="w-3.5 h-3.5 text-white" />
               </div>
-              <p className="text-xs font-bold text-emerald-700">Correct! 6 + 7 = 13. You're on a roll!</p>
+              <p className="text-xs font-bold text-emerald-700">Correct. 6 + 7 = 13 — that's a streak.</p>
             </motion.div>
           )}
           {phase === "idle" && (
             <motion.p key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="w-full text-center text-xs text-muted-foreground/50"
             >
-              Choose an answer above
+Tap an answer to check your work.
             </motion.p>
           )}
         </AnimatePresence>
@@ -319,7 +319,7 @@ export default function Home() {
                       "0 2px 12px oklch(0.44 0.20 222 / 0.35), inset 0 1px 0 rgba(255,255,255,0.12)";
                   }}
                 >
-                  Get Started Free
+                  Start Free
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </motion.div>
@@ -386,7 +386,7 @@ export default function Home() {
                       className="w-full py-2.5 text-sm font-bold text-white rounded-xl"
                       style={{ background: "linear-gradient(135deg, oklch(0.44 0.20 222) 0%, oklch(0.38 0.18 240) 100%)" }}
                     >
-                      Get Started Free
+                      Start Free
                     </button>
                   </Link>
                 </motion.div>
@@ -474,7 +474,7 @@ export default function Home() {
                 initial="hidden" animate="visible" variants={fadeUp} custom={2}
                 className="text-lg sm:text-xl text-muted-foreground mb-8 max-w-lg mx-auto lg:mx-0 leading-relaxed"
               >
-                Every problem is chosen for <em className="not-italic font-bold text-foreground">your</em> child — right now, at their exact level. Adaptive difficulty, guided hints, and real mastery tracking built for ages 6–8.
+Every problem is picked for <em className="not-italic font-bold text-foreground">your</em> child, at their exact level, right now. Adaptive difficulty, guided hints, and real mastery tracking built for ages 6–8.
               </motion.p>
 
               <motion.div
@@ -488,7 +488,7 @@ export default function Home() {
                     style={{ background: "linear-gradient(135deg, oklch(0.44 0.20 222), oklch(0.36 0.18 240))" }}
                   >
                     <Rocket className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" />
-                    Start Free — No Card Needed
+                    Start Free — No Card Required
                     <ChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </Link>
@@ -499,7 +499,7 @@ export default function Home() {
                     className="w-full sm:w-auto text-base px-7 py-6 rounded-2xl border-border/80 text-foreground hover:bg-muted/60 group transition-all"
                   >
                     <PlayCircle className="w-5 h-5 mr-2 text-muted-foreground group-hover:text-primary transition-colors" />
-                    See how it works
+                    See How It Works
                   </Button>
                 </a>
               </motion.div>
@@ -555,7 +555,7 @@ export default function Home() {
                   </div>
                   <div>
                     <p className="text-xs font-extrabold text-foreground">7-day streak!</p>
-                    <p className="text-[10px] text-muted-foreground">Keep it up</p>
+                    <p className="text-[10px] text-muted-foreground">Back tomorrow to keep it alive.</p>
                   </div>
                 </motion.div>
 
@@ -619,7 +619,7 @@ export default function Home() {
               Why MathFuel works when<br className="hidden sm:block" /> other apps fall short
             </motion.h2>
             <motion.p variants={fadeIn} className="text-base sm:text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed">
-              Three things every child needs to genuinely improve — and most apps completely forget.
+Three things every child needs to truly improve. Most apps forget all three.
             </motion.p>
           </motion.div>
 
@@ -632,7 +632,7 @@ export default function Home() {
                 accentColor: "oklch(0.44 0.20 222)",
                 topGradient: "linear-gradient(135deg, oklch(0.44 0.20 222), oklch(0.52 0.16 163))",
                 title: "Adapts in real time",
-                body: "Problems get harder when your child is on a roll, gentler when they need support. The engine tracks accuracy, speed, and hints used — not just right or wrong.",
+                body: "Problems get harder when your child is on a streak and gentler when they need support. The engine watches accuracy, speed, and hints used — not just right or wrong.",
                 detail: "Powered by mastery + confidence signals",
                 badge: "AI Engine",
               },
@@ -643,7 +643,7 @@ export default function Home() {
                 accentColor: "oklch(0.72 0.18 75)",
                 topGradient: "linear-gradient(135deg, oklch(0.72 0.18 75), oklch(0.78 0.18 50))",
                 title: "Hints that teach, not reveal",
-                body: "When stuck, step-by-step hints guide thinking. Children arrive at answers themselves — that's how learning actually sticks, not just performing.",
+                body: "When your child is stuck, step-by-step hints guide their thinking without giving away the answer. They arrive at the solution themselves — that's how learning sticks.",
                 detail: "AI-powered, personalized guidance",
                 badge: "Hint System",
               },
@@ -654,7 +654,7 @@ export default function Home() {
                 accentColor: "oklch(0.52 0.16 163)",
                 topGradient: "linear-gradient(135deg, oklch(0.52 0.16 163), oklch(0.44 0.14 180))",
                 title: "Parents see everything",
-                body: "A clear dashboard shows what was practiced, where gaps exist, and what to focus on next. Weekly summaries land in your inbox automatically.",
+                body: "A clear dashboard shows what was practiced, where the gaps are, and what to focus on next. Weekly summaries land in your inbox every Monday.",
                 detail: "Weekly email reports included",
                 badge: "Parent View",
               },
@@ -805,7 +805,7 @@ export default function Home() {
                 Know exactly where<br />your child stands.
               </motion.h2>
               <motion.p variants={fadeIn} className="text-base sm:text-lg text-muted-foreground leading-relaxed mb-8">
-                No more guessing if practice is helping. MathFuel's parent dashboard shows skill-by-skill mastery, weekly trends, and what to focus on next — in plain English.
+Stop guessing whether practice is helping. MathFuel's parent dashboard shows skill-by-skill mastery, weekly trends, and where to focus next — in plain English.
               </motion.p>
 
               <motion.div variants={stagger} className="space-y-4 text-left max-w-md mx-auto lg:mx-0 mb-8">
@@ -831,7 +831,7 @@ export default function Home() {
                     className="font-bold px-7 py-6 text-base rounded-2xl shadow-lg shadow-primary/20 group transition-all hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5"
                     style={{ background: "linear-gradient(135deg, oklch(0.44 0.20 222), oklch(0.36 0.18 240))" }}
                   >
-                    Create a free account
+                    Create My Free Account
                     <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </Link>
@@ -855,10 +855,10 @@ export default function Home() {
               Real families
             </motion.div>
             <motion.h2 variants={fadeIn} className="!text-3xl sm:!text-4xl font-extrabold text-foreground tracking-tight mb-3">
-              Parents love what they see.
+              What parents are saying
             </motion.h2>
             <motion.p variants={fadeIn} className="text-muted-foreground text-lg">
-              Join 12,400+ families already using MathFuel.
+              Join 12,400+ families already practicing with MathFuel.
             </motion.p>
           </motion.div>
 
@@ -948,10 +948,10 @@ export default function Home() {
               Simple by design
             </motion.div>
             <motion.h2 variants={fadeIn} className="!text-3xl sm:!text-4xl font-extrabold text-foreground tracking-tight mb-4">
-              Up and running in 60 seconds.
+              Up and running in 60 seconds
             </motion.h2>
             <motion.p variants={fadeIn} className="text-base sm:text-lg text-muted-foreground max-w-md mx-auto">
-              A typical session takes less time than a TV ad break.
+              A typical session takes about 4 minutes — less than a commercial break.
             </motion.p>
           </motion.div>
 
@@ -963,19 +963,19 @@ export default function Home() {
               {
                 num: "01", icon: <Zap className="w-6 h-6" />,
                 title: "Pick a session",
-                desc: "Choose a skill focus or let MathFuel decide. 10 problems, chosen exactly for where your child is today.",
+                desc: "Pick a skill focus, or let MathFuel choose. Ten problems, picked for exactly where your child is today.",
                 gradient: "linear-gradient(135deg, oklch(0.44 0.20 222), oklch(0.52 0.16 163))",
               },
               {
                 num: "02", icon: <Brain className="w-6 h-6" />,
                 title: "Think it through",
-                desc: "Hints guide, never give away. Each step builds the next. Children learn to think, not just click.",
+                desc: "Hints guide, never give away. Each step builds the next. Your child learns to think, not just tap.",
                 gradient: "linear-gradient(135deg, oklch(0.52 0.16 163), oklch(0.44 0.14 180))",
               },
               {
                 num: "03", icon: <Trophy className="w-6 h-6" />,
                 title: "Celebrate real growth",
-                desc: "A session summary shows what clicked. Mastery updates. Parents see it too, no login required.",
+                desc: "A session summary shows what clicked and what to revisit. Mastery updates. Parents see it too.",
                 gradient: "linear-gradient(135deg, oklch(0.72 0.18 75), oklch(0.65 0.16 55))",
               },
             ].map((step, i) => (
@@ -1035,17 +1035,17 @@ export default function Home() {
             <motion.div variants={fadeIn}
               className="inline-flex items-center gap-2 bg-white/10 border border-white/20 text-white/90 text-xs font-bold px-4 py-2 rounded-full uppercase tracking-widest mb-7"
             >
-              <Sparkles className="w-3.5 h-3.5" /> Free for life — no credit card
+              <Sparkles className="w-3.5 h-3.5" /> Free forever. No card required.
             </motion.div>
 
             <motion.h2 variants={fadeIn}
               className="!text-3xl sm:!text-4xl lg:!text-5xl font-extrabold text-white !leading-tight mb-5 tracking-tight"
             >
-              Your child's math<br />breakthrough starts today.
+Your child's math breakthrough<br />starts with one session.
             </motion.h2>
 
             <motion.p variants={fadeIn} className="text-white/70 text-base sm:text-lg mb-10 max-w-lg mx-auto leading-relaxed">
-              Free to start. Real progress within the first week. No ads, no gimmicks — just genuine learning built around your child.
+Free to start. Real progress inside the first week. No ads, no gimmicks — real learning built around your child.
             </motion.p>
 
             <motion.div variants={fadeIn} className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -1056,7 +1056,7 @@ export default function Home() {
                   style={{ color: "oklch(0.44 0.20 222)" }}
                 >
                   <Rocket className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" />
-                  Start Free Today
+                  Start My First Session
                   <ChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </Link>
@@ -1066,7 +1066,7 @@ export default function Home() {
                   size="lg"
                   className="text-white/80 hover:text-white hover:bg-white/10 font-semibold text-base px-8 py-6 rounded-2xl border border-white/20 transition-all"
                 >
-                  View pricing
+                  See Pricing
                 </Button>
               </Link>
             </motion.div>
@@ -1105,7 +1105,7 @@ export default function Home() {
                 { href: "/leaderboard", label: "Leaderboard" },
                 { href: "/pricing", label: "Pricing" },
                 { href: "/login", label: "Log In" },
-                { href: "/signup", label: "Sign Up Free" },
+                { href: "/signup", label: "Start Free" },
               ].map(link => (
                 <Link
                   key={link.href} href={link.href}
@@ -1125,7 +1125,7 @@ export default function Home() {
               &copy; {new Date().getFullYear()} DBB Capital Ventures LLC. All rights reserved.
             </p>
             <p className="text-xs" style={{ color: "oklch(0.45 0.03 220)" }}>
-              Designed for real learning. Built with care.
+Built for real learning. Made with care.
             </p>
           </div>
         </div>

@@ -88,7 +88,7 @@ function PodiumCard({ rank, name, xp, accuracy, isCurrentUser }: {
 
       {/* Name */}
       <p className={`text-xs sm:text-sm font-semibold text-center leading-tight max-w-[90px] sm:max-w-[120px] truncate ${isCurrentUser ? "text-primary" : "text-foreground"}`}>
-        {isCurrentUser ? "You!" : name}
+        {isCurrentUser ? "That's you" : name}
       </p>
       <p className="text-xs text-muted-foreground">{formatXP(xp)} XP</p>
 
@@ -202,7 +202,7 @@ function XPBreakdown({ period }: { period: Period }) {
       <CardHeader className="pb-2 px-4 pt-4">
         <CardTitle className="text-sm font-semibold flex items-center gap-2">
           <TrendingUp className="w-4 h-4 text-primary" />
-          Your XP Breakdown
+          Where your XP came from
         </CardTitle>
       </CardHeader>
       <CardContent className="px-4 pb-4 space-y-2">
@@ -398,7 +398,7 @@ export default function Leaderboard() {
               <Trophy className="w-12 h-12 text-muted-foreground/50 mx-auto mb-3" />
               <h3 className="font-semibold text-lg mb-1">No rankings yet</h3>
               <p className="text-sm text-muted-foreground mb-4">
-                Be the first to earn XP and claim the top spot!
+                Be the first to earn XP this period and claim the top spot.
               </p>
               <Link href="/practice">
                 <Button className="gap-2">
@@ -459,7 +459,7 @@ export default function Leaderboard() {
           <CardHeader className="pb-2 px-4 pt-4">
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-accent" />
-              How XP Works
+              How you earn XP
             </CardTitle>
           </CardHeader>
           <CardContent className="px-4 pb-4">
@@ -469,7 +469,7 @@ export default function Leaderboard() {
                   <Target className="w-3 h-3 text-green-600" />
                 </div>
                 <div>
-                  <p className="font-medium">Correct Answer</p>
+                  <p className="font-medium">Correct answer</p>
                   <p className="text-muted-foreground">+10 XP each</p>
                 </div>
               </div>
@@ -478,8 +478,8 @@ export default function Leaderboard() {
                   <Zap className="w-3 h-3 text-blue-500" />
                 </div>
                 <div>
-                  <p className="font-medium">Speed Bonus</p>
-                  <p className="text-muted-foreground">+2 XP under 15s</p>
+                  <p className="font-medium">Speed bonus</p>
+                  <p className="text-muted-foreground">+2 XP when you answer in under 15 seconds</p>
                 </div>
               </div>
               <div className="flex items-start gap-2">
@@ -487,8 +487,8 @@ export default function Leaderboard() {
                   <Star className="w-3 h-3 text-purple-500" />
                 </div>
                 <div>
-                  <p className="font-medium">Skill Mastery</p>
-                  <p className="text-muted-foreground">+50 XP per skill</p>
+                  <p className="font-medium">Skill mastery</p>
+                  <p className="text-muted-foreground">+50 XP the first time you master a skill</p>
                 </div>
               </div>
               <div className="flex items-start gap-2">
@@ -496,8 +496,8 @@ export default function Leaderboard() {
                   <Flame className="w-3 h-3 text-orange-500" />
                 </div>
                 <div>
-                  <p className="font-medium">Daily Streak</p>
-                  <p className="text-muted-foreground">+5 XP per day</p>
+                  <p className="font-medium">Daily streak</p>
+                  <p className="text-muted-foreground">+5 XP for every day you practice in a row</p>
                 </div>
               </div>
             </div>
@@ -508,13 +508,13 @@ export default function Leaderboard() {
         {!isAuthenticated && (
           <Card className="bg-gradient-to-r from-primary/10 to-accent/10 border-primary/20">
             <CardContent className="p-6 text-center">
-              <h3 className="font-bold text-lg mb-2">Ready to compete?</h3>
+              <h3 className="font-bold text-lg mb-2">Want to see your name on this board?</h3>
               <p className="text-sm text-muted-foreground mb-4">
-                Sign up to track your rank and earn XP!
+                Create a free account to track your rank and start earning XP.
               </p>
               <Link href="/signup">
                 <Button className="gap-2">
-                  <ChevronUp className="w-4 h-4" /> Join the Leaderboard
+                  <ChevronUp className="w-4 h-4" /> Create My Free Account
                 </Button>
               </Link>
             </CardContent>

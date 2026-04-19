@@ -7,21 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import {
-  Gift,
-  Copy,
-  Share2,
-  Users,
-  Trophy,
-  ArrowLeft,
-  CheckCircle2,
-  Clock,
-  Sparkles,
-  Rocket,
-  ExternalLink,
-  MessageCircle,
-  Mail,
-} from "lucide-react";
+import { Gift, Copy, Share2, Users, Trophy, ArrowLeft, CircleCheck as CheckCircle2, Clock, Sparkles, Rocket, ExternalLink, MessageCircle, Mail } from "lucide-react";
 
 const LOGO_URL = import.meta.env.VITE_APP_LOGO || "";
 
@@ -92,7 +78,7 @@ export default function Referrals() {
     try {
       await navigator.clipboard.writeText(referralLink);
       setCopied(true);
-      toast.success("Referral link copied!");
+      toast.success("Link copied. Paste it anywhere.");
       setTimeout(() => setCopied(false), 2000);
     } catch {
       // Fallback for older browsers
@@ -103,35 +89,35 @@ export default function Referrals() {
       document.execCommand("copy");
       document.body.removeChild(input);
       setCopied(true);
-      toast.success("Referral link copied!");
+      toast.success("Link copied. Paste it anywhere.");
       setTimeout(() => setCopied(false), 2000);
     }
   };
 
   const handleShareEmail = () => {
-    const subject = encodeURIComponent("Try MathFuel - Fun Math Practice for Kids!");
+    const subject = encodeURIComponent("You should try MathFuel with your kids");
     const body = encodeURIComponent(
-      `Hey! I've been using MathFuel to help my kids practice math, and it's been amazing. You should try it!\n\nSign up here: ${referralLink}\n\nWhen you subscribe, I'll get a free month as a thank you!`
+      `Hey — I've been using MathFuel with the kids and it's actually working. The problems adapt to their level and there's a parent dashboard that shows exactly where they're stuck.\n\nHere's my sign-up link: ${referralLink}\n\nIf you end up subscribing, it gives me a free month as a thank-you.`
     );
     window.open(`mailto:?subject=${subject}&body=${body}`, "_blank");
   };
 
   const handleShareSMS = () => {
     const text = encodeURIComponent(
-      `Check out MathFuel for your kids' math practice! Sign up here: ${referralLink}`
+      `MathFuel has been great for the kids' math practice. Here's my sign-up link if you want to try it: ${referralLink}`
     );
     window.open(`sms:?body=${text}`, "_blank");
   };
 
   const stats = [
     {
-      label: "Friends Referred",
+      label: "Friends referred",
       value: dashboard.data?.totalReferrals || 0,
       icon: <Users className="w-5 h-5" />,
       color: "text-indigo-600 bg-indigo-50",
     },
     {
-      label: "Free Months Earned",
+      label: "Free months earned",
       value: dashboard.data?.totalRewardMonths || 0,
       icon: <Trophy className="w-5 h-5" />,
       color: "text-amber-600 bg-amber-50",
@@ -181,10 +167,10 @@ export default function Referrals() {
             <Gift className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold text-indigo-900 mb-2">
-            Give a Month, Get a Month
+            Give a month, get a month
           </h1>
           <p className="text-sm sm:text-base text-muted-foreground max-w-md mx-auto">
-            Share MathFuel with friends. When they subscribe, you both win — they get a great math tool, and you get a <strong className="text-indigo-600">free month</strong> for each friend!
+            Share MathFuel with a friend. When they subscribe, they get adaptive math practice and you get <strong className="text-indigo-600">one free month</strong> on us — every time.
           </p>
         </motion.div>
 
@@ -224,10 +210,10 @@ export default function Referrals() {
             <CardHeader className="bg-gradient-to-r from-indigo-600 to-indigo-700 text-white pb-4">
               <CardTitle className="flex items-center gap-2 text-lg">
                 <Share2 className="w-5 h-5" />
-                Your Referral Link
+                Your sharing link
               </CardTitle>
               <p className="text-indigo-100 text-sm mt-1">
-                Share this link with friends and family
+                Send it to anyone who might benefit. It's tied to your account.
               </p>
             </CardHeader>
             <CardContent className="p-5 sm:p-6 space-y-4">
@@ -304,7 +290,7 @@ export default function Referrals() {
         >
           <Card className="border-0 shadow-md">
             <CardHeader>
-              <CardTitle className="text-base sm:text-lg">How It Works</CardTitle>
+              <CardTitle className="text-base sm:text-lg">How it works</CardTitle>
             </CardHeader>
             <CardContent className="pb-6">
               <div className="space-y-4">
@@ -312,25 +298,25 @@ export default function Referrals() {
                   {
                     step: "1",
                     title: "Share your link",
-                    desc: "Send your unique referral link to friends and family",
+                    desc: "Send it by text, email, or however you chat.",
                     color: "bg-indigo-100 text-indigo-700",
                   },
                   {
                     step: "2",
-                    title: "Friend signs up",
-                    desc: "They create an account using your referral link",
+                    title: "They sign up",
+                    desc: "Your friend creates a free account through your link.",
                     color: "bg-teal-100 text-teal-700",
                   },
                   {
                     step: "3",
-                    title: "Friend subscribes",
-                    desc: "When they subscribe to the Family Plan, your reward is triggered",
+                    title: "They subscribe to Family",
+                    desc: "Your reward unlocks as soon as their first payment clears.",
                     color: "bg-amber-100 text-amber-700",
                   },
                   {
                     step: "4",
-                    title: "You get a free month!",
-                    desc: "A 100% discount is automatically applied to your next billing cycle",
+                    title: "You get a free month",
+                    desc: "We apply a 100% discount to your next billing cycle automatically.",
                     color: "bg-emerald-100 text-emerald-700",
                   },
                 ].map((item, i) => (
@@ -362,7 +348,7 @@ export default function Referrals() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                   <Users className="w-5 h-5 text-indigo-600" />
-                  Your Referrals
+                  People you've invited
                 </CardTitle>
               </CardHeader>
               <CardContent className="pb-6">
@@ -408,9 +394,9 @@ export default function Referrals() {
                 <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center mx-auto mb-4">
                   <Users className="w-7 h-7 text-gray-400" />
                 </div>
-                <h3 className="font-semibold text-gray-900 mb-1">No referrals yet</h3>
+                <h3 className="font-semibold text-gray-900 mb-1">No invites sent yet</h3>
                 <p className="text-sm text-muted-foreground max-w-xs mx-auto">
-                  Share your referral link with friends and family to start earning free months!
+                  Copy your link above and send it to one parent this week. Each friend who subscribes earns you a free month.
                 </p>
               </CardContent>
             </Card>
