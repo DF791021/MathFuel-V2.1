@@ -6,10 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Link, useLocation } from "wouter";
 import { motion } from "framer-motion";
 import confetti from "canvas-confetti";
-import {
-  Rocket, Crown, CheckCircle2, ArrowRight,
-  Sparkles, Users, Brain, BarChart3, Shield,
-} from "lucide-react";
+import { Rocket, Crown, CircleCheck as CheckCircle2, ArrowRight, Sparkles, Users, Brain, ChartBar as BarChart3, Shield } from "lucide-react";
 
 const LOGO_URL =
   "https://d2xsxph8kpxj0f.cloudfront.net/310519663117001051/BAbKuMSfjHaa9ao8qByqEp/mathfuel-logo-V7jjfN52dexxQobYgXDFCk.webp";
@@ -218,7 +215,7 @@ export default function PaymentSuccess() {
               className="bg-accent text-accent-foreground hover:bg-accent/90 text-base px-8 py-6 rounded-xl shadow-lg shadow-accent/20 gap-2 w-full sm:w-auto"
             >
               <Rocket className="w-5 h-5" />
-              Start Practicing Now
+              Start practicing now
               <ArrowRight className="w-4 h-4" />
             </Button>
           </Link>
@@ -288,7 +285,7 @@ export default function PaymentSuccess() {
         >
           A receipt has been sent to your email. You can manage billing anytime from your{" "}
           <Link href="/account" className="underline hover:text-foreground transition-colors">
-            Account Settings
+            account settings
           </Link>
           .
         </motion.p>
