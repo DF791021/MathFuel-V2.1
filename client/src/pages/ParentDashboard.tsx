@@ -9,10 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { motion } from "framer-motion";
-import {
-  ArrowLeft, Users, BarChart3, Flame, Target, Trophy,
-  BookOpen, Calendar, TrendingUp, Link2, CheckCircle2, AlertCircle,
-} from "lucide-react";
+import { ArrowLeft, Users, ChartBar as BarChart3, Flame, Target, Trophy, BookOpen, Calendar, TrendingUp, Link2, CircleCheck as CheckCircle2, CircleAlert as AlertCircle } from "lucide-react";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
@@ -118,9 +115,9 @@ function EmptyState() {
   return (
     <div className="text-center py-10 sm:py-16">
       <Users className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 text-muted-foreground/30" />
-      <h2 className="!text-xl sm:!text-2xl font-bold mb-2">No Linked Students</h2>
+      <h2 className="!text-xl sm:!text-2xl font-bold mb-2">You're not linked to a child yet</h2>
       <p className="text-xs sm:text-base text-muted-foreground mb-4 sm:mb-6 max-w-md mx-auto px-4">
-        Enter your child's invite code below to start tracking their progress.
+        Ask your child to open their dashboard and tap "Generate Invite Code", then enter it below.
       </p>
       <RedeemInviteCode />
     </div>
@@ -147,7 +144,7 @@ function RedeemInviteCode() {
           <h3 className="font-bold text-sm sm:text-base text-indigo-900">Enter Invite Code</h3>
         </div>
         <p className="text-xs sm:text-sm text-indigo-600/70 mb-3">
-          Ask your child to generate an invite code from their dashboard.
+          Ask your child to tap "Generate Invite Code" on their dashboard, then type the 6-character code below.
         </p>
 
         {success ? (
@@ -327,7 +324,7 @@ function ChildOverview({ child, progress, isLoading }: { child: any; progress: a
                     </div>
                   ))
                 ) : (
-                  <p className="text-center text-xs sm:text-sm text-muted-foreground py-3 sm:py-4">No skills practiced yet.</p>
+                  <p className="text-center text-xs sm:text-sm text-muted-foreground py-3 sm:py-4">Skill progress will appear here after the first practice session.</p>
                 )}
               </CardContent>
             </Card>
@@ -348,7 +345,7 @@ function ChildOverview({ child, progress, isLoading }: { child: any; progress: a
                     <SessionRow key={session.id} session={session} showDate />
                   ))
                 ) : (
-                  <p className="text-center text-xs sm:text-sm text-muted-foreground py-3 sm:py-4">No sessions yet.</p>
+                  <p className="text-center text-xs sm:text-sm text-muted-foreground py-3 sm:py-4">Recent sessions will show up here once your child starts practicing.</p>
                 )}
               </CardContent>
             </Card>

@@ -23,14 +23,14 @@ export default function Login() {
       navigate("/dashboard");
     },
     onError: (err) => {
-      toast.error(err.message || "Login failed. Please try again.");
+      toast.error(err.message || "That email and password don't match. Try again or reset your password.");
     },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim() || !password.trim()) {
-      toast.error("Please fill in all fields.");
+      toast.error("Add your email and password to continue.");
       return;
     }
     loginMutation.mutate({ email: email.trim(), password });
@@ -175,7 +175,7 @@ export default function Login() {
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
                   ) : (
                     <>
-                      Log In
+                      Log In to My Account
                       <ArrowRight className="w-4 h-4" />
                     </>
                   )}

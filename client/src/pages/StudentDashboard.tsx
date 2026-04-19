@@ -167,7 +167,7 @@ function BadgeShowcase({ badges }: { badges: any[] }) {
           <div className="w-12 h-12 rounded-2xl bg-muted/60 flex items-center justify-center mx-auto mb-2">
             <Trophy className="w-6 h-6 opacity-30" />
           </div>
-          <p className="text-xs">Complete sessions to earn badges!</p>
+          <p className="text-xs">Finish your first session to unlock your first badge.</p>
         </div>
       ) : (
         <div className="flex flex-wrap gap-2">
@@ -210,7 +210,7 @@ function RecentSessions({ sessions }: { sessions: any[] }) {
           <div className="w-12 h-12 rounded-2xl bg-muted/60 flex items-center justify-center mx-auto mb-2">
             <BookOpen className="w-6 h-6 opacity-30" />
           </div>
-          <p className="text-xs">No sessions yet. Start practicing!</p>
+          <p className="text-xs">No sessions yet. A first one takes about 4 minutes — try it now.</p>
         </div>
       ) : (
         <div className="space-y-2.5">
@@ -283,12 +283,12 @@ function RecommendedSkills({ isAuthenticated }: { isAuthenticated: boolean }) {
         >
           <TrendingUp className="w-4 h-4" style={{ color: "oklch(0.42 0.14 163)" }} />
         </div>
-        <p className="font-extrabold text-foreground text-sm">What to Work On Next</p>
+        <p className="font-extrabold text-foreground text-sm">Skills to practice next</p>
         <div className="ml-auto">
           <span className="text-[10px] font-bold px-2 py-1 rounded-full"
             style={{ background: "oklch(0.52 0.16 163 / 0.1)", color: "oklch(0.42 0.14 163)" }}
           >
-            AI Powered
+            Picked for you
           </span>
         </div>
       </div>
@@ -302,7 +302,7 @@ function RecommendedSkills({ isAuthenticated }: { isAuthenticated: boolean }) {
           <div className="w-12 h-12 rounded-2xl bg-muted/60 flex items-center justify-center mx-auto mb-2">
             <TrendingUp className="w-6 h-6 opacity-30" />
           </div>
-          <p className="text-xs">Complete some sessions to get personalized recommendations!</p>
+          <p className="text-xs">Finish a few sessions and we'll show you the skills to focus on next.</p>
         </div>
       ) : (
         <div className="space-y-2.5">
@@ -360,7 +360,7 @@ function ErrorPatterns({ isAuthenticated }: { isAuthenticated: boolean }) {
         >
           <Lightbulb className="w-4 h-4" style={{ color: "oklch(0.58 0.18 65)" }} />
         </div>
-        <p className="font-extrabold text-foreground text-sm">Learning Insights</p>
+        <p className="font-extrabold text-foreground text-sm">Where you get stuck</p>
       </div>
 
       {isLoading ? (
@@ -372,7 +372,7 @@ function ErrorPatterns({ isAuthenticated }: { isAuthenticated: boolean }) {
           <div className="w-12 h-12 rounded-2xl bg-muted/60 flex items-center justify-center mx-auto mb-2">
             <Lightbulb className="w-6 h-6 opacity-30" />
           </div>
-          <p className="text-xs">Keep practicing and I'll spot any tricky patterns for you!</p>
+          <p className="text-xs">After a few sessions, MathBuddy will point out the problems that trip you up most.</p>
         </div>
       ) : (
         <div className="space-y-2.5">
@@ -443,7 +443,7 @@ function InviteCodeCard() {
           <div className="flex-1 min-w-0">
             <h3 className="font-extrabold text-sm text-foreground">Connect a Parent</h3>
             <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
-              Share this code with your parent so they can track your progress.
+              Share this code with a parent so they can see how you're doing.
             </p>
             {generateCode.data ? (
               <div className="mt-3">

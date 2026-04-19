@@ -7,18 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import {
-  Eye,
-  EyeOff,
-  Rocket,
-  ArrowRight,
-  ArrowLeft,
-  GraduationCap,
-  Users,
-  CheckCircle2,
-  Sparkles,
-  Gift,
-} from "lucide-react";
+import { Eye, EyeOff, Rocket, ArrowRight, ArrowLeft, GraduationCap, Users, CircleCheck as CheckCircle2, Sparkles, Gift } from "lucide-react";
 
 const LOGO_URL = import.meta.env.VITE_APP_LOGO || "";
 
@@ -35,21 +24,21 @@ const ROLE_OPTIONS: {
   {
     value: "student",
     label: "I'm a Student",
-    description: "I want to practice math and level up my skills",
+    description: "Practice math and watch my skills grow",
     icon: <Rocket className="w-6 h-6" />,
     color: "bg-indigo-50 border-indigo-200 hover:border-indigo-400 text-indigo-700",
   },
   {
     value: "parent",
     label: "I'm a Parent",
-    description: "I want to track my child's progress and support their learning",
+    description: "Track my child's progress and support their learning",
     icon: <Users className="w-6 h-6" />,
     color: "bg-teal-50 border-teal-200 hover:border-teal-400 text-teal-700",
   },
   {
     value: "teacher",
     label: "I'm a Teacher",
-    description: "I want to use MathFuel with my classroom",
+    description: "Use MathFuel with my classroom",
     icon: <GraduationCap className="w-6 h-6" />,
     color: "bg-amber-50 border-amber-200 hover:border-amber-400 text-amber-700",
   },
@@ -96,11 +85,11 @@ export default function Signup() {
           { code: referralCode },
           {
             onSuccess: () => {
-              toast.success("Account created! Your referral has been recorded. 🎉");
+              toast.success("You're in! Your referral has been recorded.");
             },
             onError: () => {
               // Still navigate even if referral recording fails
-              toast.success("Account created! Welcome to MathFuel! 🚀");
+              toast.success("You're in! Welcome to MathFuel.");
             },
             onSettled: () => {
               navigate("/dashboard");
@@ -108,12 +97,12 @@ export default function Signup() {
           }
         );
       } else {
-        toast.success("Account created! Welcome to MathFuel! 🚀");
+        toast.success("You're in! Welcome to MathFuel.");
         navigate("/dashboard");
       }
     },
     onError: (err) => {
-      toast.error(err.message || "Registration failed. Please try again.");
+      toast.error(err.message || "We couldn't create your account. This email may already be in use — try logging in instead.");
     },
   });
 
@@ -125,11 +114,11 @@ export default function Signup() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!userType || !name.trim() || !email.trim() || !password.trim()) {
-      toast.error("Please fill in all fields.");
+      toast.error("Fill in every field to finish creating your account.");
       return;
     }
     if (password.length < 6) {
-      toast.error("Password must be at least 6 characters.");
+      toast.error("Passwords need 6 or more characters. Add a few more.");
       return;
     }
     registerMutation.mutate({
@@ -315,8 +304,8 @@ export default function Signup() {
                           onChange={(e) => setName(e.target.value)}
                           placeholder={
                             userType === "student"
-                              ? "What should we call you?"
-                              : "Enter your full name"
+                              ? "Your first name"
+                              : "Your full name"
                           }
                           className="h-11 sm:h-12 text-sm sm:text-base"
                           autoComplete="name"
@@ -351,7 +340,7 @@ export default function Signup() {
                             type={showPassword ? "text" : "password"}
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            placeholder="At least 6 characters"
+                            placeholder="6 or more characters"
                             className="h-11 sm:h-12 text-sm sm:text-base pr-11"
                             autoComplete="new-password"
                           />
@@ -368,11 +357,15 @@ export default function Signup() {
                             )}
                           </button>
                         </div>
-                        {password.length > 0 && password.length < 6 && (
-                          <p className="text-xs text-red-500 mt-1">
-                            Password must be at least 6 characters
+                        {password.length === 0 ? (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Use 6 or more characters. Mix in a number to make it stronger.
                           </p>
-                        )}
+                        ) : password.length < 6 ? (
+                          <p className="text-xs text-red-500 mt-1">
+                            {6 - password.length} more character{6 - password.length === 1 ? "" : "s"} to go.
+                          </p>
+                        ) : null}
                       </div>
 
                       {/* Grade Level (students only) */}
@@ -414,7 +407,7 @@ export default function Signup() {
                           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
                         ) : (
                           <>
-                            Create Account
+                            Create My Account
                             <Rocket className="w-4 h-4" />
                           </>
                         )}

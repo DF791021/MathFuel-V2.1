@@ -156,13 +156,13 @@ export default function PracticeSession() {
     try {
       const result = await aiHintMutation.mutateAsync({ problemId: currentProblem.id, hintsUsed: hintsViewed, previousHints: visibleHints });
       if (result.hint) { setVisibleHints((prev) => [...prev, result.hint]); setHintsViewed((h) => h + 1); }
-      else toast.info("No more hints available!");
+      else toast.info("You've used every hint for this problem. Give it your best guess!");
     } catch {
       try {
         const result = await utils.client.practice.getHint.query({ problemId: currentProblem.id, hintIndex: hintsViewed });
         if (result.hint) { setVisibleHints((prev) => [...prev, result.hint!]); setHintsViewed((h) => h + 1); }
-        else toast.info("No more hints available!");
-      } catch { toast.error("Failed to get hint"); }
+        else toast.info("You've used every hint for this problem. Give it your best guess!");
+      } catch { toast.error("MathBuddy is having trouble writing a hint. Try again in a moment."); }
     }
   };
 
@@ -271,9 +271,9 @@ function SetupScreen({ onStart, isLoading, skillId }: { onStart: () => void; isL
         >
           <Zap className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
         </motion.div>
-        <h1 className="!text-2xl sm:!text-3xl font-bold mb-2">Ready to Practice?</h1>
+        <h1 className="!text-2xl sm:!text-3xl font-bold mb-2">Ready when you are</h1>
         <p className="text-sm sm:text-base text-muted-foreground max-w-md mx-auto px-2">
-          You'll solve {PROBLEMS_PER_SESSION} problems. MathBuddy is here to help when you're stuck!
+          {PROBLEMS_PER_SESSION} problems, about 4 minutes. MathBuddy will help when a problem feels tricky.
         </p>
       </div>
 
@@ -307,7 +307,7 @@ function SetupScreen({ onStart, isLoading, skillId }: { onStart: () => void; isL
         className="h-12 sm:h-14 px-8 sm:px-10 text-base sm:text-lg gap-2 rounded-full shadow-lg w-full sm:w-auto"
       >
         {isLoading ? <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" /> : <Play className="w-5 h-5" />}
-        {isLoading ? "Starting..." : "Let's Go!"}
+        {isLoading ? "Setting up your practice..." : "Start Practicing"}
       </Button>
     </motion.div>
   );
@@ -409,7 +409,7 @@ function ProblemScreen({ problem, answer, setAnswer, onSubmit, onGetHint, visibl
           <Input ref={inputRef} type={problem.answerType === "number" ? "number" : "text"}
             value={answer} onChange={(e) => setAnswer(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && onSubmit()}
-            placeholder="Type your answer..." className="text-base sm:text-lg h-12 sm:h-14 text-center" autoFocus
+            placeholder="Type a number, then press Enter" className="text-base sm:text-lg h-12 sm:h-14 text-center" autoFocus
           />
         )}
 
@@ -418,7 +418,7 @@ function ProblemScreen({ problem, answer, setAnswer, onSubmit, onGetHint, visibl
           className="w-full h-11 sm:h-12 text-sm sm:text-lg gap-1.5 sm:gap-2"
         >
           {isSubmitting ? <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-b-2 border-white" /> : <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5" />}
-          {isSubmitting ? "Checking..." : "Submit Answer"}
+          {isSubmitting ? "Checking your answer..." : "Check My Answer"}
         </Button>
       </div>
 
@@ -462,7 +462,7 @@ function FeedbackScreen({ feedback, problem, answer, onNext, isLast, aiExplanati
               )}
             </motion.div>
             <h2 className={`!text-xl sm:!text-2xl font-bold ${feedback.isCorrect ? "text-green-700" : "text-red-700"}`}>
-              {feedback.isCorrect ? "Correct!" : "Not Quite!"}
+              {feedback.isCorrect ? "Correct!" : "Close! Let's look at this one."}
             </h2>
             {feedback.isCorrect && feedback.streak > 1 && (
               <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="text-green-600 mt-1 text-sm">
@@ -537,7 +537,7 @@ function FeedbackScreen({ feedback, problem, answer, onNext, isLast, aiExplanati
 
       {/* Next Button */}
       <Button onClick={onNext} size="lg" className="w-full h-11 sm:h-12 text-sm sm:text-lg gap-2">
-        {isLast ? <><Trophy className="w-4 h-4 sm:w-5 sm:h-5" /> See Results</> : <><ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" /> Next Problem</>}
+        {isLast ? <><Trophy className="w-4 h-4 sm:w-5 sm:h-5" /> See How I Did</> : <><ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" /> Next Problem</>}
       </Button>
     </motion.div>
   );
@@ -552,10 +552,10 @@ function CompleteScreen({ results, aiSummary, summaryRating, onRateSummary, onPl
   const accuracy = results.accuracy ?? 0;
 
   const displaySummary = aiSummary || (
-    accuracy >= 90 ? "Outstanding! You're a math superstar!"
-    : accuracy >= 70 ? "Great job! Keep practicing to master more skills!"
-    : accuracy >= 50 ? "Good effort! Try using hints to learn tricky problems."
-    : "Don't worry! Every practice makes you stronger. Try again!"
+    accuracy >= 90 ? "Nine or more out of ten — that's mastery-level focus."
+    : accuracy >= 70 ? "Strong session. A few more like this and the next skill unlocks."
+    : accuracy >= 50 ? "Good try. Use a hint on tricky problems next time to learn the pattern."
+    : "Tough session — that's how brains grow. Try 5 more and it'll feel easier."
   );
 
   return (
@@ -635,7 +635,7 @@ function CompleteScreen({ results, aiSummary, summaryRating, onRateSummary, onPl
       <div className="flex gap-2 sm:gap-3 justify-center">
         <Button onClick={onPlayAgain} size="lg" className="gap-1.5 sm:gap-2 text-sm sm:text-base h-11 sm:h-12 px-4 sm:px-6">
           <RotateCcw className="w-4 h-4 sm:w-5 sm:h-5" />
-          Play Again
+          Do Another Session
         </Button>
         <Button variant="outline" size="lg" onClick={() => navigate("/dashboard")} className="gap-1.5 sm:gap-2 text-sm sm:text-base h-11 sm:h-12 px-4 sm:px-6">
           <Home className="w-4 h-4 sm:w-5 sm:h-5" />
