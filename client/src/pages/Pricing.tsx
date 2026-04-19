@@ -44,22 +44,22 @@ const FAMILY_FEATURES = [
 const TRUST_ITEMS = [
   {
     icon: Brain,
-    title: "Adaptive Learning",
+    title: "Adaptive learning",
     desc: "Problems adjust in real time to your child's level — not too easy, not too hard.",
   },
   {
     icon: BarChart3,
-    title: "Parent Insights",
+    title: "Parent insights",
     desc: "See exactly where your child excels and where they need help, every week.",
   },
   {
     icon: Shield,
-    title: "Safe & Private",
+    title: "Safe & private",
     desc: "No ads, no third-party trackers. Your child's data is never sold.",
   },
   {
     icon: TrendingUp,
-    title: "Proven Progress",
+    title: "Proven progress",
     desc: "Students who practice 3× per week see measurable improvement in 30 days.",
   },
 ];
@@ -138,11 +138,11 @@ export default function Pricing() {
             ) : (
               <>
                 <Link href="/login" className="no-underline">
-                  <Button variant="outline" size="sm">Log In</Button>
+                  <Button variant="outline" size="sm">Log in</Button>
                 </Link>
                 <Link href="/signup" className="no-underline">
                   <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90">
-                    Sign Up Free
+                    Sign up free
                   </Button>
                 </Link>
               </>
@@ -234,16 +234,16 @@ export default function Pricing() {
                   {!isAuthenticated ? (
                     <Link href="/signup" className="no-underline block">
                       <Button variant="outline" className="w-full" size="lg">
-                        Start Free
+                        Start free
                       </Button>
                     </Link>
                   ) : !isCurrentlySubscribed ? (
                     <Button variant="outline" className="w-full" size="lg" disabled>
-                      <Check className="w-4 h-4 mr-2" /> Current Plan
+                      <Check className="w-4 h-4 mr-2" /> Current plan
                     </Button>
                   ) : (
                     <Button variant="outline" className="w-full" size="lg" disabled>
-                      Free Plan
+                      Free plan
                     </Button>
                   )}
                 </div>
@@ -310,7 +310,7 @@ export default function Pricing() {
                 <div className="mb-6">
                   {isCurrentlySubscribed ? (
                     <Button className="w-full bg-accent text-accent-foreground" size="lg" disabled>
-                      <Crown className="w-4 h-4 mr-2" /> Current Plan
+                      <Crown className="w-4 h-4 mr-2" /> Current plan
                     </Button>
                   ) : (
                     <Button
@@ -324,7 +324,7 @@ export default function Pricing() {
                       ) : (
                         <Zap className="w-4 h-4 mr-2" />
                       )}
-                      {isAuthenticated ? "Upgrade to Family" : "Create Account & Upgrade"}
+                      {isAuthenticated ? "Upgrade to Family" : "Create account & upgrade"}
                     </Button>
                   )}
                 </div>
@@ -450,7 +450,7 @@ Join the families using MathFuel to turn daily practice into lasting progress.
               <>
                 <Link href="/signup" className="no-underline">
                   <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90 shadow-lg w-full sm:w-auto">
-                    <Zap className="w-4 h-4 mr-2" /> Start Free — No Card Required
+                    <Zap className="w-4 h-4 mr-2" /> Start free — no card required
                   </Button>
                 </Link>
               </>
@@ -467,7 +467,7 @@ Join the families using MathFuel to turn daily practice into lasting progress.
             ) : (
               <Link href="/dashboard" className="no-underline">
                 <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90">
-                  <ArrowLeft className="w-4 h-4 mr-2" /> Back to Dashboard
+                  <ArrowLeft className="w-4 h-4 mr-2" /> Back to dashboard
                 </Button>
               </Link>
             )}

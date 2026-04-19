@@ -14,7 +14,7 @@ const LOGO_URL = import.meta.env.VITE_APP_LOGO || "";
 function StatusBadge({ status }: { status: string }) {
   const config: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
     signed_up: {
-      label: "Signed Up",
+      label: "Signed up",
       color: "bg-blue-50 text-blue-700 border-blue-200",
       icon: <Clock className="w-3 h-3" />,
     },
@@ -275,7 +275,7 @@ export default function Referrals() {
                   className="gap-2 h-11"
                 >
                   <MessageCircle className="w-4 h-4" />
-                  Text Message
+                  Text message
                 </Button>
               </div>
             </CardContent>

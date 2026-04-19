@@ -151,7 +151,7 @@ export default function Account() {
                 <div>
                   <h2 className="text-lg font-bold text-foreground">Subscription</h2>
                   <p className="text-xs text-muted-foreground">
-                    {isPremium ? "Family Plan" : "Free Plan"}
+                    {isPremium ? "Family plan" : "Free plan"}
                   </p>
                 </div>
                 {isPremium && (
@@ -211,7 +211,7 @@ export default function Account() {
                     ) : (
                       <CreditCard className="w-4 h-4 mr-2" />
                     )}
-                    Manage Billing in Stripe
+                    Manage billing in Stripe
                     <ExternalLink className="w-3.5 h-3.5 ml-1.5 opacity-50" />
                   </Button>
                 </div>
@@ -250,7 +250,7 @@ export default function Account() {
               <Link href="/referrals" className="no-underline block">
                 <Button variant="outline" className="w-full gap-2">
                   <Gift className="w-4 h-4" />
-                  Open My Referral Page
+                  Open my referral page
                   <ExternalLink className="w-3.5 h-3.5 ml-auto opacity-50" />
                 </Button>
               </Link>
@@ -278,7 +278,7 @@ export default function Account() {
                     navigate("/");
                   }}
                 >
-                  Log Out of MathFuel
+                  Log out of MathFuel
                 </Button>
               </div>
             </CardContent>

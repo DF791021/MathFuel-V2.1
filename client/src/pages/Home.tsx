@@ -292,7 +292,7 @@ export default function Home() {
             <Link href="/login" className="no-underline">
               <div className="relative px-3.5 py-2 group/login cursor-pointer">
                 <span className="text-[0.83rem] font-semibold text-slate-600 group-hover/login:text-slate-900 transition-colors duration-200 tracking-wide">
-                  Log In
+                  Log in
                 </span>
                 <span className="absolute bottom-1 left-3.5 right-3.5 h-[1.5px] bg-slate-900 scale-x-0 group-hover/login:scale-x-100 transition-transform duration-250 origin-left rounded-full" />
               </div>
@@ -319,7 +319,7 @@ export default function Home() {
                       "0 2px 12px oklch(0.44 0.20 222 / 0.35), inset 0 1px 0 rgba(255,255,255,0.12)";
                   }}
                 >
-                  Start Free
+                  Start free
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </motion.div>
@@ -360,7 +360,7 @@ export default function Home() {
                 {[
                   { href: "/leaderboard", label: "Leaderboard" },
                   { href: "/pricing", label: "Pricing" },
-                  { href: "/login", label: "Log In" },
+                  { href: "/login", label: "Log in" },
                 ].map((item, i) => (
                   <motion.div
                     key={item.href}
@@ -386,7 +386,7 @@ export default function Home() {
                       className="w-full py-2.5 text-sm font-bold text-white rounded-xl"
                       style={{ background: "linear-gradient(135deg, oklch(0.44 0.20 222) 0%, oklch(0.38 0.18 240) 100%)" }}
                     >
-                      Start Free
+                      Start free
                     </button>
                   </Link>
                 </motion.div>
@@ -449,7 +449,7 @@ export default function Home() {
                 }}
               >
                 <Sparkles className="w-3.5 h-3.5" />
-                Adaptive AI · Grades 1 &amp; 2 · Free to Start
+                Adaptive AI · Grades 1 &amp; 2 · Free to start
               </motion.div>
 
               <motion.h1
@@ -488,7 +488,7 @@ Every problem is picked for <em className="not-italic font-bold text-foreground"
                     style={{ background: "linear-gradient(135deg, oklch(0.44 0.20 222), oklch(0.36 0.18 240))" }}
                   >
                     <Rocket className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" />
-                    Start Free — No Card Required
+                    Start free — no card required
                     <ChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </Link>
@@ -499,7 +499,7 @@ Every problem is picked for <em className="not-italic font-bold text-foreground"
                     className="w-full sm:w-auto text-base px-7 py-6 rounded-2xl border-border/80 text-foreground hover:bg-muted/60 group transition-all"
                   >
                     <PlayCircle className="w-5 h-5 mr-2 text-muted-foreground group-hover:text-primary transition-colors" />
-                    See How It Works
+                    See how it works
                   </Button>
                 </a>
               </motion.div>
@@ -554,7 +554,7 @@ Every problem is picked for <em className="not-italic font-bold text-foreground"
                     <Flame className="w-4 h-4 text-amber-600" />
                   </div>
                   <div>
-                    <p className="text-xs font-extrabold text-foreground">7-day streak!</p>
+                    <p className="text-xs font-extrabold text-foreground">7-day streak</p>
                     <p className="text-[10px] text-muted-foreground">Back tomorrow to keep it alive.</p>
                   </div>
                 </motion.div>
@@ -723,8 +723,8 @@ Three things every child needs to truly improve. Most apps forget all three.
 
                 <div className="flex items-center justify-between mb-6 mt-2">
                   <div>
-                    <p className="text-xs text-muted-foreground font-semibold mb-1">Emma's Progress</p>
-                    <p className="font-extrabold text-foreground">This Week</p>
+                    <p className="text-xs text-muted-foreground font-semibold mb-1">Emma's progress</p>
+                    <p className="font-extrabold text-foreground">This week</p>
                   </div>
                   <div
                     className="text-xs font-extrabold px-3 py-1.5 rounded-full"
@@ -831,7 +831,7 @@ Stop guessing whether practice is helping. MathFuel's parent dashboard shows ski
                     className="font-bold px-7 py-6 text-base rounded-2xl shadow-lg shadow-primary/20 group transition-all hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5"
                     style={{ background: "linear-gradient(135deg, oklch(0.44 0.20 222), oklch(0.36 0.18 240))" }}
                   >
-                    Create My Free Account
+                    Create my free account
                     <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </Link>
@@ -1035,7 +1035,7 @@ Stop guessing whether practice is helping. MathFuel's parent dashboard shows ski
             <motion.div variants={fadeIn}
               className="inline-flex items-center gap-2 bg-white/10 border border-white/20 text-white/90 text-xs font-bold px-4 py-2 rounded-full uppercase tracking-widest mb-7"
             >
-              <Sparkles className="w-3.5 h-3.5" /> Free forever. No card required.
+              <Sparkles className="w-3.5 h-3.5" /> Free forever — no card required
             </motion.div>
 
             <motion.h2 variants={fadeIn}
@@ -1056,7 +1056,7 @@ Free to start. Real progress inside the first week. No ads, no gimmicks — real
                   style={{ color: "oklch(0.44 0.20 222)" }}
                 >
                   <Rocket className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" />
-                  Start My First Session
+                  Start my first session
                   <ChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </Link>
@@ -1066,7 +1066,7 @@ Free to start. Real progress inside the first week. No ads, no gimmicks — real
                   size="lg"
                   className="text-white/80 hover:text-white hover:bg-white/10 font-semibold text-base px-8 py-6 rounded-2xl border border-white/20 transition-all"
                 >
-                  See Pricing
+                  See pricing
                 </Button>
               </Link>
             </motion.div>
@@ -1104,8 +1104,8 @@ Free to start. Real progress inside the first week. No ads, no gimmicks — real
               {[
                 { href: "/leaderboard", label: "Leaderboard" },
                 { href: "/pricing", label: "Pricing" },
-                { href: "/login", label: "Log In" },
-                { href: "/signup", label: "Start Free" },
+                { href: "/login", label: "Log in" },
+                { href: "/signup", label: "Start free" },
               ].map(link => (
                 <Link
                   key={link.href} href={link.href}
