@@ -1,4 +1,4 @@
-import express from "express";
+import express, { type NextFunction, type Request, type Response } from "express";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
@@ -18,5 +18,16 @@ export function createApp() {
       createContext,
     })
   );
+
+  app.use("/api", (_req: Request, res: Response) => {
+    res.status(404).json({ error: "Not Found" });
+  });
+
+  app.use("/api", (err: unknown, _req: Request, res: Response, _next: NextFunction) => {
+    const message = err instanceof Error ? err.message : "Internal Server Error";
+    console.error("[API] Unhandled error:", err);
+    res.status(500).json({ error: message });
+  });
+
   return app;
 }
