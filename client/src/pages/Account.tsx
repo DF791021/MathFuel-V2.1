@@ -5,10 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link, useLocation } from "wouter";
 import { motion } from "framer-motion";
-import {
-  ArrowLeft, Crown, CreditCard, Settings, User, Mail,
-  Calendar, Shield, Loader2, ExternalLink, Zap, CheckCircle2, Gift,
-} from "lucide-react";
+import { ArrowLeft, Crown, CreditCard, Settings, User, Mail, Calendar, Shield, Loader as Loader2, ExternalLink, Zap, CircleCheck as CheckCircle2, Gift } from "lucide-react";
 import { toast } from "sonner";
 
 const LOGO_URL = "https://d2xsxph8kpxj0f.cloudfront.net/310519663117001051/BAbKuMSfjHaa9ao8qByqEp/mathfuel-logo-V7jjfN52dexxQobYgXDFCk.webp";
@@ -34,11 +31,11 @@ export default function Account() {
     onSuccess: (data) => {
       if (data.url) {
         window.open(data.url, "_blank");
-        toast.info("Opening Stripe billing portal...");
+        toast.info("Opening your secure Stripe billing portal in a new tab.");
       }
     },
     onError: (err) => {
-      toast.error(err.message || "Failed to open billing portal.");
+      toast.error(err.message || "We couldn't reach the billing portal right now. Try again in a moment.");
     },
   });
 
@@ -96,10 +93,10 @@ export default function Account() {
       <div className="max-w-2xl mx-auto px-4 py-8 sm:py-12">
         <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0}>
           <h1 className="!text-2xl sm:!text-3xl font-extrabold text-foreground mb-1">
-            Account Settings
+            Your account
           </h1>
           <p className="text-muted-foreground text-sm sm:text-base mb-8">
-            Manage your profile and subscription
+            Update your profile, check your plan, or manage billing.
           </p>
         </motion.div>
 
@@ -169,7 +166,7 @@ export default function Account() {
               {subLoading ? (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Loading subscription details...
+                  Checking your plan details...
                 </div>
               ) : isPremium ? (
                 <div className="space-y-4">
@@ -214,15 +211,14 @@ export default function Account() {
                     ) : (
                       <CreditCard className="w-4 h-4 mr-2" />
                     )}
-                    Manage Billing
+                    Manage Billing in Stripe
                     <ExternalLink className="w-3.5 h-3.5 ml-1.5 opacity-50" />
                   </Button>
                 </div>
               ) : (
                 <div className="space-y-4">
                   <p className="text-sm text-muted-foreground">
-                    You're on the Free plan with limited daily sessions and AI hints.
-                    Upgrade to Family for unlimited access.
+                    You're on the Free plan — 5 sessions and 3 AI hints a day. Upgrade to Family for unlimited practice and full parent insights.
                   </p>
                   <Link href="/pricing" className="no-underline block">
                     <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
@@ -245,16 +241,16 @@ export default function Account() {
                   <Gift className="w-5 h-5 text-amber-600" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-foreground">Refer a Friend</h2>
+                  <h2 className="text-lg font-bold text-foreground">Refer a friend</h2>
                   <p className="text-xs text-muted-foreground">
-                    Earn a free month for each friend who subscribes
+                    Earn a free month every time a friend subscribes through your link.
                   </p>
                 </div>
               </div>
               <Link href="/referrals" className="no-underline block">
                 <Button variant="outline" className="w-full gap-2">
                   <Gift className="w-4 h-4" />
-                  View Referral Program
+                  Open My Referral Page
                   <ExternalLink className="w-3.5 h-3.5 ml-auto opacity-50" />
                 </Button>
               </Link>
@@ -270,7 +266,7 @@ export default function Account() {
                 <div className="w-10 h-10 bg-muted rounded-xl flex items-center justify-center">
                   <Settings className="w-5 h-5 text-muted-foreground" />
                 </div>
-                <h2 className="text-lg font-bold text-foreground">Actions</h2>
+                <h2 className="text-lg font-bold text-foreground">Sign out</h2>
               </div>
 
               <div className="space-y-3">
@@ -282,7 +278,7 @@ export default function Account() {
                     navigate("/");
                   }}
                 >
-                  Log Out
+                  Log Out of MathFuel
                 </Button>
               </div>
             </CardContent>
