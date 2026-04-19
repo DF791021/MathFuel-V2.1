@@ -10,11 +10,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  ArrowLeft, CheckCircle2, XCircle, Lightbulb, ChevronRight,
-  Play, Trophy, Sparkles, Clock, Zap, RotateCcw, Home, Bot,
-  ThumbsUp, ThumbsDown,
-} from "lucide-react";
+import { ArrowLeft, CircleCheck as CheckCircle2, Circle as XCircle, Lightbulb, ChevronRight, Play, Trophy, Sparkles, Clock, Zap, RotateCcw, Chrome as Home, Bot, ThumbsUp, ThumbsDown } from "lucide-react";
 import HintSystem from "@/components/HintSystem";
 import { toast } from "sonner";
 
@@ -450,6 +446,9 @@ function FeedbackScreen({ feedback, problem, answer, onNext, isLast, aiExplanati
   return (
     <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
       className="space-y-4 sm:space-y-6"
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
     >
       {/* Result Banner */}
       <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} transition={{ type: "spring", damping: 10 }}>
