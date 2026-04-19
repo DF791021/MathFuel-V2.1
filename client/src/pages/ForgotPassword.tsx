@@ -47,12 +47,12 @@ export default function ForgotPassword() {
               <Mail className="w-7 h-7 text-white" />
             </div>
             <CardTitle className="text-2xl font-extrabold text-gray-900">
-              {sent ? "Check your email" : "Forgot password?"}
+              {sent ? "Check your email" : "Forgot your password?"}
             </CardTitle>
             <CardDescription className="text-base mt-1">
               {sent
                 ? "Open the email we just sent to finish resetting your password."
-                : "Enter your email and we'll send a secure link to reset your password."}
+                : "Enter your email and we'll send a secure reset link."}
             </CardDescription>
           </CardHeader>
 
@@ -128,7 +128,7 @@ export default function ForgotPassword() {
                       Sending your reset link...
                     </>
                   ) : (
-                    "Email Me a Reset Link"
+                    "Send reset link"
                   )}
                 </Button>
               </form>

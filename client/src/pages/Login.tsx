@@ -19,7 +19,7 @@ export default function Login() {
 
   const loginMutation = trpc.auth.login.useMutation({
     onSuccess: () => {
-      toast.success("Welcome back!");
+      toast.success("Welcome back.");
       navigate("/dashboard");
     },
     onError: (err) => {
@@ -91,13 +91,13 @@ export default function Login() {
               className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 text-amber-700 text-xs sm:text-sm font-medium mb-3"
             >
               <Sparkles className="w-3.5 h-3.5" />
-              Welcome back, learner!
+              Welcome back
             </motion.div>
             <h1 className="text-2xl sm:text-3xl font-bold text-indigo-900 mb-1.5">
               Log in to MathFuel
             </h1>
             <p className="text-sm sm:text-base text-muted-foreground">
-              Continue your math adventure
+              Pick up right where you left off.
             </p>
           </div>
 
@@ -175,7 +175,7 @@ export default function Login() {
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
                   ) : (
                     <>
-                      Log In to My Account
+                      Log in
                       <ArrowRight className="w-4 h-4" />
                     </>
                   )}

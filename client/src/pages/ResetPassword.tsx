@@ -127,12 +127,12 @@ export default function ResetPassword() {
               <Lock className="w-7 h-7 text-white" />
             </div>
             <CardTitle className="text-2xl font-extrabold text-gray-900">
-              {success ? "Password reset!" : "Create new password"}
+              {success ? "Password updated" : "Create a new password"}
             </CardTitle>
             <CardDescription className="text-base mt-1">
               {success
-                ? "Your password has been updated successfully."
-                : "Choose a strong password for your MathFuel account."}
+                ? "You're all set. Log in with your new password."
+                : "Pick something strong you'll remember."}
             </CardDescription>
           </CardHeader>
 
@@ -144,7 +144,7 @@ export default function ResetPassword() {
                     <CheckCircle2 className="w-8 h-8 text-emerald-500" />
                   </div>
                   <p className="text-sm text-muted-foreground text-center">
-                    You can now log in with your new password.
+                    Log in with your new password to continue.
                   </p>
                 </div>
                 <Link href="/login">
@@ -246,7 +246,7 @@ export default function ResetPassword() {
                       Saving your new password...
                     </>
                   ) : (
-                    "Save New Password"
+                    "Save new password"
                   )}
                 </Button>
               </form>

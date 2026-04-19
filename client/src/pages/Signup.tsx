@@ -23,22 +23,22 @@ const ROLE_OPTIONS: {
 }[] = [
   {
     value: "student",
-    label: "I'm a Student",
-    description: "Practice math and watch my skills grow",
+    label: "I'm a student",
+    description: "Practice math and watch my skills grow.",
     icon: <Rocket className="w-6 h-6" />,
     color: "bg-indigo-50 border-indigo-200 hover:border-indigo-400 text-indigo-700",
   },
   {
     value: "parent",
-    label: "I'm a Parent",
-    description: "Track my child's progress and support their learning",
+    label: "I'm a parent",
+    description: "Follow my child's progress and support their learning.",
     icon: <Users className="w-6 h-6" />,
     color: "bg-teal-50 border-teal-200 hover:border-teal-400 text-teal-700",
   },
   {
     value: "teacher",
-    label: "I'm a Teacher",
-    description: "Use MathFuel with my classroom",
+    label: "I'm a teacher",
+    description: "Use MathFuel with my classroom.",
     icon: <GraduationCap className="w-6 h-6" />,
     color: "bg-amber-50 border-amber-200 hover:border-amber-400 text-amber-700",
   },
@@ -85,11 +85,11 @@ export default function Signup() {
           { code: referralCode },
           {
             onSuccess: () => {
-              toast.success("You're in! Your referral has been recorded.");
+              toast.success("You're in. Your referral is recorded.");
             },
             onError: () => {
               // Still navigate even if referral recording fails
-              toast.success("You're in! Welcome to MathFuel.");
+              toast.success("Welcome to MathFuel.");
             },
             onSettled: () => {
               navigate("/dashboard");
@@ -97,7 +97,7 @@ export default function Signup() {
           }
         );
       } else {
-        toast.success("You're in! Welcome to MathFuel.");
+        toast.success("Welcome to MathFuel.");
         navigate("/dashboard");
       }
     },
@@ -184,10 +184,10 @@ export default function Signup() {
             </div>
             <div>
               <p className="text-sm font-semibold text-amber-800">
-                Referred by {referralValidation.data.referrerName}!
+                Referred by {referralValidation.data.referrerName}
               </p>
               <p className="text-xs text-amber-600">
-                Sign up and subscribe to earn them a free month
+                Subscribe after signup to earn them a free month.
               </p>
             </div>
           </div>
@@ -215,13 +215,13 @@ export default function Signup() {
                     className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-100 text-teal-700 text-xs sm:text-sm font-medium mb-3"
                   >
                     <Sparkles className="w-3.5 h-3.5" />
-                    Join the adventure!
+                    Start learning with MathFuel
                   </motion.div>
                   <h1 className="text-2xl sm:text-3xl font-bold text-indigo-900 mb-1.5">
                     Create your account
                   </h1>
                   <p className="text-sm sm:text-base text-muted-foreground">
-                    First, tell us who you are
+                    Tell us who's signing up.
                   </p>
                 </div>
 
@@ -282,10 +282,10 @@ export default function Signup() {
                     {ROLE_OPTIONS.find((r) => r.value === userType)?.label}
                   </div>
                   <h1 className="text-2xl sm:text-3xl font-bold text-indigo-900 mb-1.5">
-                    Almost there!
+                    A few quick details
                   </h1>
                   <p className="text-sm sm:text-base text-muted-foreground">
-                    Fill in your details to get started
+                    You'll be learning in under a minute.
                   </p>
                 </div>
 
@@ -407,7 +407,7 @@ export default function Signup() {
                           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
                         ) : (
                           <>
-                            Create My Account
+                            Create my account
                             <Rocket className="w-4 h-4" />
                           </>
                         )}
