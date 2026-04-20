@@ -7,7 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Eye, EyeOff, Rocket, ArrowRight, ArrowLeft, GraduationCap, Users, CircleCheck as CheckCircle2, Sparkles, Gift } from "lucide-react";
+import { Eye, EyeOff, Rocket, ArrowRight, ArrowLeft, GraduationCap, Users, CircleCheck as CheckCircle2, Sparkles, Gift, Lock, Briefcase } from "lucide-react";
+
+const INVESTOR_PASSWORD = "Mathmatics1021";
+const INVESTOR_UNLOCK_KEY = "mathfuel_investor_unlocked";
 
 const LOGO_URL = import.meta.env.VITE_APP_LOGO || "";
 
@@ -55,6 +58,13 @@ const GRADE_OPTIONS = [
 export default function Signup() {
   const [, navigate] = useLocation();
   const searchString = useSearch();
+  const [investorUnlocked, setInvestorUnlocked] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.sessionStorage.getItem(INVESTOR_UNLOCK_KEY) === "true";
+  });
+  const [investorPassword, setInvestorPassword] = useState("");
+  const [showInvestorPassword, setShowInvestorPassword] = useState(false);
+  const [investorError, setInvestorError] = useState("");
   const [step, setStep] = useState<Step>("role");
   const [userType, setUserType] = useState<UserType | null>(null);
   const [name, setName] = useState("");
@@ -129,6 +139,147 @@ export default function Signup() {
       gradeLevel: userType === "student" && gradeLevel ? gradeLevel : undefined,
     });
   };
+
+  const handleInvestorSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (investorPassword === INVESTOR_PASSWORD) {
+      window.sessionStorage.setItem(INVESTOR_UNLOCK_KEY, "true");
+      setInvestorUnlocked(true);
+      setInvestorError("");
+      toast.success("Welcome. Access granted.");
+    } else {
+      setInvestorError("That password isn't right. Please try again.");
+    }
+  };
+
+  if (!investorUnlocked) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 flex flex-col">
+        <div className="fixed inset-0 overflow-hidden pointer-events-none opacity-[0.04]">
+          {["÷", "×", "+", "−", "=", "π", "∞", "%"].map((s, i) => (
+            <motion.span
+              key={i}
+              className="absolute text-6xl sm:text-8xl font-bold text-blue-900"
+              style={{
+                top: `${10 + (i * 12) % 80}%`,
+                left: `${5 + (i * 15) % 90}%`,
+              }}
+              animate={{ y: [0, -20, 0], rotate: [0, 5, -5, 0] }}
+              transition={{ duration: 6 + i, repeat: Infinity, ease: "easeInOut" }}
+            >
+              {s}
+            </motion.span>
+          ))}
+        </div>
+
+        <header className="relative z-10 px-4 sm:px-6 py-4 sm:py-6">
+          <button
+            onClick={() => navigate("/")}
+            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+          >
+            {LOGO_URL ? (
+              <img src={LOGO_URL} alt="MathFuel" className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg" />
+            ) : (
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-blue-600 flex items-center justify-center">
+                <Rocket className="w-5 h-5 text-white" />
+              </div>
+            )}
+            <span className="text-lg sm:text-xl font-bold text-blue-900">MathFuel</span>
+          </button>
+        </header>
+
+        <main className="relative z-10 flex-1 flex items-center justify-center px-4 sm:px-6 pb-8">
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35 }}
+            className="w-full max-w-md"
+          >
+            <div className="text-center mb-6 sm:mb-8">
+              <motion.div
+                initial={{ scale: 0.8 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.1, type: "spring", damping: 15 }}
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs sm:text-sm font-medium mb-3"
+              >
+                <Briefcase className="w-3.5 h-3.5" />
+                Private preview
+              </motion.div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-2">
+                For Investor Login Please Enter Password
+              </h1>
+              <p className="text-sm sm:text-base text-muted-foreground">
+                MathFuel is in a closed preview while we finalize onboarding.
+              </p>
+            </div>
+
+            <Card className="border-0 shadow-xl shadow-blue-100/50 bg-white/85 backdrop-blur-sm">
+              <CardContent className="p-5 sm:p-8">
+                <form onSubmit={handleInvestorSubmit} className="space-y-4 sm:space-y-5">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="investor-password" className="text-sm font-medium">
+                      Access password
+                    </Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="investor-password"
+                        type={showInvestorPassword ? "text" : "password"}
+                        value={investorPassword}
+                        onChange={(e) => {
+                          setInvestorPassword(e.target.value);
+                          if (investorError) setInvestorError("");
+                        }}
+                        placeholder="Enter the investor password"
+                        className="h-11 sm:h-12 text-sm sm:text-base pl-10 pr-11"
+                        autoFocus
+                        autoComplete="off"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowInvestorPassword(!showInvestorPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                        tabIndex={-1}
+                      >
+                        {showInvestorPassword ? (
+                          <EyeOff className="w-4 h-4 sm:w-5 sm:h-5" />
+                        ) : (
+                          <Eye className="w-4 h-4 sm:w-5 sm:h-5" />
+                        )}
+                      </button>
+                    </div>
+                    {investorError && (
+                      <p className="text-xs text-red-500 mt-1">{investorError}</p>
+                    )}
+                  </div>
+
+                  <Button
+                    type="submit"
+                    className="w-full h-11 sm:h-12 text-sm sm:text-base font-semibold gap-2"
+                  >
+                    Unlock access
+                    <ArrowRight className="w-4 h-4" />
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+
+            <div className="text-center mt-6">
+              <p className="text-sm text-muted-foreground">
+                Already have an account?{" "}
+                <button
+                  onClick={() => navigate("/login")}
+                  className="text-blue-600 font-semibold hover:text-blue-700 transition-colors underline underline-offset-2"
+                >
+                  Log in
+                </button>
+              </p>
+            </div>
+          </motion.div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-teal-50 flex flex-col">
