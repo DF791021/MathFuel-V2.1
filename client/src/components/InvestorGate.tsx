@@ -7,7 +7,11 @@ import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, ArrowRight, Lock, Briefcase, Rocket } from "lucide-react";
 
 const INVESTOR_PASSWORD = "Mathmatics1021";
-const INVESTOR_UNLOCK_KEY = "mathfuel_investor_unlocked";
+const INVESTOR_UNLOCK_KEY = "mathfuel_investor_unlocked_v3";
+const LEGACY_UNLOCK_KEYS = [
+  "mathfuel_investor_unlocked",
+  "mathfuel_investor_unlocked_v2",
+];
 
 export default function InvestorGate({ children }: { children: React.ReactNode }) {
   const [unlocked, setUnlocked] = useState<boolean | null>(null);
@@ -17,6 +21,12 @@ export default function InvestorGate({ children }: { children: React.ReactNode }
 
   useEffect(() => {
     try {
+      if (typeof window !== "undefined") {
+        for (const k of LEGACY_UNLOCK_KEYS) {
+          window.localStorage.removeItem(k);
+          window.sessionStorage.removeItem(k);
+        }
+      }
       const ok =
         typeof window !== "undefined" &&
         (window.localStorage.getItem(INVESTOR_UNLOCK_KEY) === "true" ||
