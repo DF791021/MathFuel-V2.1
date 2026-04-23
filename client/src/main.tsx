@@ -45,11 +45,26 @@ const trpcClient = trpc.createClient({
     httpBatchLink({
       url: "/api/trpc",
       transformer: superjson,
-      fetch(input, init) {
-        return globalThis.fetch(input, {
+      async fetch(input, init) {
+        const res = await globalThis.fetch(input, {
           ...(init ?? {}),
           credentials: "include",
         });
+        const contentType = res.headers.get("content-type") ?? "";
+        if (!contentType.includes("application/json")) {
+          const body = await res.text();
+          const preview = body.slice(0, 200);
+          console.error(
+            `[tRPC] Non-JSON response (status ${res.status}, content-type "${contentType}"). ` +
+            `This usually means the serverless function crashed or DATABASE_URL is not set in Netlify. ` +
+            `Body preview: ${preview}`
+          );
+          throw new Error(
+            `Server returned ${res.status} ${contentType || "unknown content type"}. ` +
+            `Check Netlify function logs and that DATABASE_URL is set.`
+          );
+        }
+        return res;
       },
     }),
   ],
