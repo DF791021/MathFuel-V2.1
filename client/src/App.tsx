@@ -3,6 +3,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
+import InvestorGate from "./components/InvestorGate";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { Toaster } from "sonner";
 
@@ -21,6 +22,7 @@ const Account = React.lazy(() => import("./pages/Account"));
 const PaymentSuccess = React.lazy(() => import("./pages/PaymentSuccess"));
 const Referrals = React.lazy(() => import("./pages/Referrals"));
 const Leaderboard = React.lazy(() => import("./pages/Leaderboard"));
+const AdminContentEditor = React.lazy(() => import("./pages/AdminContentEditor"));
 
 function Router() {
   return (
@@ -41,6 +43,7 @@ function Router() {
         <Route path="/payment-success" component={PaymentSuccess} />
         <Route path="/referrals" component={Referrals} />
         <Route path="/leaderboard" component={Leaderboard} />
+        <Route path="/admin/editor" component={AdminContentEditor} />
         <Route path="/404" component={NotFound} />
         <Route component={NotFound} />
       </Switch>
@@ -54,14 +57,16 @@ function App() {
       <ThemeProvider defaultTheme="light">
         <TooltipProvider>
           <Toaster richColors position="top-center" />
-          <div className="flex flex-col min-h-screen">
-            <div className="flex-1">
-              <Router />
+          <InvestorGate>
+            <div className="flex flex-col min-h-screen">
+              <div className="flex-1">
+                <Router />
+              </div>
+              <footer className="py-3 text-center text-xs text-muted-foreground border-t">
+                By Mike K
+              </footer>
             </div>
-            <footer className="py-3 text-center text-xs text-muted-foreground border-t">
-              By Mike K
-            </footer>
-          </div>
+          </InvestorGate>
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>

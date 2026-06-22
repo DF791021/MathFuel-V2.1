@@ -19,18 +19,18 @@ export default function Login() {
 
   const loginMutation = trpc.auth.login.useMutation({
     onSuccess: () => {
-      toast.success("Welcome back!");
+      toast.success("Welcome back.");
       navigate("/dashboard");
     },
     onError: (err) => {
-      toast.error(err.message || "Login failed. Please try again.");
+      toast.error(err.message || "That email and password don't match. Try again or reset your password.");
     },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim() || !password.trim()) {
-      toast.error("Please fill in all fields.");
+      toast.error("Add your email and password to continue.");
       return;
     }
     loginMutation.mutate({ email: email.trim(), password });
@@ -91,13 +91,13 @@ export default function Login() {
               className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 text-amber-700 text-xs sm:text-sm font-medium mb-3"
             >
               <Sparkles className="w-3.5 h-3.5" />
-              Welcome back, learner!
+              Welcome back
             </motion.div>
             <h1 className="text-2xl sm:text-3xl font-bold text-indigo-900 mb-1.5">
               Log in to MathFuel
             </h1>
             <p className="text-sm sm:text-base text-muted-foreground">
-              Continue your math adventure
+              Pick up right where you left off.
             </p>
           </div>
 
@@ -142,6 +142,8 @@ export default function Login() {
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                       tabIndex={-1}
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      aria-pressed={showPassword}
                     >
                       {showPassword ? (
                         <EyeOff className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -173,7 +175,7 @@ export default function Login() {
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
                   ) : (
                     <>
-                      Log In
+                      Log in
                       <ArrowRight className="w-4 h-4" />
                     </>
                   )}

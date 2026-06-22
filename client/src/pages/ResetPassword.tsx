@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ArrowLeft, Lock, CheckCircle2, XCircle, Loader2, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, Lock, CircleCheck as CheckCircle2, Circle as XCircle, Loader as Loader2, Eye, EyeOff } from "lucide-react";
 
 export default function ResetPassword() {
   const search = useSearch();
@@ -38,11 +38,11 @@ export default function ResetPassword() {
     setError("");
 
     if (password.length < 6) {
-      setError("Password must be at least 6 characters.");
+      setError("Passwords need 6 or more characters. Add a few more.");
       return;
     }
     if (password !== confirmPassword) {
-      setError("Passwords don't match.");
+      setError("These two passwords are different. Check for typos.");
       return;
     }
 
@@ -59,9 +59,9 @@ export default function ResetPassword() {
               <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center">
                 <XCircle className="w-8 h-8 text-red-400" />
               </div>
-              <h2 className="text-xl font-bold text-gray-900">Invalid reset link</h2>
+              <h2 className="text-xl font-bold text-gray-900">This link isn't valid</h2>
               <p className="text-sm text-muted-foreground">
-                This password reset link is missing or invalid. Please request a new one.
+                The reset link is missing or incomplete. Request a fresh one to continue.
               </p>
               <Link href="/forgot-password">
                 <Button className="mt-2 bg-indigo-600 hover:bg-indigo-700 text-white">
@@ -97,9 +97,9 @@ export default function ResetPassword() {
               <div className="w-16 h-16 rounded-full bg-amber-50 flex items-center justify-center">
                 <XCircle className="w-8 h-8 text-amber-500" />
               </div>
-              <h2 className="text-xl font-bold text-gray-900">Link expired</h2>
+              <h2 className="text-xl font-bold text-gray-900">This link has expired</h2>
               <p className="text-sm text-muted-foreground">
-                This password reset link has expired or has already been used. Please request a new one.
+                Reset links only work for 1 hour and can only be used once. Request a new one to continue.
               </p>
               <Link href="/forgot-password">
                 <Button className="mt-2 bg-indigo-600 hover:bg-indigo-700 text-white">
@@ -127,12 +127,12 @@ export default function ResetPassword() {
               <Lock className="w-7 h-7 text-white" />
             </div>
             <CardTitle className="text-2xl font-extrabold text-gray-900">
-              {success ? "Password reset!" : "Create new password"}
+              {success ? "Password updated" : "Create a new password"}
             </CardTitle>
             <CardDescription className="text-base mt-1">
               {success
-                ? "Your password has been updated successfully."
-                : "Choose a strong password for your MathFuel account."}
+                ? "You're all set. Log in with your new password."
+                : "Pick something strong you'll remember."}
             </CardDescription>
           </CardHeader>
 
@@ -144,7 +144,7 @@ export default function ResetPassword() {
                     <CheckCircle2 className="w-8 h-8 text-emerald-500" />
                   </div>
                   <p className="text-sm text-muted-foreground text-center">
-                    You can now log in with your new password.
+                    Log in with your new password to continue.
                   </p>
                 </div>
                 <Link href="/login">
@@ -163,7 +163,7 @@ export default function ResetPassword() {
                     <Input
                       id="password"
                       type={showPassword ? "text" : "password"}
-                      placeholder="At least 6 characters"
+                      placeholder="6 or more characters"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       className="h-11 bg-gray-50/50 border-gray-200 focus:border-indigo-400 focus:ring-indigo-400 pr-10"
@@ -189,7 +189,7 @@ export default function ResetPassword() {
                   <Input
                     id="confirmPassword"
                     type={showPassword ? "text" : "password"}
-                    placeholder="Type your password again"
+                    placeholder="Retype the password above"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     className="h-11 bg-gray-50/50 border-gray-200 focus:border-indigo-400 focus:ring-indigo-400"
@@ -243,10 +243,10 @@ export default function ResetPassword() {
                   {resetMutation.isPending ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Resetting password...
+                      Saving your new password...
                     </>
                   ) : (
-                    "Reset password"
+                    "Save new password"
                   )}
                 </Button>
               </form>

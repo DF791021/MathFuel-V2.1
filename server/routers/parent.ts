@@ -146,7 +146,10 @@ export const parentRouter = router({
       };
     }),
 
-  // ── Legacy: Link a child directly by ID (admin use) ──
+  // ── Admin-only: Link a child directly by ID ──
+  // Regular parents MUST use redeemInviteCode, which requires the student to
+  // generate and share a code. Direct linking is restricted to administrators
+  // to prevent any parent from linking to arbitrary student accounts.
   linkChild: protectedProcedure
     .input(
       z.object({
@@ -155,12 +158,22 @@ export const parentRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
+      if (ctx.user.userType !== "admin") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message:
+            "Direct linking is restricted. Parents must redeem an invite code from their child.",
+        });
+      }
+
       const child = await db.getUserById(input.childId);
-      if (!child)
+      if (!child || child.userType !== "student") {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "Student not found",
         });
+      }
+
       await db.linkParentStudent(ctx.user.id, input.childId, input.relationship);
       return { success: true };
     }),
@@ -168,13 +181,17 @@ export const parentRouter = router({
   // ── Get linked children with progress summary ──
   getChildren: protectedProcedure.query(async ({ ctx }) => {
     const links = await db.getParentStudents(ctx.user.id);
-    const children = [];
-    for (const link of links) {
-      const child = await db.getUserById(link.studentId);
-      if (child) {
-        const streak = await db.getStudentStreak(link.studentId);
-        const mastery = await db.getStudentMastery(link.studentId);
-        const recentSessions = await db.getStudentSessions(link.studentId, 5);
+
+    const perChild = await Promise.all(
+      links.map(async (link) => {
+        const [child, streak, mastery, recentSessions] = await Promise.all([
+          db.getUserById(link.studentId),
+          db.getStudentStreak(link.studentId),
+          db.getStudentMastery(link.studentId),
+          db.getStudentSessions(link.studentId, 5),
+        ]);
+
+        if (!child) return null;
 
         const totalMastered = mastery.filter(
           (m) => m.masteryLevel === "mastered"
@@ -187,7 +204,7 @@ export const parentRouter = router({
               )
             : 0;
 
-        children.push({
+        return {
           id: child.id,
           name: child.name,
           gradeLevel: child.gradeLevel,
@@ -206,10 +223,11 @@ export const parentRouter = router({
             hintsUsed: s.hintsUsed,
             completedAt: s.completedAt,
           })),
-        });
-      }
-    }
-    return children;
+        };
+      })
+    );
+
+    return perChild.filter((c): c is NonNullable<typeof c> => c !== null);
   }),
 
   // ── Get detailed progress for a specific child ──

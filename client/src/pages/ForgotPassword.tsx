@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ArrowLeft, Mail, CheckCircle2, Loader2 } from "lucide-react";
+import { ArrowLeft, Mail, CircleCheck as CheckCircle2, Loader as Loader2 } from "lucide-react";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -26,7 +26,7 @@ export default function ForgotPassword() {
     e.preventDefault();
     setError("");
     if (!email.trim()) {
-      setError("Please enter your email address.");
+      setError("Enter the email you used to sign up.");
       return;
     }
     forgotMutation.mutate({ email: email.trim() });
@@ -47,12 +47,12 @@ export default function ForgotPassword() {
               <Mail className="w-7 h-7 text-white" />
             </div>
             <CardTitle className="text-2xl font-extrabold text-gray-900">
-              {sent ? "Check your email" : "Forgot password?"}
+              {sent ? "Check your email" : "Forgot your password?"}
             </CardTitle>
             <CardDescription className="text-base mt-1">
               {sent
-                ? "We've sent a password reset link to your email."
-                : "No worries! Enter your email and we'll send you a reset link."}
+                ? "Open the email we just sent to finish resetting your password."
+                : "Enter your email and we'll send a secure reset link."}
             </CardDescription>
           </CardHeader>
 
@@ -70,7 +70,7 @@ export default function ForgotPassword() {
                     </p>
                     <p className="font-semibold text-gray-900 break-all">{email}</p>
                     <p className="text-xs text-muted-foreground mt-3 leading-relaxed">
-                      The link expires in 1 hour. Check your spam folder if you don't see it.
+                      The link works for 1 hour. Don't see it? Check your spam or promotions folder.
                     </p>
                   </div>
                 </div>
@@ -125,7 +125,7 @@ export default function ForgotPassword() {
                   {forgotMutation.isPending ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Sending reset link...
+                      Sending your reset link...
                     </>
                   ) : (
                     "Send reset link"

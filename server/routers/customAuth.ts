@@ -89,6 +89,12 @@ export const customAuthRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
+      const dbCheck = await db.getDb();
+      if (!dbCheck) {
+        throw new Error(
+          "Database is not configured. Set DATABASE_URL in your .env (Supabase -> Project Settings -> Database -> Connection string) and restart the server."
+        );
+      }
       const existing = await getUserByEmail(input.email);
       if (existing) {
         // If account exists but has no password (OAuth-created), let them set one
@@ -171,6 +177,12 @@ export const customAuthRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
+      const dbCheck = await db.getDb();
+      if (!dbCheck) {
+        throw new Error(
+          "Database is not configured. Set DATABASE_URL in your .env (Supabase -> Project Settings -> Database -> Connection string) and restart the server."
+        );
+      }
       const user = await getUserByEmail(input.email);
       if (!user) {
         throw new Error("Invalid email or password.");

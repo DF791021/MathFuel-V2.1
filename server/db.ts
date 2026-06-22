@@ -43,6 +43,12 @@ export async function getDb() {
       _db = null;
     }
   }
+  if (!_db && !connectionString) {
+    console.warn(
+      "[Database] DATABASE_URL is not set. In production (Netlify), set it under " +
+      "Site configuration -> Environment variables. Locally, add it to .env and restart."
+    );
+  }
   return _db;
 }
 

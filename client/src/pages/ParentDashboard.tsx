@@ -9,10 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { motion } from "framer-motion";
-import {
-  ArrowLeft, Users, BarChart3, Flame, Target, Trophy,
-  BookOpen, Calendar, TrendingUp, Link2, CheckCircle2, AlertCircle,
-} from "lucide-react";
+import { ArrowLeft, Users, ChartBar as BarChart3, Flame, Target, Trophy, BookOpen, Calendar, TrendingUp, Link2, CircleCheck as CheckCircle2, CircleAlert as AlertCircle } from "lucide-react";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
@@ -67,7 +64,7 @@ export default function ParentDashboard() {
             </Link>
             <h1 className="font-bold text-sm sm:text-lg flex items-center gap-1.5 sm:gap-2">
               <Users className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-              Parent View
+              Parent view
             </h1>
           </div>
         </div>
@@ -118,9 +115,9 @@ function EmptyState() {
   return (
     <div className="text-center py-10 sm:py-16">
       <Users className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 text-muted-foreground/30" />
-      <h2 className="!text-xl sm:!text-2xl font-bold mb-2">No Linked Students</h2>
+      <h2 className="!text-xl sm:!text-2xl font-bold mb-2">You're not linked to a child yet</h2>
       <p className="text-xs sm:text-base text-muted-foreground mb-4 sm:mb-6 max-w-md mx-auto px-4">
-        Enter your child's invite code below to start tracking their progress.
+        Ask your child to open their dashboard, tap Generate Parent Code, and share the 6-character code with you.
       </p>
       <RedeemInviteCode />
     </div>
@@ -133,7 +130,7 @@ function RedeemInviteCode() {
   const utils = trpc.useUtils();
   const redeemCode = trpc.parent.redeemInviteCode.useMutation({
     onSuccess: (data) => {
-      setSuccess(`Connected to ${data.studentName}!`);
+      setSuccess(`You're now linked to ${data.studentName}.`);
       setCode("");
       utils.parent.getChildren.invalidate();
     },
@@ -144,10 +141,10 @@ function RedeemInviteCode() {
       <CardContent className="p-4 sm:p-6">
         <div className="flex items-center gap-2 mb-3">
           <Link2 className="w-5 h-5 text-indigo-600" />
-          <h3 className="font-bold text-sm sm:text-base text-indigo-900">Enter Invite Code</h3>
+          <h3 className="font-bold text-sm sm:text-base text-indigo-900">Enter your child's code</h3>
         </div>
         <p className="text-xs sm:text-sm text-indigo-600/70 mb-3">
-          Ask your child to generate an invite code from their dashboard.
+          Type the 6-character code your child generated on their dashboard. We'll link your accounts in one tap.
         </p>
 
         {success ? (
@@ -206,7 +203,7 @@ function SelfProgressView() {
     <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={0} className="space-y-4 sm:space-y-6">
       <h2 className="!text-lg sm:!text-xl font-bold flex items-center gap-2">
         <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-        Your Progress
+        Your progress
       </h2>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4">
@@ -222,7 +219,7 @@ function SelfProgressView() {
           <CardHeader className="pb-2 sm:pb-3 p-3 sm:p-6">
             <CardTitle className="!text-base sm:!text-lg flex items-center gap-2">
               <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-              Recent Sessions
+              Recent sessions
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 sm:space-y-3 p-3 sm:p-6 pt-0 sm:pt-0">
@@ -239,7 +236,7 @@ function SelfProgressView() {
           <CardHeader className="pb-2 sm:pb-3 p-3 sm:p-6">
             <CardTitle className="!text-base sm:!text-lg flex items-center gap-2">
               <Target className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-              Skill Mastery
+              Skill mastery
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-1.5 sm:space-y-2 p-3 sm:p-6 pt-0 sm:pt-0">
@@ -290,8 +287,8 @@ function ChildOverview({ child, progress, isLoading }: { child: any; progress: a
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4">
           <StatCard icon={<Flame className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500" />} label="Streak" value={`${child.streak} days`} color="bg-orange-50 border-orange-200" />
           <StatCard icon={<Target className="w-4 h-4 sm:w-5 sm:h-5 text-green-500" />} label="Mastered" value={`${child.skillsMastered}/${child.totalSkills}`} color="bg-green-50 border-green-200" />
-          <StatCard icon={<Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />} label="Active Days" value={`${child.totalActiveDays}`} color="bg-blue-50 border-blue-200" />
-          <StatCard icon={<Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500" />} label="Best Streak" value={`${child.longestStreak} days`} color="bg-yellow-50 border-yellow-200" />
+          <StatCard icon={<Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />} label="Active days" value={`${child.totalActiveDays}`} color="bg-blue-50 border-blue-200" />
+          <StatCard icon={<Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500" />} label="Best streak" value={`${child.longestStreak} days`} color="bg-yellow-50 border-yellow-200" />
         </div>
       </motion.div>
 
@@ -309,7 +306,7 @@ function ChildOverview({ child, progress, isLoading }: { child: any; progress: a
               <CardHeader className="pb-2 sm:pb-3 p-3 sm:p-6">
                 <CardTitle className="!text-base sm:!text-lg flex items-center gap-2">
                   <Target className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-                  Skill Progress
+                  Skill progress
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-1.5 sm:space-y-2 max-h-60 sm:max-h-80 overflow-y-auto p-3 sm:p-6 pt-0 sm:pt-0">
@@ -327,7 +324,7 @@ function ChildOverview({ child, progress, isLoading }: { child: any; progress: a
                     </div>
                   ))
                 ) : (
-                  <p className="text-center text-xs sm:text-sm text-muted-foreground py-3 sm:py-4">No skills practiced yet.</p>
+                  <p className="text-center text-xs sm:text-sm text-muted-foreground py-3 sm:py-4">Skill progress appears here after your child's first session.</p>
                 )}
               </CardContent>
             </Card>
@@ -339,7 +336,7 @@ function ChildOverview({ child, progress, isLoading }: { child: any; progress: a
               <CardHeader className="pb-2 sm:pb-3 p-3 sm:p-6">
                 <CardTitle className="!text-base sm:!text-lg flex items-center gap-2">
                   <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-                  Recent Sessions
+                  Recent sessions
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-2 sm:space-y-3 p-3 sm:p-6 pt-0 sm:pt-0">
@@ -348,7 +345,7 @@ function ChildOverview({ child, progress, isLoading }: { child: any; progress: a
                     <SessionRow key={session.id} session={session} showDate />
                   ))
                 ) : (
-                  <p className="text-center text-xs sm:text-sm text-muted-foreground py-3 sm:py-4">No sessions yet.</p>
+                  <p className="text-center text-xs sm:text-sm text-muted-foreground py-3 sm:py-4">Recent sessions show up here as soon as your child starts practicing.</p>
                 )}
               </CardContent>
             </Card>
@@ -361,7 +358,7 @@ function ChildOverview({ child, progress, isLoading }: { child: any; progress: a
                 <CardHeader className="pb-2 sm:pb-3 p-3 sm:p-6">
                   <CardTitle className="!text-base sm:!text-lg flex items-center gap-2">
                     <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500" />
-                    Badges Earned
+                    Badges earned
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-3 sm:p-6 pt-0 sm:pt-0">

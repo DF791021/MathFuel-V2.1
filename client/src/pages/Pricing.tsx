@@ -44,22 +44,22 @@ const FAMILY_FEATURES = [
 const TRUST_ITEMS = [
   {
     icon: Brain,
-    title: "Adaptive Learning",
+    title: "Adaptive learning",
     desc: "Problems adjust in real time to your child's level — not too easy, not too hard.",
   },
   {
     icon: BarChart3,
-    title: "Parent Insights",
+    title: "Parent insights",
     desc: "See exactly where your child excels and where they need help, every week.",
   },
   {
     icon: Shield,
-    title: "Safe & Private",
+    title: "Safe & private",
     desc: "No ads, no third-party trackers. Your child's data is never sold.",
   },
   {
     icon: TrendingUp,
-    title: "Proven Progress",
+    title: "Proven progress",
     desc: "Students who practice 3× per week see measurable improvement in 30 days.",
   },
 ];
@@ -80,7 +80,7 @@ export default function Pricing() {
       if (data.url) window.location.href = data.url;
     },
     onError: (err) => {
-      toast.error(err.message || "Failed to start checkout. Please try again.");
+      toast.error(err.message || "We couldn't open Stripe checkout. Check your connection and try again.");
     },
   });
 
@@ -90,7 +90,7 @@ export default function Pricing() {
 
   useEffect(() => {
     if (searchString?.includes("canceled=true")) {
-      toast.info("Checkout was canceled. No charges were made.");
+      toast.info("Checkout canceled. You weren't charged.");
     }
   }, [searchString]);
 
@@ -138,11 +138,11 @@ export default function Pricing() {
             ) : (
               <>
                 <Link href="/login" className="no-underline">
-                  <Button variant="outline" size="sm">Log In</Button>
+                  <Button variant="outline" size="sm">Log in</Button>
                 </Link>
                 <Link href="/signup" className="no-underline">
                   <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90">
-                    Sign Up Free
+                    Sign up free
                   </Button>
                 </Link>
               </>
@@ -172,7 +172,7 @@ export default function Pricing() {
           initial="hidden" animate="visible" variants={fadeUp} custom={2}
           className="text-base sm:text-lg text-muted-foreground max-w-xl mx-auto mb-8"
         >
-          Start free with no credit card. Upgrade anytime for unlimited practice and real parent insights.
+          Start free — no card required. Upgrade when you're ready for unlimited practice and deeper parent insights.
         </motion.p>
 
         {/* Billing toggle */}
@@ -227,23 +227,23 @@ export default function Pricing() {
                 <div className="mb-6">
                   <span className="text-4xl font-extrabold text-foreground">$0</span>
                   <span className="text-muted-foreground text-sm ml-1">/month</span>
-                  <p className="text-xs text-muted-foreground mt-1">No credit card required</p>
+                  <p className="text-xs text-muted-foreground mt-1">Free forever. No card required.</p>
                 </div>
 
                 <div className="mb-6">
                   {!isAuthenticated ? (
                     <Link href="/signup" className="no-underline block">
                       <Button variant="outline" className="w-full" size="lg">
-                        Get Started Free
+                        Start free
                       </Button>
                     </Link>
                   ) : !isCurrentlySubscribed ? (
                     <Button variant="outline" className="w-full" size="lg" disabled>
-                      <Check className="w-4 h-4 mr-2" /> Current Plan
+                      <Check className="w-4 h-4 mr-2" /> Current plan
                     </Button>
                   ) : (
                     <Button variant="outline" className="w-full" size="lg" disabled>
-                      Free Plan
+                      Free plan
                     </Button>
                   )}
                 </div>
@@ -310,7 +310,7 @@ export default function Pricing() {
                 <div className="mb-6">
                   {isCurrentlySubscribed ? (
                     <Button className="w-full bg-accent text-accent-foreground" size="lg" disabled>
-                      <Crown className="w-4 h-4 mr-2" /> Current Plan
+                      <Crown className="w-4 h-4 mr-2" /> Current plan
                     </Button>
                   ) : (
                     <Button
@@ -324,7 +324,7 @@ export default function Pricing() {
                       ) : (
                         <Zap className="w-4 h-4 mr-2" />
                       )}
-                      {isAuthenticated ? "Upgrade Now" : "Start Free Trial"}
+                      {isAuthenticated ? "Upgrade to Family" : "Create account & upgrade"}
                     </Button>
                   )}
                 </div>
@@ -386,7 +386,7 @@ export default function Pricing() {
             className="text-center mb-10"
           >
             <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground mb-2">
-              Questions? Answered.
+              Common questions
             </h2>
           </motion.div>
 
@@ -394,11 +394,11 @@ export default function Pricing() {
             {[
               {
                 q: "Can I try it before paying?",
-                a: "Absolutely. The Free plan gives 5 sessions per day with no credit card required. Upgrade only when you're ready.",
+                a: "Yes. The Free plan gives 5 sessions a day with no card on file. Upgrade only when it feels right.",
               },
               {
                 q: "Can I cancel anytime?",
-                a: "Yes — cancel any time from your account settings. You'll keep full access through the end of your billing period.",
+                a: "Yes. Cancel in one tap from your Account page. You'll keep full access until the end of your billing period.",
               },
               {
                 q: "What ages is MathFuel designed for?",
@@ -440,17 +440,17 @@ export default function Pricing() {
             <Users className="w-7 h-7 text-accent" />
           </div>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground mb-3">
-            Ready to fuel their math skills?
+Ready to build real math confidence?
           </h2>
           <p className="text-muted-foreground mb-6 text-sm sm:text-base">
-            Join families using MathFuel to build real math confidence — one session at a time.
+Join the families using MathFuel to turn daily practice into lasting progress.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             {!isAuthenticated ? (
               <>
                 <Link href="/signup" className="no-underline">
                   <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90 shadow-lg w-full sm:w-auto">
-                    <Zap className="w-4 h-4 mr-2" /> Start Free — No Card Needed
+                    <Zap className="w-4 h-4 mr-2" /> Start free — no card required
                   </Button>
                 </Link>
               </>
@@ -467,7 +467,7 @@ export default function Pricing() {
             ) : (
               <Link href="/dashboard" className="no-underline">
                 <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90">
-                  <ArrowLeft className="w-4 h-4 mr-2" /> Back to Dashboard
+                  <ArrowLeft className="w-4 h-4 mr-2" /> Back to dashboard
                 </Button>
               </Link>
             )}

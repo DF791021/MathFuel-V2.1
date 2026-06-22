@@ -11,9 +11,9 @@ import {
 const MAX_HINTS = 3;
 
 const ENCOURAGEMENTS = [
-  "Think about it a little more...",
-  "You're getting warmer!",
-  "Almost there — one more clue!",
+  "Take another look with this in mind.",
+  "You're getting closer.",
+  "Almost there — one more clue if you need it.",
 ];
 
 const HINT_STYLES = [
@@ -24,7 +24,7 @@ const HINT_STYLES = [
     iconColor: "text-amber-600",
     labelColor: "text-amber-600",
     textColor: "text-amber-800",
-    label: "Gentle Nudge",
+    label: "Gentle nudge",
     emoji: "💡",
   },
   {
@@ -34,7 +34,7 @@ const HINT_STYLES = [
     iconColor: "text-orange-600",
     labelColor: "text-orange-600",
     textColor: "text-orange-800",
-    label: "Bigger Clue",
+    label: "Bigger clue",
     emoji: "🔍",
   },
   {
@@ -44,7 +44,7 @@ const HINT_STYLES = [
     iconColor: "text-rose-600",
     labelColor: "text-rose-600",
     textColor: "text-rose-800",
-    label: "Strong Hint",
+    label: "Strong hint",
     emoji: "🎯",
   },
 ];
@@ -75,7 +75,7 @@ function MiniRating({
             </button>
           </TooltipTrigger>
           <TooltipContent side="top" className="text-xs">
-            Helpful!
+            Helpful
           </TooltipContent>
         </Tooltip>
         <Tooltip>
@@ -104,7 +104,7 @@ function MiniRating({
               exit={{ opacity: 0 }}
               className="text-[9px] sm:text-[10px] text-muted-foreground ml-0.5"
             >
-              Thanks!
+              Got it
             </motion.span>
           )}
         </AnimatePresence>
@@ -191,11 +191,11 @@ function HintButton({
           {isLoading
             ? "Thinking..."
             : isOnCooldown
-            ? "Wait..."
+            ? "One moment..."
             : allUsed
             ? "All hints used"
             : hintsUsed === 0
-            ? "Need a Hint?"
+            ? "Need a hint?"
             : `Hint ${hintsUsed}/${MAX_HINTS}`}
         </span>
 
@@ -435,7 +435,7 @@ export default function HintSystem({
                       className="text-center py-2"
                     >
                       <p className="text-[11px] sm:text-xs text-muted-foreground">
-                        All hints revealed — give it your best shot! 🚀
+                        All hints used — trust your best answer.
                       </p>
                     </motion.div>
                   )}

@@ -10,11 +10,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  ArrowLeft, CheckCircle2, XCircle, Lightbulb, ChevronRight,
-  Play, Trophy, Sparkles, Clock, Zap, RotateCcw, Home, Bot,
-  ThumbsUp, ThumbsDown,
-} from "lucide-react";
+import { ArrowLeft, CircleCheck as CheckCircle2, Circle as XCircle, Lightbulb, ChevronRight, Play, Trophy, Sparkles, Clock, Zap, RotateCcw, Chrome as Home, Bot, ThumbsUp, ThumbsDown } from "lucide-react";
 import HintSystem from "@/components/HintSystem";
 import { toast } from "sonner";
 
@@ -66,7 +62,7 @@ export default function PracticeSession() {
 
   const startSessionMutation = trpc.practice.startSession.useMutation({
     onSuccess: (data) => { setSessionId(data.sessionId); setState("playing"); setProblemCount(0); setCorrectCount(0); },
-    onError: (err) => toast.error("Failed to start session: " + err.message),
+    onError: (err) => toast.error("We couldn't start your session. " + err.message),
   });
 
   const submitAnswerMutation = trpc.practice.submitAnswer.useMutation({
@@ -76,12 +72,12 @@ export default function PracticeSession() {
       setIsSubmitting(false);
       if (currentProblem) fetchAIExplanation(currentProblem.id, answer, data.isCorrect);
     },
-    onError: (err) => { toast.error("Failed to submit: " + err.message); setIsSubmitting(false); },
+    onError: (err) => { toast.error("Your answer didn't go through. " + err.message); setIsSubmitting(false); },
   });
 
   const completeSessionMutation = trpc.practice.completeSession.useMutation({
     onSuccess: (data) => { setSessionResults(data); setState("complete"); fetchAISessionSummary(data); },
-    onError: (err) => toast.error("Failed to complete session: " + err.message),
+    onError: (err) => toast.error("We couldn't wrap up this session. " + err.message),
   });
 
   const aiHintMutation = trpc.aiTutor.getAIHint.useMutation();
@@ -137,7 +133,7 @@ export default function PracticeSession() {
       } else {
         completeSessionMutation.mutate({ sessionId });
       }
-    } catch (err: any) { toast.error("Failed to load problem: " + err.message); }
+    } catch (err: any) { toast.error("We couldn't load the next problem. " + err.message); }
   }, [sessionId, gradeLevel, utils, completeSessionMutation]);
 
   const handleStart = () => {
@@ -160,13 +156,13 @@ export default function PracticeSession() {
     try {
       const result = await aiHintMutation.mutateAsync({ problemId: currentProblem.id, hintsUsed: hintsViewed, previousHints: visibleHints });
       if (result.hint) { setVisibleHints((prev) => [...prev, result.hint]); setHintsViewed((h) => h + 1); }
-      else toast.info("No more hints available!");
+      else toast.info("You've seen every hint on this one. Trust your best guess.");
     } catch {
       try {
         const result = await utils.client.practice.getHint.query({ problemId: currentProblem.id, hintIndex: hintsViewed });
         if (result.hint) { setVisibleHints((prev) => [...prev, result.hint!]); setHintsViewed((h) => h + 1); }
-        else toast.info("No more hints available!");
-      } catch { toast.error("Failed to get hint"); }
+        else toast.info("You've seen every hint on this one. Trust your best guess.");
+      } catch { toast.error("MathBuddy couldn't put a hint together. Give it a moment and try again."); }
     }
   };
 
@@ -233,7 +229,7 @@ export default function PracticeSession() {
             <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center justify-center py-16 sm:py-20">
               <div className="text-center space-y-3">
                 <div className="animate-spin rounded-full h-8 w-8 sm:h-10 sm:w-10 border-b-2 border-primary mx-auto" />
-                <p className="text-sm text-muted-foreground">Loading next problem...</p>
+                <p className="text-sm text-muted-foreground">Picking the right next problem...</p>
               </div>
             </motion.div>
           )}
@@ -275,9 +271,9 @@ function SetupScreen({ onStart, isLoading, skillId }: { onStart: () => void; isL
         >
           <Zap className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
         </motion.div>
-        <h1 className="!text-2xl sm:!text-3xl font-bold mb-2">Ready to Practice?</h1>
+        <h1 className="!text-2xl sm:!text-3xl font-bold mb-2">Ready when you are</h1>
         <p className="text-sm sm:text-base text-muted-foreground max-w-md mx-auto px-2">
-          You'll solve {PROBLEMS_PER_SESSION} problems. MathBuddy is here to help when you're stuck!
+          {PROBLEMS_PER_SESSION} problems, about 4 minutes. MathBuddy will help when a problem feels tricky.
         </p>
       </div>
 
@@ -299,11 +295,11 @@ function SetupScreen({ onStart, isLoading, skillId }: { onStart: () => void; isL
         </div>
         <div className="p-2.5 sm:p-3 rounded-lg bg-muted/50">
           <Lightbulb className="w-5 h-5 sm:w-6 sm:h-6 mx-auto text-yellow-500" />
-          <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">AI Hints</p>
+          <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">AI hints</p>
         </div>
         <div className="p-2.5 sm:p-3 rounded-lg bg-muted/50">
           <Clock className="w-5 h-5 sm:w-6 sm:h-6 mx-auto text-blue-500" />
-          <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">Your Pace</p>
+          <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">Your pace</p>
         </div>
       </div>
 
@@ -311,7 +307,7 @@ function SetupScreen({ onStart, isLoading, skillId }: { onStart: () => void; isL
         className="h-12 sm:h-14 px-8 sm:px-10 text-base sm:text-lg gap-2 rounded-full shadow-lg w-full sm:w-auto"
       >
         {isLoading ? <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" /> : <Play className="w-5 h-5" />}
-        {isLoading ? "Starting..." : "Let's Go!"}
+        {isLoading ? "Setting up your session..." : "Start Practicing"}
       </Button>
     </motion.div>
   );
@@ -413,7 +409,7 @@ function ProblemScreen({ problem, answer, setAnswer, onSubmit, onGetHint, visibl
           <Input ref={inputRef} type={problem.answerType === "number" ? "number" : "text"}
             value={answer} onChange={(e) => setAnswer(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && onSubmit()}
-            placeholder="Type your answer..." className="text-base sm:text-lg h-12 sm:h-14 text-center" autoFocus
+            placeholder="Type a number, then press Enter" className="text-base sm:text-lg h-12 sm:h-14 text-center" autoFocus
           />
         )}
 
@@ -422,7 +418,7 @@ function ProblemScreen({ problem, answer, setAnswer, onSubmit, onGetHint, visibl
           className="w-full h-11 sm:h-12 text-sm sm:text-lg gap-1.5 sm:gap-2"
         >
           {isSubmitting ? <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-b-2 border-white" /> : <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5" />}
-          {isSubmitting ? "Checking..." : "Submit Answer"}
+          {isSubmitting ? "Checking your work..." : "Check My Answer"}
         </Button>
       </div>
 
@@ -450,6 +446,9 @@ function FeedbackScreen({ feedback, problem, answer, onNext, isLast, aiExplanati
   return (
     <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
       className="space-y-4 sm:space-y-6"
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
     >
       {/* Result Banner */}
       <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} transition={{ type: "spring", damping: 10 }}>
@@ -463,11 +462,11 @@ function FeedbackScreen({ feedback, problem, answer, onNext, isLast, aiExplanati
               )}
             </motion.div>
             <h2 className={`!text-xl sm:!text-2xl font-bold ${feedback.isCorrect ? "text-green-700" : "text-red-700"}`}>
-              {feedback.isCorrect ? "Correct!" : "Not Quite!"}
+              {feedback.isCorrect ? "Correct." : "Not quite — let's walk through it."}
             </h2>
             {feedback.isCorrect && feedback.streak > 1 && (
               <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="text-green-600 mt-1 text-sm">
-                🔥 {feedback.streak} in a row!
+                {feedback.streak} in a row — keep the streak going.
               </motion.p>
             )}
           </CardContent>
@@ -511,7 +510,7 @@ function FeedbackScreen({ feedback, problem, answer, onNext, isLast, aiExplanati
               {isLoadingExplanation ? (
                 <div className="flex items-center gap-2 text-xs sm:text-sm text-blue-600">
                   <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-500" />
-                  <span>MathBuddy is thinking...</span>
+                  <span>MathBuddy is working it out...</span>
                 </div>
               ) : (
                 <>
@@ -529,7 +528,7 @@ function FeedbackScreen({ feedback, problem, answer, onNext, isLast, aiExplanati
 
       {/* Mastery Progress */}
       <div className="flex items-center justify-between p-2.5 sm:p-3 rounded-lg bg-muted/50">
-        <span className="text-xs sm:text-sm text-muted-foreground">Skill Mastery</span>
+        <span className="text-xs sm:text-sm text-muted-foreground">Skill mastery</span>
         <div className="flex items-center gap-2">
           <Progress value={feedback.masteryScore} className="w-16 sm:w-20 h-1.5 sm:h-2" />
           <span className="text-xs sm:text-sm font-medium">{feedback.masteryScore}%</span>
@@ -538,7 +537,7 @@ function FeedbackScreen({ feedback, problem, answer, onNext, isLast, aiExplanati
 
       {/* Next Button */}
       <Button onClick={onNext} size="lg" className="w-full h-11 sm:h-12 text-sm sm:text-lg gap-2">
-        {isLast ? <><Trophy className="w-4 h-4 sm:w-5 sm:h-5" /> See Results</> : <><ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" /> Next Problem</>}
+        {isLast ? <><Trophy className="w-4 h-4 sm:w-5 sm:h-5" /> See My Results</> : <><ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" /> Next Problem</>}
       </Button>
     </motion.div>
   );
@@ -553,10 +552,10 @@ function CompleteScreen({ results, aiSummary, summaryRating, onRateSummary, onPl
   const accuracy = results.accuracy ?? 0;
 
   const displaySummary = aiSummary || (
-    accuracy >= 90 ? "Outstanding! You're a math superstar!"
-    : accuracy >= 70 ? "Great job! Keep practicing to master more skills!"
-    : accuracy >= 50 ? "Good effort! Try using hints to learn tricky problems."
-    : "Don't worry! Every practice makes you stronger. Try again!"
+    accuracy >= 90 ? "Nine or more out of ten — that's mastery-level focus."
+    : accuracy >= 70 ? "Strong session. A few more like this and the next skill unlocks."
+    : accuracy >= 50 ? "Good try. Use a hint on tricky problems next time to learn the pattern."
+    : "Tough session — that's how brains grow. Try 5 more and it'll feel easier."
   );
 
   return (
@@ -570,8 +569,8 @@ function CompleteScreen({ results, aiSummary, summaryRating, onRateSummary, onPl
       </motion.div>
 
       <div>
-        <h1 className="!text-2xl sm:!text-3xl font-bold mb-1 sm:mb-2">Session Complete!</h1>
-        <p className="text-xs sm:text-base text-muted-foreground">Great work! Here's how you did:</p>
+        <h1 className="!text-2xl sm:!text-3xl font-bold mb-1 sm:mb-2">Session complete</h1>
+        <p className="text-xs sm:text-base text-muted-foreground">Here's how today's session landed.</p>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4 max-w-lg mx-auto">
@@ -579,7 +578,7 @@ function CompleteScreen({ results, aiSummary, summaryRating, onRateSummary, onPl
           { value: `${accuracy}%`, label: "Accuracy", bg: "bg-green-50 border-green-200", text: "text-green-700", sub: "text-green-600" },
           { value: results.correctAnswers, label: "Correct", bg: "bg-blue-50 border-blue-200", text: "text-blue-700", sub: "text-blue-600" },
           { value: results.totalProblems, label: "Total", bg: "bg-purple-50 border-purple-200", text: "text-purple-700", sub: "text-purple-600" },
-          { value: results.streak, label: "Day Streak", bg: "bg-orange-50 border-orange-200", text: "text-orange-700", sub: "text-orange-600" },
+          { value: results.streak, label: "Day streak", bg: "bg-orange-50 border-orange-200", text: "text-orange-700", sub: "text-orange-600" },
         ].map((stat, i) => (
           <div key={i} className={`p-3 sm:p-4 rounded-xl ${stat.bg} border`}>
             <p className={`text-xl sm:text-3xl font-bold ${stat.text}`}>{stat.value}</p>
@@ -591,7 +590,7 @@ function CompleteScreen({ results, aiSummary, summaryRating, onRateSummary, onPl
       {/* Badges earned */}
       {results.badgesEarned?.length > 0 && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="space-y-2 sm:space-y-3">
-          <h3 className="font-semibold text-base sm:text-lg">Badges Earned!</h3>
+          <h3 className="font-semibold text-base sm:text-lg">New badges earned</h3>
           <div className="flex flex-wrap gap-1.5 sm:gap-2 justify-center">
             {results.badgesEarned.map((badge: any, i: number) => (
               <motion.div key={i} initial={{ scale: 0, rotate: -20 }} animate={{ scale: 1, rotate: 0 }} transition={{ delay: 0.6 + i * 0.15, type: "spring" }}>
@@ -636,7 +635,7 @@ function CompleteScreen({ results, aiSummary, summaryRating, onRateSummary, onPl
       <div className="flex gap-2 sm:gap-3 justify-center">
         <Button onClick={onPlayAgain} size="lg" className="gap-1.5 sm:gap-2 text-sm sm:text-base h-11 sm:h-12 px-4 sm:px-6">
           <RotateCcw className="w-4 h-4 sm:w-5 sm:h-5" />
-          Play Again
+          Start Another Session
         </Button>
         <Button variant="outline" size="lg" onClick={() => navigate("/dashboard")} className="gap-1.5 sm:gap-2 text-sm sm:text-base h-11 sm:h-12 px-4 sm:px-6">
           <Home className="w-4 h-4 sm:w-5 sm:h-5" />
