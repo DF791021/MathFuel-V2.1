@@ -6,6 +6,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import InvestorGate from "./components/InvestorGate";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { Toaster } from "sonner";
+import { useAnalytics } from "./hooks/useAnalytics";
 
 // Lazy load pages
 const Home = React.lazy(() => import("./pages/Home"));
@@ -23,6 +24,11 @@ const PaymentSuccess = React.lazy(() => import("./pages/PaymentSuccess"));
 const Referrals = React.lazy(() => import("./pages/Referrals"));
 const Leaderboard = React.lazy(() => import("./pages/Leaderboard"));
 const AdminContentEditor = React.lazy(() => import("./pages/AdminContentEditor"));
+
+function AnalyticsProvider({ children }: { children: React.ReactNode }) {
+  useAnalytics();
+  return <>{children}</>;
+}
 
 function Router() {
   return (
@@ -58,14 +64,16 @@ function App() {
         <TooltipProvider>
           <Toaster richColors position="top-center" />
           <InvestorGate>
-            <div className="flex flex-col min-h-screen">
-              <div className="flex-1">
-                <Router />
-              </div>
+            <AnalyticsProvider>
+              <div className="flex flex-col min-h-screen">
+                <div className="flex-1">
+                  <Router />
+                </div>
               <footer className="py-3 text-center text-xs text-muted-foreground border-t">
                 By Mike K
               </footer>
             </div>
+            </AnalyticsProvider>
           </InvestorGate>
         </TooltipProvider>
       </ThemeProvider>
