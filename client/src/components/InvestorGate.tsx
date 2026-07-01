@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, ArrowRight, Lock, Briefcase, Rocket } from "lucide-react";
 
-const INVESTOR_PASSWORD = "Mathmatics1021";
+const INVESTOR_PASSWORD = "MathFuel1021";
 const INVESTOR_UNLOCK_KEY = "mathfuel_investor_unlocked";
 
 export default function InvestorGate({ children }: { children: React.ReactNode }) {
