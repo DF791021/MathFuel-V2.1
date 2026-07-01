@@ -24,12 +24,8 @@ declare global {
   }
 }
 
-const MEASUREMENT_ID = typeof window !== "undefined"
-  ? (import.meta as any).env?.VITE_GA_MEASUREMENT_ID ?? ""
-  : "";
-
 const isEnabled = (): boolean =>
-  typeof window !== "undefined" && MEASUREMENT_ID.length > 0 && typeof window.gtag === "function";
+  typeof window !== "undefined" && typeof window.gtag === "function";
 
 function gtag(...args: unknown[]) {
   if (!isEnabled()) return;
@@ -43,16 +39,8 @@ function gtag(...args: unknown[]) {
 let initialized = false;
 
 export function initGA() {
-  if (typeof window === "undefined" || !MEASUREMENT_ID || initialized) return;
+  if (typeof window === "undefined" || !isEnabled() || initialized) return;
   initialized = true;
-
-  // Enhanced measurement is enabled by default in GA4 property settings.
-  // The config below sets the initial page and enables features that
-  // require explicit opt-in.
-  gtag("config", MEASUREMENT_ID, {
-    send_page_view: false, // we fire page_view manually on route changes
-    cookie_flags: "SameSite=None;Secure",
-  });
 }
 
 // ---------------------------------------------------------------------------
