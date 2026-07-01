@@ -23,7 +23,7 @@ export default function InvestorGate({ children }: { children: React.ReactNode }
           window.sessionStorage.getItem(INVESTOR_UNLOCK_KEY) === "true");
       setUnlocked(ok);
     } catch {
-      setUnlocked(false);
+      setUnlocked(true);
     }
   }, []);
 
