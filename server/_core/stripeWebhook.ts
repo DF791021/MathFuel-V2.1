@@ -10,7 +10,8 @@ import { subscriptions } from "../../drizzle/schema";
 import { eq } from "drizzle-orm";
 import { processReferralRewardFromWebhook } from "../routers/referral";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "");
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY || "";
+const stripe = stripeSecretKey ? new Stripe(stripeSecretKey) : null;
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || "";
 
 // ============================================================================
@@ -91,6 +92,10 @@ async function upsertSubscription(sub: Stripe.Subscription) {
 // ============================================================================
 
 export async function handleStripeWebhook(req: Request, res: Response) {
+  if (!stripe) {
+    return res.status(500).json({ error: "Stripe not configured" });
+  }
+
   const signature = req.headers["stripe-signature"] as string;
 
   if (!signature) {
