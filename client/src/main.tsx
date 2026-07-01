@@ -7,6 +7,21 @@ import superjson from "superjson";
 import App from "./App";
 import "./index.css";
 
+// Google Analytics 4 — inject before React renders
+(function () {
+  const GA_ID = "G-WF1H6DRZSE";
+  if (typeof window === "undefined") return;
+  const s = document.createElement("script");
+  s.async = true;
+  s.src = "https://www.googletagmanager.com/gtag/js?id=" + GA_ID;
+  document.head.appendChild(s);
+  window.dataLayer = window.dataLayer || [];
+  function gtag(...args: unknown[]) { window.dataLayer.push(args); }
+  (window as any).gtag = gtag;
+  gtag("js", new Date());
+  gtag("config", GA_ID);
+})();
+
 const queryClient = new QueryClient();
 
 const redirectToLoginIfUnauthorized = (error: unknown) => {
