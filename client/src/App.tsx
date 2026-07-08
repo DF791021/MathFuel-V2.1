@@ -3,7 +3,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
-import InvestorGate from "./components/InvestorGate";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { Toaster } from "sonner";
 import { useAnalytics } from "./hooks/useAnalytics";
@@ -63,18 +62,16 @@ function App() {
       <ThemeProvider defaultTheme="light">
         <TooltipProvider>
           <Toaster richColors position="top-center" />
-          <InvestorGate>
-            <AnalyticsProvider>
-              <div className="flex flex-col min-h-screen">
-                <div className="flex-1">
-                  <Router />
-                </div>
+          <AnalyticsProvider>
+            <div className="flex flex-col min-h-screen">
+              <div className="flex-1">
+                <Router />
+              </div>
               <footer className="py-3 text-center text-xs text-muted-foreground border-t">
                 By Mike K
               </footer>
             </div>
-            </AnalyticsProvider>
-          </InvestorGate>
+          </AnalyticsProvider>
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>
