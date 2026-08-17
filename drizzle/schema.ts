@@ -261,6 +261,7 @@ export const inviteCodes = pgTable("inviteCodes", {
   expiresAt: timestamp("expiresAt", { withTimezone: true }).notNull(),
   usedBy: integer("usedBy"),
   usedAt: timestamp("usedAt", { withTimezone: true }),
+  purpose: varchar("purpose", { length: 20 }).notNull().default("reset"),
   createdAt: timestamp("createdAt", { withTimezone: true }).defaultNow().notNull(),
 });
 

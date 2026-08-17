@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { useLocation } from "wouter";
-import { ArrowLeft, Code as Code2, Eye, Copy, Download, Trash2, FileCode } from "lucide-react";
+import { ArrowLeft, Code as Code2, Eye, Copy, Download, Trash2, FileCode, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
@@ -287,6 +287,9 @@ export default function AdminContentEditor() {
             )}
           </Button>
         )}
+        <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs ml-2" onClick={() => setLocation("/admin/users")}>
+          <Users className="h-3.5 w-3.5" /> Users
+        </Button>
       </header>
 
       {/* Main content */}

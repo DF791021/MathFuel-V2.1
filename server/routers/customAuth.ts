@@ -89,6 +89,8 @@ export const customAuthRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
+      throw new Error("Self-registration is disabled. Ask a MathFuel administrator to create your account.");
+      /*
       const dbCheck = await db.getDb();
       if (!dbCheck) {
         throw new Error(
@@ -167,6 +169,7 @@ export const customAuthRouter = router({
 
       const user = await db.getUserByOpenId(openId);
       return { success: true, user };
+      */
     }),
 
   login: publicProcedure
@@ -249,6 +252,7 @@ export const customAuthRouter = router({
         userId: user.id,
         token,
         expiresAt,
+        purpose: "reset",
       });
 
       // Build reset URL
@@ -287,7 +291,7 @@ export const customAuthRouter = router({
         )
         .limit(1);
 
-      return { valid: result.length > 0 };
+      return { valid: result.length > 0, purpose: result[0]?.purpose ?? null };
     }),
 
   // ── Reset Password ──
