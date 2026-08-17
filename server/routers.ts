@@ -11,10 +11,12 @@ import { customAuthRouter } from "./routers/customAuth";
 import { paymentRouter } from "./routers/payment";
 import { referralRouter } from "./routers/referral";
 import { leaderboardRouter } from "./routers/leaderboard";
+import { adminUsersRouter } from "./routers/adminUsers";
 
 export const appRouter = router({
   system: systemRouter,
   adminSettings: adminSettingsRouter,
+  adminUsers: adminUsersRouter,
   mathContent: mathContentRouter,
   practice: practiceRouter,
   student: studentRouter,

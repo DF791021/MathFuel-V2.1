@@ -22,6 +22,7 @@ export default function ResetPassword() {
     { token },
     { enabled: !!token, retry: false }
   );
+  const isInvitation = tokenQuery.data?.purpose === "invite";
 
   const resetMutation = trpc.auth.resetPassword.useMutation({
     onSuccess: () => {
@@ -99,7 +100,7 @@ export default function ResetPassword() {
               </div>
               <h2 className="text-xl font-bold text-gray-900">This link has expired</h2>
               <p className="text-sm text-muted-foreground">
-                Reset links only work for 1 hour and can only be used once. Request a new one to continue.
+                {isInvitation ? "Invitation links work for 48 hours and can only be used once. Ask your administrator to resend the invitation." : "Reset links only work for 1 hour and can only be used once. Request a new one to continue."}
               </p>
               <Link href="/forgot-password">
                 <Button className="mt-2 bg-indigo-600 hover:bg-indigo-700 text-white">
@@ -127,11 +128,11 @@ export default function ResetPassword() {
               <Lock className="w-7 h-7 text-white" />
             </div>
             <CardTitle className="text-2xl font-extrabold text-gray-900">
-              {success ? "Password updated" : "Create a new password"}
+              {success ? "Password created" : isInvitation ? "Create your MathFuel password" : "Create a new password"}
             </CardTitle>
             <CardDescription className="text-base mt-1">
               {success
-                ? "You're all set. Log in with your new password."
+                ? "You're all set. Log in with your assigned email address and your new password."
                 : "Pick something strong you'll remember."}
             </CardDescription>
           </CardHeader>

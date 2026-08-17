@@ -24,6 +24,7 @@ const PaymentSuccess = React.lazy(() => import("./pages/PaymentSuccess"));
 const Referrals = React.lazy(() => import("./pages/Referrals"));
 const Leaderboard = React.lazy(() => import("./pages/Leaderboard"));
 const AdminContentEditor = React.lazy(() => import("./pages/AdminContentEditor"));
+const AdminUserManagement = React.lazy(() => import("./pages/AdminUserManagement"));
 
 function AnalyticsProvider({ children }: { children: React.ReactNode }) {
   useAnalytics();
@@ -50,6 +51,7 @@ function Router() {
         <Route path="/referrals" component={Referrals} />
         <Route path="/leaderboard" component={Leaderboard} />
         <Route path="/admin/editor" component={AdminContentEditor} />
+        <Route path="/admin/users" component={AdminUserManagement} />
         <Route path="/404" component={NotFound} />
         <Route component={NotFound} />
       </Switch>
